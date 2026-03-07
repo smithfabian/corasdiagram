@@ -1,0 +1,98 @@
+
+\begin{tikzpicture}[
+    font=\small,
+    processL/.style={
+      rectangle,
+      draw=dtured,
+      fill=dtured,
+      text=white,
+      font=\bfseries,
+      line width=0.8pt,
+      minimum width=5.0cm,
+      minimum height=0.95cm,
+      text width=4.3cm,
+      align=left,
+      inner xsep=10pt,
+      inner ysep=6pt
+    },
+    processR/.style={
+      rectangle,
+      draw=blue,
+      fill=blue,
+      text=white,
+      font=\bfseries,
+      line width=0.8pt,
+      minimum width=5.0cm,
+      minimum height=0.95cm,
+      text width=4.3cm,
+      align=left,
+      inner xsep=10pt,
+      inner ysep=6pt
+    },
+    mapbox/.style={
+      rectangle,
+      draw=black!45,
+      fill=grey!20,
+      text=black,
+      line width=0.8pt,
+      minimum width=2.8cm,
+      minimum height=0.95cm,
+      text width=2.2cm,
+      align=center,
+      inner xsep=6pt,
+      inner ysep=4pt
+    },
+    heading/.style={
+      font=\bfseries\small,
+      text=black,
+      align=center
+    },
+    line/.style={
+      draw=black!70,
+      line width=1.0pt
+    }
+  ]
+
+  % headings
+  \node[heading] at (0,5.15) {General risk management\\process};
+  \node[heading] at (8.2,5.15) {CORAS 7-step\\presentation};
+
+  % left column
+  \node[processL] (g1) at (0,4.1)  {1. Identify context};
+  \node[processL] (g2) at (0,2.8)  {2. Identify risks};
+  \node[processL] (g3) at (0,1.5)  {3. Analyse risk};
+  \node[processL] (g4) at (0,0.2)  {4. Risk evaluation};
+  \node[processL] (g5) at (0,-1.1) {5. Risk treatment};
+
+  % right column
+  \node[processR] (c1) at (8.2,4.7)  {1. Introduction};
+  \node[processR] (c2) at (8.2,3.7)  {2. High-level analysis};
+  \node[processR] (c3) at (8.2,2.7)  {3. Approval};
+  \node[processR] (c4) at (8.2,1.5)  {4. Risk identification};
+  \node[processR] (c5) at (8.2,0.3)  {5. Risk estimation};
+  \node[processR] (c6) at (8.2,-0.9) {6. Risk evaluation};
+  \node[processR] (c7) at (8.2,-2.1) {7. Risk treatment};
+
+  % straight lines only
+  \draw[line] (g1.east) -- (c1.west);
+  \draw[line] (g1.east) -- (c2.west);
+  \draw[line] (g1.east) -- (c3.west);
+  \draw[line] (g2.east) -- (c4.west);
+  \draw[line] (g3.east) -- (c5.west);
+  \draw[line] (g4.east) -- (c6.west);
+  \draw[line] (g5.east) -- (c7.west);
+
+  % grouping on right
+  \draw[black!45, line width=0.8pt] (10.95,5.0) -- (11.1,5.0);
+  \draw[black!45, line width=0.8pt] (11.1,5.0) -- (11.1,2.4);
+  \draw[black!45, line width=0.8pt] (10.95,2.4) -- (11.1,2.4);
+
+  \node[
+    text=black,
+    line width=0.8pt,
+    minimum height=0.9cm,
+    text width=2.4cm,
+    align=center
+  ] at (12.75,3.7) {Introductory\\activities};
+
+\end{tikzpicture}%
