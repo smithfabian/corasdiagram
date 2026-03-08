@@ -1,0 +1,365 @@
+\documentclass[a4paper]{article}
+
+\usepackage{lmodern}
+\usepackage[margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{corasdiagram}
+
+\title{\texttt{corasdiagram} Manual}
+\author{Fabian Robert Smith}
+\date{Version 0.1.0}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Overview}
+
+\texttt{corasdiagram} is a notation-first LaTeX package for the five core CORAS
+diagram families:
+
+\begin{itemize}
+  \item asset diagrams
+  \item threat diagrams
+  \item risk diagrams
+  \item treatment diagrams
+  \item treatment overview diagrams
+\end{itemize}
+
+The package ships with pre-rendered CORAS icons, semantic diagram
+environments, concept-level node macros, and semantic edge macros. The current
+supported engines are \texttt{pdflatex} and \texttt{lualatex}.
+
+\section{Installation}
+
+\subsection{Repository-Local Use}
+
+Compile from the repository root with:
+
+\begin{verbatim}
+TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error \
+  examples/corasdiagram-minimal.tex
+\end{verbatim}
+
+\subsection{User TEXMF Tree}
+
+Copy \texttt{tex/latex/corasdiagram/} to
+\texttt{\$HOME/texmf/tex/latex/corasdiagram/}. Refresh the TeX filename
+database if your TeX distribution requires it.
+
+\subsection{Release Bundle}
+
+The release tooling assembles a CTAN-friendly bundle. Once the package is
+published, installation can happen through the normal TeX package manager.
+
+\section{Package Options}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}p{0.22\linewidth}p{0.18\linewidth}p{0.46\linewidth}}
+\hline
+Option & Default & Meaning \\
+\hline
+iconset=color|bw & color & Select the color or black-and-white icon set. \\
+icons-path=<path> & package icons & Override the icon directory path. \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Diagram Environments}
+
+\begin{description}
+  \item[\texttt{corasassetdiagram}] Stakeholders, assets, asset relations,
+    and scope containers.
+  \item[\texttt{corasthreatdiagram}] Threat sources, vulnerabilities, threat
+    scenarios, unwanted incidents, impacted assets, and threat scopes.
+  \item[\texttt{corasriskdiagram}] Threat sources, risks, assets, and risk
+    group containers.
+  \item[\texttt{corastreatmentdiagram}] Treatment nodes together with the
+    selected threat chain they mitigate.
+  \item[\texttt{corastreatmentoverviewdiagram}] Treatments, risks, assets, and
+    treatment fan-in via a junction.
+\end{description}
+
+Each environment enforces its legal CORAS vocabulary. Illegal node types or
+edge relations raise package errors during compilation.
+
+\section{Public API}
+
+\subsection{Canonical Node Macros}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}p{0.34\linewidth}p{0.52\linewidth}}
+\hline
+Macro & Meaning \\
+\hline
+\textbackslash corasasset & Asset node with CORAS asset icon. \\
+\textbackslash corasstakeholder & Stakeholder node with stakeholder icon. \\
+\textbackslash corasthreataccidental & Accidental human threat source. \\
+\textbackslash corasthreatdeliberate & Deliberate human threat source. \\
+\textbackslash corasthreatnonhuman & Non-human threat source. \\
+\textbackslash corasvulnerability & Vulnerability node. \\
+\textbackslash corasscenario & Threat scenario node. \\
+\textbackslash corasincident & Unwanted incident node. \\
+\textbackslash corasunwantedincident & Alias for \textbackslash corasincident. \\
+\textbackslash corasrisk & Risk node with title and level metadata. \\
+\textbackslash corastreatment & Treatment node. \\
+\textbackslash corasjunction & Junction node for treatment overview fan-in. \\
+\hline
+\end{tabular}
+\end{center}
+
+The common keyed API includes \texttt{name}, \texttt{title}, \texttt{meta},
+\texttt{level}, \texttt{scope}, \texttt{at}, \texttt{order}, \texttt{layout},
+\texttt{right of}, \texttt{below of}, \texttt{incident of}, \texttt{treats},
+\texttt{harms}, and \texttt{tikz}.
+
+\subsection{Semantic Edge Macros}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}p{0.28\linewidth}p{0.58\linewidth}}
+\hline
+Macro & Meaning \\
+\hline
+\textbackslash corascauses & Solid causal edge. \\
+\textbackslash corasrelates & Solid relation/impact edge. \\
+\textbackslash corasconcerns & Dashed concern edge, typically stakeholder to asset. \\
+\textbackslash corasassociates & Dashed non-causal association edge. \\
+\textbackslash corastreats & Dashed treatment edge. \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Scopes and Containers}
+
+\texttt{\textbackslash corasscope} is the public scope/container helper. The
+important keys are:
+
+\begin{itemize}
+  \item \texttt{name}
+  \item \texttt{scope}
+  \item \texttt{fit}
+  \item \texttt{kind=system|asset-scope|analysis|risk-group|treatment-scope}
+  \item \texttt{padding}
+  \item \texttt{stakeholder}
+  \item \texttt{stakeholder corner=left|right}
+  \item \texttt{tikz}
+\end{itemize}
+
+The \texttt{asset-scope} kind renders a rounded container and can draw the
+stakeholder corner compartment shown in the asset-diagram notation examples.
+
+\subsection{Advanced Compatibility API}
+
+The package still ships the lower-level primitives
+\texttt{\textbackslash corasnode}, \texttt{\textbackslash corasedge}, and
+\texttt{\textbackslash corascontainer}. They remain available for advanced
+usage and backward compatibility, but the semantic wrappers are the preferred
+public API.
+
+\section{Layout Behavior}
+
+The package supports both explicit coordinates and role-aware automatic
+placement. Manual placement always wins when \texttt{at=<...>} is given.
+
+Important layout-related keys:
+
+\begin{itemize}
+  \item \texttt{at} for direct placement
+  \item \texttt{order} for lane ordering in auto mode
+  \item \texttt{scope} for fit-based container grouping
+  \item \texttt{right of}, \texttt{below of}, \texttt{incident of},
+    \texttt{treats}, and \texttt{harms} for relative placement
+  \item \texttt{layout=auto|manual}
+\end{itemize}
+
+\section{Complete Examples}
+
+\subsection{Asset Diagram}
+
+\begin{center}
+\begin{corasassetdiagram}[x=.8cm,y=.8cm]
+  \corasstakeholder[
+    name=doc-stakeholder,
+    scope=doc-asset-scope,
+    at={(1.5,4.4)},
+    title={Stakeholder}
+  ]
+  \corasasset[
+    name=doc-asset,
+    scope=doc-asset-scope,
+    at={(4.3,2.0)},
+    title={Asset}
+  ]
+  \corasasset[
+    name=doc-indirect,
+    scope=doc-asset-scope,
+    at={(8.1,3.8)},
+    title={Indirect\\Asset}
+  ]
+  \corasscope[
+    name=doc-asset-box,
+    scope=doc-asset-scope,
+    kind=asset-scope,
+    stakeholder=doc-stakeholder,
+    stakeholder corner=left
+  ]
+  \corasrelates[from=doc-asset,to=doc-indirect]
+\end{corasassetdiagram}
+\end{center}
+
+\subsection{Threat Diagram}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.75cm,y=.75cm]
+  \corasthreataccidental[name=doc-employee,at={(0,0)},title={Employee}]
+  \corasscenario[
+    name=doc-remote,
+    at={(2.6,.2)},
+    title={Remote access},
+    meta={1 per 6 months}
+  ]
+  \corasvulnerability[
+    name=doc-oldweb,
+    at={(5.1,.2)},
+    title={Old\\webserver}
+  ]
+  \corasunwantedincident[
+    name=doc-disclosure,
+    at={(7.8,.2)},
+    title={Disclosure\\of data}
+  ]
+  \corasasset[
+    name=doc-privacy,
+    at={(10.1,.2)},
+    title={Data\\privacy}
+  ]
+  \corascauses[from=doc-employee,to=doc-remote]
+  \corascauses[from=doc-remote,to=doc-oldweb]
+  \corascauses[from=doc-oldweb,to=doc-disclosure]
+  \corasrelates[from=doc-disclosure,to=doc-privacy]
+\end{corasthreatdiagram}
+\end{center}
+
+\subsection{Risk Diagram}
+
+\begin{center}
+\begin{corasriskdiagram}[x=.8cm,y=.8cm]
+  \corasthreatnonhuman[
+    name=doc-infra,
+    at={(0,0)},
+    title={IT-infrastructure}
+  ]
+  \corasrisk[
+    name=doc-risk,
+    at={(4.3,0)},
+    title={Application\\outage},
+    meta={1 per year},
+    level=medium
+  ]
+  \corasasset[
+    name=doc-availability,
+    at={(8,0)},
+    title={Application\\availability}
+  ]
+  \corascauses[from=doc-infra,to=doc-risk]
+  \corasrelates[from=doc-risk,to=doc-availability]
+\end{corasriskdiagram}
+\end{center}
+
+\subsection{Treatment Diagram}
+
+\begin{center}
+\begin{corastreatmentdiagram}[x=.75cm,y=.75cm]
+  \corasthreataccidental[name=doc-user,at={(0,0)},title={Employee}]
+  \corasscenario[
+    name=doc-threat,
+    at={(2.6,.2)},
+    title={Remote access},
+    meta={1 per 6 months}
+  ]
+  \corasunwantedincident[
+    name=doc-incident,
+    at={(5.5,.2)},
+    title={Disclosure\\of data},
+    meta={1 per year}
+  ]
+  \corasasset[
+    name=doc-asset2,
+    at={(8.2,.2)},
+    title={Data\\privacy}
+  ]
+  \corastreatment[
+    name=doc-training,
+    at={(2.6,2.6)},
+    title={Security\\training}
+  ]
+  \corascauses[from=doc-user,to=doc-threat]
+  \corascauses[from=doc-threat,to=doc-incident]
+  \corasrelates[from=doc-incident,to=doc-asset2]
+  \corastreats[from=doc-training,to=doc-threat]
+\end{corastreatmentdiagram}
+\end{center}
+
+\subsection{Treatment Overview Diagram}
+
+\begin{center}
+\begin{corastreatmentoverviewdiagram}[x=.75cm,y=.75cm]
+  \corasrisk[
+    name=doc-risk1,
+    at={(3.5,1.1)},
+    title={Disclosure\\of data},
+    meta={direct asset},
+    level=unacceptable
+  ]
+  \corasasset[
+    name=doc-asset3,
+    at={(7.2,1.1)},
+    title={Data\\privacy}
+  ]
+  \corasjunction[name=doc-junction,at={(3.8,-1.5)}]
+  \corastreatment[
+    name=doc-treatment1,
+    at={(1.8,-3.2)},
+    title={Limit access}
+  ]
+  \corastreatment[
+    name=doc-treatment2,
+    at={(5.8,-3.2)},
+    title={Upgrade\\server}
+  ]
+  \corasrelates[from=doc-risk1,to=doc-asset3]
+  \corastreats[from=doc-treatment1,to=doc-junction]
+  \corastreats[from=doc-treatment2,to=doc-junction]
+  \corastreats[from=doc-junction,to=doc-risk1]
+\end{corastreatmentoverviewdiagram}
+\end{center}
+
+\section{Source Files}
+
+The repository ships these main author-facing files:
+
+\begin{itemize}
+  \item \texttt{tex/latex/corasdiagram/corasdiagram.sty}
+  \item \texttt{examples/corasdiagram-minimal.tex}
+  \item \texttt{examples/corasdiagram-demo.tex}
+  \item \texttt{tests/corasdiagram/*.tex}
+\end{itemize}
+
+\section{Build and Release Tooling}
+
+The project includes helper scripts for:
+
+\begin{itemize}
+  \item building icon PDFs from the original SVG files
+  \item running semantic failure tests
+  \item assembling a CTAN-friendly release bundle
+  \item building a static documentation site with rendered screenshots
+\end{itemize}
+
+See \texttt{CONTRIBUTING.md} for the current repository-root commands.
+
+\end{document}

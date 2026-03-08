@@ -1,1 +1,0 @@
-Place chapter figures here.

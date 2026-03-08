@@ -1,0 +1,23 @@
+\documentclass{article}
+
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{corasassetdiagram}
+  \corasstakeholder[
+    name=owner,
+    title={System owner}
+  ]
+  \corasasset[
+    name=service,
+    title={Customer service}
+  ]
+  \corastreats[
+    from=owner,
+    to=service
+  ]
+\end{corasassetdiagram}
+
+\end{document}

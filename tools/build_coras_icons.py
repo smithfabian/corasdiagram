@@ -11,7 +11,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
-    default_source = repo_root / "Resources" / "Coras_icons"
+    default_source = repo_root / "tex" / "latex" / "corasdiagram" / "icons-src"
     default_dest = repo_root / "tex" / "latex" / "corasdiagram" / "icons"
 
     parser = argparse.ArgumentParser(

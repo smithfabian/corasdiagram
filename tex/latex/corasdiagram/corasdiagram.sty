@@ -1,11 +1,13 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{corasdiagram}[2026/03/08 CORAS diagram package]
+\ProvidesPackage{corasdiagram}[2026/03/08 v0.1.0 CORAS diagram package]
 
 \RequirePackage{graphicx}
 \RequirePackage{pgfkeys}
 \RequirePackage{tikz}
 \RequirePackage{xparse}
 \usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
+\pgfdeclarelayer{corasbackground}
+\pgfsetlayers{corasbackground,main}
 
 \makeatletter
 
@@ -65,6 +67,7 @@
     every node/.style={font=\sffamily\footnotesize,align=center},
     >=Latex
   },
+  layout/.code={\def\corasdiagram@layoutmode{#1}},
   coras/asset diagram/.style={},
   coras/threat diagram/.style={},
   coras/risk diagram/.style={},
@@ -80,8 +83,7 @@
     draw=none,
     fill=none,
     inner sep=0pt,
-    outer sep=0pt,
-    minimum size=0pt
+    outer sep=0pt
   },
   coras/anchor ellipse/.style={
     coras/invisible anchor,
@@ -95,9 +97,9 @@
     draw,
     rectangle,
     fill=white,
-    line width=0.4pt,
-    inner xsep=3pt,
-    inner ysep=2pt,
+    line width=0.45pt,
+    inner xsep=4pt,
+    inner ysep=3pt,
     outer sep=1pt,
     align=center
   },
@@ -105,16 +107,15 @@
     draw,
     ellipse,
     fill=white,
-    line width=0.4pt,
-    inner xsep=4pt,
-    inner ysep=2pt,
+    line width=0.45pt,
+    inner xsep=5pt,
+    inner ysep=3pt,
     outer sep=1pt,
     align=center
   },
   coras/incident body/.style={
     coras/box,
-    minimum height=8mm,
-    align=left
+    minimum height=8mm
   },
   coras/risk body/.style={
     coras/box,
@@ -122,31 +123,39 @@
   },
   coras/treatment body/.style={
     coras/ellipse,
-    fill=gray!20,
-    minimum height=10mm
+    fill=gray!12,
+    minimum height=9mm
   },
   coras/junction/.style={
     circle,
     draw,
     fill=white,
-    line width=0.4pt,
-    minimum size=3.2mm,
+    line width=0.45pt,
+    minimum size=3.3mm,
     inner sep=0pt,
     outer sep=1pt
   },
-  coras/container/.style={
+  coras/scope base/.style={
     draw,
     rectangle,
-    fill=none,
-    line width=0.4pt,
+    fill=black!2,
+    line width=0.45pt,
     inner sep=7mm,
     outer sep=0pt
   },
-  coras/container title/.style={
-    anchor=north west,
+  coras/scope system/.style={coras/scope base},
+  coras/scope asset-scope/.style={
+    coras/scope base,
+    rounded corners=8mm
+  },
+  coras/scope analysis/.style={coras/scope base},
+  coras/scope risk-group/.style={coras/scope base},
+  coras/scope treatment-scope/.style={coras/scope base},
+  coras/scope title/.style={
+    anchor=south west,
     inner sep=0pt,
     outer sep=0pt,
-    font=\sffamily\footnotesize
+    font=\sffamily\footnotesize\bfseries
   },
   coras/risk ref box/.style={
     coras/box,
@@ -157,35 +166,44 @@
   },
   coras/causal/.style={
     draw,
-    -{Latex[length=2mm,width=1.2mm]},
-    line width=0.4pt
+    -{Latex[length=2mm,width=1.2mm,open]},
+    line width=0.45pt
   },
   coras/relation/.style={
     draw,
-    -{Latex[length=2mm,width=1.2mm]},
-    line width=0.4pt
+    -{Latex[length=2mm,width=1.2mm,open]},
+    line width=0.45pt
   },
   coras/concern/.style={
     draw,
     dashed,
-    -{Latex[length=2mm,width=1.2mm]},
-    line width=0.4pt
+    -{Latex[length=2mm,width=1.2mm,open]},
+    line width=0.45pt
+  },
+  coras/association/.style={
+    draw,
+    dashed,
+    -{Latex[length=2mm,width=1.2mm,open]},
+    line width=0.45pt
   },
   coras/treatment/.style={
     draw,
     dashed,
-    -{Latex[length=2mm,width=1.2mm]},
-    line width=0.4pt
+    -{Latex[length=2mm,width=1.2mm,open]},
+    line width=0.45pt
   },
   coras/overview/.style={
-    draw,
-    dashed,
-    -{Latex[length=2mm,width=1.2mm]},
-    line width=0.4pt
+    coras/treatment
   },
 }
 
 \newcount\corasdiagram@autonode
+\newcount\corasdiagram@diagramseq
+
+\def\corasdiagram@knownroles{stakeholder,asset,threatsource,vulnerability,scenario,incident,risk,treatment,junction,scope}
+\def\corasdiagram@currentfamily{}
+\def\corasdiagram@layoutmode{auto}
+\def\corasdiagram@currentdiagramid{}
 
 \newcommand{\corasdiagram@ensurename}[1]{%
   \ifx#1\@empty
@@ -212,13 +230,451 @@
   \includegraphics[width=#1]{\corasdiagram@iconfile{#2}}%
 }
 
+\newcommand{\corasdiagram@ifincsv}[4]{%
+  \edef\corasdiagram@membertest{#1}%
+  \def\corasdiagram@ismember{0}%
+  \@for\corasdiagram@candidate:=#2\do{%
+    \edef\corasdiagram@candidatevalue{\corasdiagram@candidate}%
+    \ifx\corasdiagram@candidatevalue\corasdiagram@membertest
+      \def\corasdiagram@ismember{1}%
+    \fi
+  }%
+  \ifnum\corasdiagram@ismember=1\relax
+    #3%
+  \else
+    #4%
+  \fi
+}
+
+\newcommand{\corasdiagram@setnodeprop}[3]{%
+  \expandafter\edef\csname corasdiagram@node@#1@#2\endcsname{#3}%
+}
+
+\newcommand{\corasdiagram@getnodeprop}[3]{%
+  \expandafter\ifcsname corasdiagram@node@#1@#2\endcsname
+    \edef#3{\csname corasdiagram@node@#1@#2\endcsname}%
+  \else
+    \let#3\@empty
+  \fi
+}
+
+\newcommand{\corasdiagram@setscopefit}[2]{%
+  \expandafter\edef\csname corasdiagram@scopefit@#1\endcsname{#2}%
+}
+
+\newcommand{\corasdiagram@getscopefit}[2]{%
+  \expandafter\ifcsname corasdiagram@scopefit@#2\endcsname
+    \edef#1{\csname corasdiagram@scopefit@#2\endcsname}%
+  \else
+    \let#1\@empty
+  \fi
+}
+
+\newcommand{\corasdiagram@scopekey}[1]{%
+  \corasdiagram@currentdiagramid::#1%
+}
+
+\newcommand{\corasdiagram@registerscopemember}[2]{%
+  \ifx#1\@empty
+  \else
+    \edef\corasdiagram@scopenodename{#2}%
+    \edef\corasdiagram@currscopekey{\corasdiagram@scopekey{#1}}%
+    \corasdiagram@getscopefit{\corasdiagram@scopefitlist}{\corasdiagram@currscopekey}%
+    \ifx\corasdiagram@scopefitlist\@empty
+      \corasdiagram@setscopefit{\corasdiagram@currscopekey}{(\corasdiagram@scopenodename)}%
+    \else
+      \expandafter\edef\csname corasdiagram@scopefit@\corasdiagram@currscopekey\endcsname{%
+        \corasdiagram@scopefitlist\space (\corasdiagram@scopenodename)%
+      }%
+    \fi
+  \fi
+}
+
+\expandafter\def\csname corasdiagram@allowednodes@asset\endcsname{stakeholder,asset,scope}
+\expandafter\def\csname corasdiagram@allowednodes@threat\endcsname{threatsource,vulnerability,scenario,incident,asset,scope}
+\expandafter\def\csname corasdiagram@allowednodes@risk\endcsname{threatsource,risk,asset,scope}
+\expandafter\def\csname corasdiagram@allowednodes@treatment\endcsname{treatment,threatsource,vulnerability,scenario,incident,asset,scope}
+\expandafter\def\csname corasdiagram@allowednodes@treatmentoverview\endcsname{treatment,risk,asset,junction,scope}
+
+\newcommand{\corasdiagram@getallowedroles}[1]{%
+  \expandafter\ifcsname corasdiagram@allowednodes@#1\endcsname
+    \edef\corasdiagram@allowedroles{\csname corasdiagram@allowednodes@#1\endcsname}%
+  \else
+    \let\corasdiagram@allowedroles\@empty
+  \fi
+}
+
+\newcommand{\corasdiagram@familynamelabel}[1]{%
+  \ifcsname corasdiagram@familylabel@#1\endcsname
+    \csname corasdiagram@familylabel@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+\expandafter\def\csname corasdiagram@familylabel@asset\endcsname{asset diagram}
+\expandafter\def\csname corasdiagram@familylabel@threat\endcsname{threat diagram}
+\expandafter\def\csname corasdiagram@familylabel@risk\endcsname{risk diagram}
+\expandafter\def\csname corasdiagram@familylabel@treatment\endcsname{treatment diagram}
+\expandafter\def\csname corasdiagram@familylabel@treatmentoverview\endcsname{treatment overview diagram}
+
+\newcommand{\corasdiagram@rolelabel}[1]{%
+  \ifcsname corasdiagram@rolelabel@#1\endcsname
+    \csname corasdiagram@rolelabel@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+\expandafter\def\csname corasdiagram@rolelabel@stakeholder\endcsname{stakeholder}
+\expandafter\def\csname corasdiagram@rolelabel@asset\endcsname{asset}
+\expandafter\def\csname corasdiagram@rolelabel@threatsource\endcsname{threat source}
+\expandafter\def\csname corasdiagram@rolelabel@vulnerability\endcsname{vulnerability}
+\expandafter\def\csname corasdiagram@rolelabel@scenario\endcsname{threat scenario}
+\expandafter\def\csname corasdiagram@rolelabel@incident\endcsname{unwanted incident}
+\expandafter\def\csname corasdiagram@rolelabel@risk\endcsname{risk}
+\expandafter\def\csname corasdiagram@rolelabel@treatment\endcsname{treatment}
+\expandafter\def\csname corasdiagram@rolelabel@junction\endcsname{junction}
+\expandafter\def\csname corasdiagram@rolelabel@scope\endcsname{scope}
+
+\newcommand{\corasdiagram@semanticlabel}[1]{%
+  \ifcsname corasdiagram@semanticlabel@#1\endcsname
+    \csname corasdiagram@semanticlabel@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+\expandafter\def\csname corasdiagram@semanticlabel@causal\endcsname{causal}
+\expandafter\def\csname corasdiagram@semanticlabel@relation\endcsname{relation}
+\expandafter\def\csname corasdiagram@semanticlabel@concern\endcsname{concern}
+\expandafter\def\csname corasdiagram@semanticlabel@association\endcsname{association}
+\expandafter\def\csname corasdiagram@semanticlabel@treatment\endcsname{treatment}
+
+\newcommand{\corasdiagram@maptyperole}[1]{%
+  \def\corasdiagram@mappedrole{#1}%
+  \corasdiagram@ifincsv{#1}{threataccidental,threatdeliberate,threatnonhuman}{%
+    \def\corasdiagram@mappedrole{threatsource}%
+  }{}%
+}
+
+\newcommand{\corasdiagram@validatecurrentrole}[2]{%
+  \ifx\corasdiagram@currentfamily\@empty
+  \else
+    \corasdiagram@getallowedroles{\corasdiagram@currentfamily}%
+    \corasdiagram@ifincsv{#2}{\corasdiagram@allowedroles}{}{%
+      \PackageError{corasdiagram}{Node type `#1' is not allowed in the \corasdiagram@familynamelabel{\corasdiagram@currentfamily}}{%
+        Allowed roles here are \corasdiagram@allowedroles.%
+      }%
+    }%
+  \fi
+}
+
+\newcommand{\corasdiagram@validateedgepair}[4]{%
+  \def\corasdiagram@edgepairvalid{0}%
+  \def\corasdiagram@fromrole{#3}%
+  \def\corasdiagram@torole{#4}%
+  \expandafter\ifx\csname corasdiagram@edgecheck@#1@#2\endcsname\relax
+  \else
+    \csname corasdiagram@edgecheck@#1@#2\endcsname
+  \fi
+}
+
+\def\corasdiagram@markedgevalid{\def\corasdiagram@edgepairvalid{1}}
+
+\expandafter\def\csname corasdiagram@edgecheck@asset@relation\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{asset}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@asset@concern\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{stakeholder}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+
+\expandafter\def\csname corasdiagram@edgecheck@threat@causal\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{threatsource,vulnerability,scenario}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{vulnerability,scenario,incident}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@threat@relation\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{incident}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@threat@association\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{scenario,incident}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset,incident,scenario}{\corasdiagram@markedgevalid}{}}{}%
+}
+
+\expandafter\def\csname corasdiagram@edgecheck@risk@causal\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{threatsource}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{risk}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@risk@relation\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{risk}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+
+\expandafter\def\csname corasdiagram@edgecheck@treatment@causal\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{threatsource,vulnerability,scenario}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{vulnerability,scenario,incident}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@treatment@relation\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{incident}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@treatment@treatment\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{treatment}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{threatsource,vulnerability,scenario,incident,asset,risk,junction}{\corasdiagram@markedgevalid}{}}{}%
+}
+
+\expandafter\def\csname corasdiagram@edgecheck@treatmentoverview@relation\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{risk}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{asset}{\corasdiagram@markedgevalid}{}}{}%
+}
+\expandafter\def\csname corasdiagram@edgecheck@treatmentoverview@treatment\endcsname{%
+  \corasdiagram@ifincsv{\corasdiagram@fromrole}{treatment,junction}%
+    {\corasdiagram@ifincsv{\corasdiagram@torole}{junction,risk}{\corasdiagram@markedgevalid}{}}{}%
+}
+
+\newcommand{\corasdiagram@validateedge}[3]{%
+  \ifx\corasdiagram@currentfamily\@empty
+  \else
+    \corasdiagram@validateedgepair{\corasdiagram@currentfamily}{#1}{#2}{#3}%
+    \ifx\corasdiagram@edgepairvalid\@empty
+    \fi
+    \ifnum\corasdiagram@edgepairvalid=1\relax
+    \else
+      \PackageError{corasdiagram}{\corasdiagram@semanticlabel{#1} edge from \corasdiagram@rolelabel{#2} to \corasdiagram@rolelabel{#3} is not allowed in the \corasdiagram@familynamelabel{\corasdiagram@currentfamily}}{%
+        Use the canonical CORAS node roles and semantic edge commands for this diagram family.%
+      }%
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@begindiagram}[1]{%
+  \global\advance\corasdiagram@diagramseq by 1\relax
+  \edef\corasdiagram@currentdiagramid{diagram-\the\corasdiagram@diagramseq}%
+  \def\corasdiagram@currentfamily{#1}%
+  \def\corasdiagram@layoutmode{auto}%
+  \@for\corasdiagram@role:=\corasdiagram@knownroles\do{%
+    \expandafter\def\csname corasdiagram@lane@#1@\corasdiagram@role\endcsname{0}%
+  }%
+}
+
+\newcommand{\corasdiagram@nextlaneindex}[2]{%
+  \expandafter\ifx\csname corasdiagram@lane@#1@#2\endcsname\relax
+    \expandafter\def\csname corasdiagram@lane@#1@#2\endcsname{0}%
+  \fi
+  \edef\corasdiagram@currindex{\csname corasdiagram@lane@#1@#2\endcsname}%
+  \pgfmathtruncatemacro{\corasdiagram@nextindex}{\corasdiagram@currindex + 1}%
+  \expandafter\xdef\csname corasdiagram@lane@#1@#2\endcsname{\corasdiagram@nextindex}%
+  \edef\corasdiagram@laneindex{\corasdiagram@nextindex}%
+}
+
+\newcommand{\corasdiagram@setautocoord}[2]{%
+  \edef\corasnode@at{(#1,#2)}%
+}
+
+\newcommand{\corasdiagram@usespecifiedorder}{%
+  \ifx\corasnode@order\@empty
+    \corasdiagram@nextlaneindex{\corasdiagram@currentfamily}{\corasnode@role}%
+  \else
+    \edef\corasdiagram@laneindex{\corasnode@order}%
+  \fi
+}
+
+\newcommand{\corasdiagram@applyrelativeplacement}{%
+  \ifx\corasnode@rightof\@empty
+  \else
+    \edef\corasnode@at{([xshift=\corasnode@horizontalgap]\corasnode@rightof.east)}%
+    \expandafter\@gobble
+  \fi
+}
+
+\newcommand{\corasdiagram@setroleplacement}[1]{%
+  \corasdiagram@usespecifiedorder
+  \def\corasdiagram@x{0}%
+  \def\corasdiagram@y{0}%
+  \def\corasdiagram@family{#1}%
+  \ifx\corasdiagram@family\@empty
+  \else
+    \ifx\corasdiagram@family\@empty\else\fi
+  \fi
+  \ifx\corasdiagram@family\@empty
+  \else
+    \expandafter\ifx\csname corasdiagram@autoplace@#1@\corasnode@role\endcsname\relax
+      \edef\corasnode@at{(0,0)}%
+    \else
+      \csname corasdiagram@autoplace@#1@\corasnode@role\endcsname
+      \corasdiagram@setautocoord{\corasdiagram@x}{\corasdiagram@y}%
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@tryrelativeplacement}{%
+  \ifx\corasnode@rightof\@empty
+  \else
+    \edef\corasnode@at{([xshift=\corasnode@horizontalgap]\corasnode@rightof.east)}%
+  \fi
+  \ifx\corasnode@at\@empty
+    \ifx\corasnode@belowof\@empty
+    \else
+      \edef\corasnode@at{([yshift=-\corasnode@verticalgap]\corasnode@belowof.south)}%
+    \fi
+  \fi
+  \ifx\corasnode@at\@empty
+    \ifx\corasnode@incidentof\@empty
+    \else
+      \edef\corasnode@at{([xshift=\corasnode@horizontalgap]\corasnode@incidentof.east)}%
+    \fi
+  \fi
+  \ifx\corasnode@at\@empty
+    \ifx\corasnode@harms\@empty
+    \else
+      \edef\corasnode@at{([xshift=-\corasnode@horizontalgap]\corasnode@harms.west)}%
+    \fi
+  \fi
+  \ifx\corasnode@at\@empty
+    \ifx\corasnode@treats\@empty
+    \else
+      \edef\corasnode@at{([yshift=\corasnode@verticalgap]\corasnode@treats.north)}%
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@resolveplacement}{%
+  \ifx\corasnode@at\@empty
+    \corasdiagram@tryrelativeplacement
+  \fi
+  \ifx\corasnode@at\@empty
+    \edef\corasdiagram@layoutchoice{\corasnode@layout}%
+    \ifx\corasdiagram@layoutchoice\@empty
+      \edef\corasdiagram@layoutchoice{\corasdiagram@layoutmode}%
+    \fi
+    \def\corasdiagram@manual{manual}%
+    \ifx\corasdiagram@layoutchoice\corasdiagram@manual
+      \edef\corasnode@at{(0,0)}%
+    \else
+      \corasdiagram@setroleplacement{\corasdiagram@currentfamily}%
+    \fi
+  \fi
+}
+
+\expandafter\def\csname corasdiagram@autoplace@asset@stakeholder\endcsname{%
+  \pgfmathtruncatemacro{\corasdiagram@lanegroup}{int((\corasdiagram@laneindex - 1)/2)}%
+  \pgfmathtruncatemacro{\corasdiagram@isright}{mod(\corasdiagram@laneindex,2)}%
+  \ifnum\corasdiagram@isright=1\relax
+    \def\corasdiagram@x{0}%
+  \else
+    \def\corasdiagram@x{10}%
+  \fi
+  \pgfmathsetmacro{\corasdiagram@y}{1.6 - 2.6*\corasdiagram@lanegroup}%
+}
+\expandafter\def\csname corasdiagram@autoplace@asset@asset\endcsname{%
+  \pgfmathtruncatemacro{\corasdiagram@lanegroup}{int((\corasdiagram@laneindex - 1)/2)}%
+  \pgfmathtruncatemacro{\corasdiagram@isright}{mod(\corasdiagram@laneindex,2)}%
+  \ifnum\corasdiagram@isright=1\relax
+    \def\corasdiagram@x{3.1}%
+  \else
+    \def\corasdiagram@x{5.9}%
+  \fi
+  \pgfmathsetmacro{\corasdiagram@y}{2.6 - 2.1*\corasdiagram@lanegroup}%
+}
+
+\expandafter\def\csname corasdiagram@autoplace@threat@threatsource\endcsname{%
+  \def\corasdiagram@x{0}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@threat@vulnerability\endcsname{%
+  \def\corasdiagram@x{3.3}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@threat@scenario\endcsname{%
+  \def\corasdiagram@x{6.6}%
+  \pgfmathsetmacro{\corasdiagram@y}{3.2 - 1.9*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@threat@incident\endcsname{%
+  \def\corasdiagram@x{10.2}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@threat@asset\endcsname{%
+  \def\corasdiagram@x{13.3}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.2 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+
+\expandafter\def\csname corasdiagram@autoplace@risk@threatsource\endcsname{%
+  \def\corasdiagram@x{0}%
+  \pgfmathsetmacro{\corasdiagram@y}{1.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@risk@risk\endcsname{%
+  \def\corasdiagram@x{4.2}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 1.9*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@risk@asset\endcsname{%
+  \def\corasdiagram@x{8.1}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.1 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+
+\expandafter\def\csname corasdiagram@autoplace@treatment@treatment\endcsname{%
+  \pgfmathsetmacro{\corasdiagram@x}{1.6 + 3.7*(\corasdiagram@laneindex - 1)}%
+  \def\corasdiagram@y{4.8}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatment@threatsource\endcsname{%
+  \def\corasdiagram@x{0}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.6*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatment@vulnerability\endcsname{%
+  \def\corasdiagram@x{3.3}%
+  \pgfmathsetmacro{\corasdiagram@y}{1.8 - 2.8*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatment@scenario\endcsname{%
+  \def\corasdiagram@x{6.6}%
+  \pgfmathsetmacro{\corasdiagram@y}{3.0 - 1.9*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatment@incident\endcsname{%
+  \def\corasdiagram@x{10.3}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.3 - 2.5*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatment@asset\endcsname{%
+  \def\corasdiagram@x{13.4}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.5*(\corasdiagram@laneindex - 1)}%
+}
+
+\expandafter\def\csname corasdiagram@autoplace@treatmentoverview@risk\endcsname{%
+  \def\corasdiagram@x{4.2}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.2 - 2.5*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatmentoverview@asset\endcsname{%
+  \def\corasdiagram@x{7.7}%
+  \pgfmathsetmacro{\corasdiagram@y}{1.7 - 2.5*(\corasdiagram@laneindex - 1)}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatmentoverview@junction\endcsname{%
+  \def\corasdiagram@x{5.0}%
+  \def\corasdiagram@y{-2.6}%
+}
+\expandafter\def\csname corasdiagram@autoplace@treatmentoverview@treatment\endcsname{%
+  \pgfmathsetmacro{\corasdiagram@x}{2.0 + 3.0*(\corasdiagram@laneindex - 1)}%
+  \def\corasdiagram@y{-4.3}%
+}
+
+\newcommand{\corasdiagram@secondarytext}[1]{%
+  {\scriptsize\itshape\color{black!65}#1}%
+}
+
+\newcommand{\corasdiagram@composecontent}[1]{%
+  \parbox{#1}{%
+    \centering
+    \strut\corasnode@title\strut
+    \ifx\corasnode@meta\@empty
+    \else
+      \\[-0.1ex]\corasdiagram@secondarytext{\corasnode@meta}%
+    \fi
+    \ifx\corasnode@level\@empty
+    \else
+      \\[-0.1ex]\corasdiagram@secondarytext{[\corasnode@level]}%
+    \fi
+  }%
+}
+
 \newcommand{\corasdiagram@placenode}[3]{%
   \edef\corasdiagram@nodeoptions{#1,\corasnode@tikz}%
-  \ifx\corasnode@at\@empty
-    \expandafter\node\expandafter[\corasdiagram@nodeoptions] (#2) {#3};
-  \else
-    \expandafter\node\expandafter[\corasdiagram@nodeoptions] (#2) at \corasnode@at {#3};
-  \fi
+  \expandafter\node\expandafter[\corasdiagram@nodeoptions] (#2) at \corasnode@at {#3};
 }
 
 \newcommand{\corasdiagram@placeauxnode}[4]{%
@@ -260,15 +716,37 @@
   \def\corasdiagram@endpointsuffix{#2}%
 }
 
-\newcommand{\corasdiagram@composevalue}{%
-  \strut
-  \corasnode@label
-  \ifx\corasnode@value\@empty
+\newcommand{\corasdiagram@endpointbasename}[2]{%
+  \edef\corasdiagram@rawendpoint{#2}%
+  \in@{(}{\corasdiagram@rawendpoint}%
+  \ifin@
+    \let#1\@empty
   \else
-    \\[-0.15ex]
-    \scriptsize[\corasnode@value]%
+    \in@{.}{\corasdiagram@rawendpoint}%
+    \ifin@
+      \expandafter\corasdiagram@splitendpoint\corasdiagram@rawendpoint\@nil
+      \edef#1{\corasdiagram@endpointbase}%
+    \else
+      \edef#1{\corasdiagram@rawendpoint}%
+    \fi
   \fi
-  \strut
+}
+
+\newcommand{\corasdiagram@lookupendpointrole}[2]{%
+  \corasdiagram@endpointbasename{\corasdiagram@basename}{#2}%
+  \ifx\corasdiagram@basename\@empty
+    \let#1\@empty
+  \else
+    \corasdiagram@getnodeprop{role}{\corasdiagram@basename}{#1}%
+  \fi
+}
+
+\newcommand{\corasdiagram@registernode}[1]{%
+  \corasdiagram@validatecurrentrole{\corasnode@type}{\corasnode@role}%
+  \corasdiagram@setnodeprop{role}{#1}{\corasnode@role}%
+  \corasdiagram@setnodeprop{type}{#1}{\corasnode@type}%
+  \corasdiagram@setnodeprop{scope}{#1}{\corasnode@scope}%
+  \corasdiagram@registerscopemember{\corasnode@scope}{#1}%
 }
 
 \newcommand{\corasdiagram@rendericonlabelnode}[1]{%
@@ -276,97 +754,96 @@
     \corasnode@anchorstyle,
     minimum width=\corasnode@anchorwidth,
     minimum height=\corasnode@anchorheight,
-    \corasnode@tikz,
     coras/invisible anchor
   }{\corasnode@name-anchor}{}%
-  \corasdiagram@placenode{coras/base node}{\corasnode@name-graphic}{%
+  \node[coras/base node] (\corasnode@name-graphic) at \corasnode@at {%
     \corasdiagram@includeicon{\corasnode@iconwidth}{#1}%
-  }%
+  };
   \corasdiagram@placeauxnode{%
     coras/base node,
     text width=\corasnode@textwidth,
     anchor=north
   }{\corasnode@name-label}{%
-    \parbox{\corasnode@textwidth}{\centering\strut\corasnode@label\strut}%
+    \corasdiagram@composecontent{\corasnode@textwidth}%
   }{at={([yshift=\corasnode@labelgap]\corasnode@name-graphic.south)}}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-graphic) (\corasnode@name-label)}%
 }
 
 \newcommand{\corasdiagram@render@asset}{%
-  \corasdiagram@setdefault\corasnode@textwidth{24mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{26mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{10mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor ellipse}%
   \corasdiagram@setdefault\corasnode@anchorwidth{8.2mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{10.2mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{asset}%
 }
 
 \newcommand{\corasdiagram@render@stakeholder}{%
-  \corasdiagram@setdefault\corasnode@textwidth{22mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{23mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{5.6mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{9.9mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{stakeholder}%
 }
 
 \newcommand{\corasdiagram@render@threataccidental}{%
-  \corasdiagram@setdefault\corasnode@textwidth{22mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{23mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{10mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{8.6mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{13.0mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{threat-human-accidental}%
 }
 
 \newcommand{\corasdiagram@render@threatdeliberate}{%
-  \corasdiagram@setdefault\corasnode@textwidth{22mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{23mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{10mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{8.8mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{13.6mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{threat-human-deliberate}%
 }
 
 \newcommand{\corasdiagram@render@threatnonhuman}{%
-  \corasdiagram@setdefault\corasnode@textwidth{24mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{26mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{13mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{11.4mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{10.8mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{threat-non-human}%
 }
 
 \newcommand{\corasdiagram@render@vulnerability}{%
-  \corasdiagram@setdefault\corasnode@textwidth{20mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{22mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{8mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{6.8mm}%
   \corasdiagram@setdefault\corasnode@anchorheight{9.0mm}%
-  \corasdiagram@setdefault\corasnode@labelgap{-0.5mm}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
   \corasdiagram@rendericonlabelnode{vulnerability}%
 }
 
 \newcommand{\corasdiagram@render@scenario}{%
-  \corasdiagram@setdefault\corasnode@textwidth{30mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{28mm}%
   \corasdiagram@placenode{%
     coras/ellipse,
     text width=\corasnode@textwidth
-  }{\corasnode@name}{\strut\corasnode@label\strut}%
+  }{\corasnode@name}{\corasdiagram@composecontent{\corasnode@textwidth}}%
 }
 
 \newcommand{\corasdiagram@render@incident}{%
-  \corasdiagram@setdefault\corasnode@textwidth{24mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{25mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{5mm}%
   \corasdiagram@placenode{%
     coras/incident body,
     text width=\corasnode@textwidth
-  }{\corasnode@name-body}{\strut\corasnode@label\strut}%
+  }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
   \node[coras/base node,anchor=west] (\corasnode@name-icon)
     at ([xshift=-1.2mm,yshift=1.0mm]\corasnode@name-body.east)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{unwanted-incident}};
@@ -374,12 +851,12 @@
 }
 
 \newcommand{\corasdiagram@render@risk}{%
-  \corasdiagram@setdefault\corasnode@textwidth{28mm}%
-  \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{27mm}%
+  \corasdiagram@setdefault\corasnode@iconwidth{6.5mm}%
   \corasdiagram@placenode{%
     coras/risk body,
     text width=\corasnode@textwidth
-  }{\corasnode@name-body}{\corasdiagram@composevalue}%
+  }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
   \node[coras/base node,anchor=south] (\corasnode@name-icon)
     at ([yshift=0.5mm]\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
@@ -387,14 +864,14 @@
 }
 
 \newcommand{\corasdiagram@render@treatment}{%
-  \corasdiagram@setdefault\corasnode@textwidth{26mm}%
-  \corasdiagram@setdefault\corasnode@iconwidth{9mm}%
+  \corasdiagram@setdefault\corasnode@textwidth{24mm}%
+  \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
   \corasdiagram@placenode{%
     coras/treatment body,
     text width=\corasnode@textwidth
-  }{\corasnode@name-body}{\strut\corasnode@label\strut}%
+  }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
   \node[coras/base node,anchor=south] (\corasnode@name-icon)
-    at ([yshift=-0.9mm]\corasnode@name-body.north)
+    at ([yshift=-0.8mm]\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{treatment}};
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
 }
@@ -408,15 +885,28 @@
   /coras/node,
   type/.store in=\corasnode@type,
   name/.store in=\corasnode@name,
+  title/.store in=\corasnode@title,
   label/.store in=\corasnode@label,
+  meta/.store in=\corasnode@meta,
+  level/.store in=\corasnode@level,
   value/.store in=\corasnode@value,
   at/.store in=\corasnode@at,
+  scope/.store in=\corasnode@scope,
+  order/.store in=\corasnode@order,
   text width/.store in=\corasnode@textwidth,
   icon width/.store in=\corasnode@iconwidth,
   anchor style/.store in=\corasnode@anchorstyle,
   anchor width/.store in=\corasnode@anchorwidth,
   anchor height/.store in=\corasnode@anchorheight,
   label gap/.store in=\corasnode@labelgap,
+  layout/.store in=\corasnode@layout,
+  right of/.store in=\corasnode@rightof,
+  below of/.store in=\corasnode@belowof,
+  incident of/.store in=\corasnode@incidentof,
+  treats/.store in=\corasnode@treats,
+  harms/.store in=\corasnode@harms,
+  horizontal gap/.store in=\corasnode@horizontalgap,
+  vertical gap/.store in=\corasnode@verticalgap,
   tikz/.store in=\corasnode@tikz,
 }
 
@@ -424,19 +914,44 @@
   \pgfkeys{/coras/node/.cd,%
     type=asset,%
     name=,%
+    title=,%
     label=,%
+    meta=,%
+    level=,%
     value=,%
     at=,%
+    scope=,%
+    order=,%
     text width=,%
     icon width=,%
     anchor style=,%
     anchor width=,%
     anchor height=,%
     label gap=,%
+    layout=,%
+    right of=,%
+    below of=,%
+    incident of=,%
+    treats=,%
+    harms=,%
+    horizontal gap=12mm,%
+    vertical gap=14mm,%
     tikz=,%
     #1%
   }%
   \corasdiagram@ensurename\corasnode@name
+  \ifx\corasnode@title\@empty
+    \edef\corasnode@title{\corasnode@label}%
+  \fi
+  \corasdiagram@maptyperole{\corasnode@type}%
+  \edef\corasnode@role{\corasdiagram@mappedrole}%
+  \ifx\corasnode@level\@empty
+    \ifx\corasnode@value\@empty
+    \else
+      \edef\corasnode@level{\corasnode@value}%
+    \fi
+  \fi
+  \corasdiagram@resolveplacement
   \corasdiagram@normalize\corasnode@tikz
   \@ifundefined{corasdiagram@render@\corasnode@type}{%
     \PackageError{corasdiagram}{Unknown node type `\corasnode@type'}{%
@@ -446,6 +961,7 @@
     }%
   }{%
     \csname corasdiagram@render@\corasnode@type\endcsname
+    \corasdiagram@registernode{\corasnode@name}%
   }%
 }
 
@@ -455,11 +971,47 @@
   from/.store in=\corasedge@from,
   to/.store in=\corasedge@to,
   type/.store in=\corasedge@type,
+  semantic/.store in=\corasedge@semantic,
   label/.store in=\corasedge@label,
   pos/.store in=\corasedge@pos,
   path/.store in=\corasedge@path,
+  route/.store in=\corasedge@route,
   tikz/.store in=\corasedge@tikz,
   label options/.store in=\corasedge@labeloptions,
+}
+
+\newcommand{\corasdiagram@resolvedgesemantic}{%
+  \ifx\corasedge@semantic\@empty
+    \edef\corasedge@semantic{\corasedge@type}%
+    \def\corasdiagram@overview{overview}%
+    \ifx\corasedge@semantic\corasdiagram@overview
+      \def\corasedge@semantic{treatment}%
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@defaultpathforroute}{%
+  \def\corasdiagram@edgepath{--}%
+  \def\corasdiagram@routeauto{auto}%
+  \def\corasdiagram@routestraight{straight}%
+  \def\corasdiagram@routehv{hv}%
+  \def\corasdiagram@routevh{vh}%
+  \ifx\corasedge@route\corasdiagram@routehv
+    \def\corasdiagram@edgepath{-|}%
+  \else\ifx\corasedge@route\corasdiagram@routevh
+    \def\corasdiagram@edgepath{|-}%
+  \else\ifx\corasedge@route\corasdiagram@routestraight
+    \def\corasdiagram@edgepath{--}%
+  \else
+    \def\corasdiagram@edgepath{--}%
+    \def\corasdiagram@concern{concern}%
+    \def\corasdiagram@treatmentsemantic{treatment}%
+    \ifx\corasedge@semantic\corasdiagram@concern
+      \def\corasdiagram@edgepath{-|}%
+    \else\ifx\corasedge@semantic\corasdiagram@treatmentsemantic
+      \def\corasdiagram@edgepath{--}%
+    \fi\fi
+  \fi\fi\fi
 }
 
 \NewDocumentCommand{\corasedge}{O{}}{%
@@ -467,9 +1019,11 @@
     from=,%
     to=,%
     type=causal,%
+    semantic=,%
     label=,%
     pos=.5,%
-    path=--,%
+    path=,%
+    route=auto,%
     tikz=,%
     label options={fill=white,inner sep=1pt},%
     #1%
@@ -485,15 +1039,28 @@
       Use \string\corasedge[from=<node>,to=<node>,type=<style>].%
     }%
   \else
+    \corasdiagram@resolvedgesemantic
+    \corasdiagram@lookupendpointrole{\corasedge@fromrole}{\corasedge@from}%
+    \corasdiagram@lookupendpointrole{\corasedge@torole}{\corasedge@to}%
+    \ifx\corasedge@fromrole\@empty
+    \else\ifx\corasedge@torole\@empty
+    \else
+      \corasdiagram@validateedge{\corasedge@semantic}{\corasedge@fromrole}{\corasedge@torole}%
+    \fi\fi
     \corasdiagram@resolveendpoint{\corasedge@from}%
     \edef\corasedge@from{\corasdiagram@resolvedendpoint}%
     \corasdiagram@resolveendpoint{\corasedge@to}%
     \edef\corasedge@to{\corasdiagram@resolvedendpoint}%
+    \ifx\corasedge@path\@empty
+      \corasdiagram@defaultpathforroute
+    \else
+      \edef\corasdiagram@edgepath{\corasedge@path}%
+    \fi
     \edef\corasdiagram@edgeoptions{coras/\corasedge@type,\corasedge@tikz}%
     \edef\corasdiagram@edgelabeloptions{pos=\corasedge@pos,\corasedge@labeloptions}%
     \ifx\corasedge@label\@empty
       \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-        (\corasedge@from) \corasedge@path (\corasedge@to);
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
     \else
       \edef\corasdiagram@edgelabelfragment{%
         node[\corasdiagram@edgelabeloptions]{%
@@ -501,50 +1068,121 @@
         }%
       }%
       \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-        (\corasedge@from) \corasedge@path (\corasedge@to)
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
         \corasdiagram@edgelabelfragment;
     \fi
   \fi\fi
 }
 
 \pgfkeys{
-  /coras/container/.is family,
-  /coras/container,
-  name/.store in=\corascontainer@name,
-  label/.store in=\corascontainer@label,
-  fit/.store in=\corascontainer@fit,
-  tikz/.store in=\corascontainer@tikz,
-  title tikz/.store in=\corascontainer@titletikz,
+  /coras/scope/.is family,
+  /coras/scope,
+  name/.store in=\corasscope@name,
+  title/.store in=\corasscope@title,
+  label/.store in=\corasscope@label,
+  kind/.store in=\corasscope@kind,
+  scope/.store in=\corasscope@scope,
+  fit/.store in=\corasscope@fit,
+  padding/.store in=\corasscope@padding,
+  stakeholder/.store in=\corasscope@stakeholder,
+  stakeholder corner/.store in=\corasscope@stakeholdercorner,
+  stakeholder xsep/.store in=\corasscope@stakeholderxsep,
+  stakeholder ysep/.store in=\corasscope@stakeholderysep,
+  stakeholder tikz/.store in=\corasscope@stakeholdertikz,
+  tikz/.store in=\corasscope@tikz,
+  title tikz/.store in=\corasscope@titletikz,
 }
 
-\NewDocumentCommand{\corascontainer}{O{}}{%
-  \pgfkeys{/coras/container/.cd,%
+\newcommand{\corasdiagram@drawstakeholdercompartment}{%
+  \ifx\corasscope@stakeholder\@empty
+  \else
+    \ifx\corasscope@stakeholderxsep\@empty
+      \def\corasscope@stakeholderxsep{4mm}%
+    \fi
+    \ifx\corasscope@stakeholderysep\@empty
+      \def\corasscope@stakeholderysep{3mm}%
+    \fi
+    \corasdiagram@normalize\corasscope@stakeholdertikz
+    \edef\corasdiagram@compartmentoptions{draw,line width=0.45pt,\corasscope@stakeholdertikz}%
+    \def\corasdiagram@cornerright{right}%
+    \ifx\corasscope@stakeholdercorner\corasdiagram@cornerright
+      \coordinate (\corasscope@name-stakeholder-elbow)
+        at ([xshift=-\corasscope@stakeholderxsep,yshift=-\corasscope@stakeholderysep]\corasscope@stakeholder.south west);
+      \expandafter\draw\expandafter[\corasdiagram@compartmentoptions]
+        ([xshift=-\corasscope@stakeholderxsep]\corasscope@stakeholder.west |- \corasscope@name.north)
+        -- (\corasscope@name-stakeholder-elbow)
+        -- (\corasscope@name.east |- \corasscope@name-stakeholder-elbow);
+    \else
+      \coordinate (\corasscope@name-stakeholder-elbow)
+        at ([xshift=\corasscope@stakeholderxsep,yshift=-\corasscope@stakeholderysep]\corasscope@stakeholder.south east);
+      \expandafter\draw\expandafter[\corasdiagram@compartmentoptions]
+        ([xshift=\corasscope@stakeholderxsep]\corasscope@stakeholder.east |- \corasscope@name.north)
+        -- (\corasscope@name-stakeholder-elbow)
+        -- (\corasscope@name.west |- \corasscope@name-stakeholder-elbow);
+    \fi
+  \fi
+}
+
+\NewDocumentCommand{\corasscope}{O{}}{%
+  \pgfkeys{/coras/scope/.cd,%
     name=,%
+    title=,%
     label=,%
+    kind=system,%
+    scope=,%
     fit=,%
+    padding=,%
+    stakeholder=,%
+    stakeholder corner=left,%
+    stakeholder xsep=,%
+    stakeholder ysep=,%
+    stakeholder tikz=,%
     tikz=,%
     title tikz=,%
     #1%
   }%
-  \corasdiagram@ensurename\corascontainer@name
-  \corasdiagram@normalize\corascontainer@tikz
-  \corasdiagram@normalize\corascontainer@titletikz
-  \ifx\corascontainer@fit\@empty
-    \PackageError{corasdiagram}{Missing `fit` key for \string\corascontainer}{%
-      Use \string\corascontainer[fit={(a) (b)},label={Container title}].%
-    }%
-  \else
-    \edef\corasdiagram@containeroptions{coras/container,fit=\corascontainer@fit,\corascontainer@tikz}%
-    \expandafter\node\expandafter[\corasdiagram@containeroptions] (\corascontainer@name) {};
-    \ifx\corascontainer@label\@empty
+  \corasdiagram@ensurename\corasscope@name
+  \ifx\corasscope@title\@empty
+    \edef\corasscope@title{\corasscope@label}%
+  \fi
+  \ifx\corasscope@fit\@empty
+    \ifx\corasscope@scope\@empty
     \else
-      \edef\corasdiagram@containertitleoptions{coras/container title,\corascontainer@titletikz}%
-      \expandafter\node\expandafter[\corasdiagram@containertitleoptions]
-        (\corascontainer@name-title)
-        at ([xshift=2mm,yshift=-2mm]\corascontainer@name.north west)
-        {\corascontainer@label};
+      \edef\corasdiagram@currscopekey{\corasdiagram@scopekey{\corasscope@scope}}%
+      \corasdiagram@getscopefit{\corasscope@fit}{\corasdiagram@currscopekey}%
     \fi
   \fi
+  \corasdiagram@validatecurrentrole{scope}{scope}%
+  \ifx\corasscope@fit\@empty
+    \PackageError{corasdiagram}{Missing `fit` or `scope` key for \string\corasscope}{%
+      Provide `fit={(a) (b)}` or `scope=<group>` after assigning nodes to that scope.%
+    }%
+  \else
+    \ifx\corasscope@padding\@empty
+      \def\corasscope@padding{5mm}%
+    \fi
+    \corasdiagram@normalize\corasscope@tikz
+    \corasdiagram@normalize\corasscope@titletikz
+    \edef\corasdiagram@scopeoptions{coras/scope \corasscope@kind,fit=\corasscope@fit,inner sep=\corasscope@padding,\corasscope@tikz}%
+    \begin{pgfonlayer}{corasbackground}%
+      \expandafter\node\expandafter[\corasdiagram@scopeoptions] (\corasscope@name) {};
+    \end{pgfonlayer}%
+    \corasdiagram@setnodeprop{role}{\corasscope@name}{scope}%
+    \corasdiagram@setnodeprop{type}{\corasscope@name}{scope}%
+    \ifx\corasscope@title\@empty
+    \else
+      \edef\corasdiagram@scopetitleoptions{coras/scope title,\corasscope@titletikz}%
+      \expandafter\node\expandafter[\corasdiagram@scopetitleoptions]
+        (\corasscope@name-title)
+        at ([xshift=2mm,yshift=1.5mm]\corasscope@name.north west)
+        {\corasscope@title};
+    \fi
+    \corasdiagram@drawstakeholdercompartment
+  \fi
+}
+
+\NewDocumentCommand{\corascontainer}{O{}}{%
+  \corasscope[#1]%
 }
 
 \pgfkeys{
@@ -572,6 +1210,14 @@
     icon width=5mm,%
     #1%
   }%
+  \ifx\corasdiagram@currentfamily\@empty
+  \else
+    \corasdiagram@ifincsv{\corasdiagram@currentfamily}{treatment,treatmentoverview}{}{%
+      \PackageError{corasdiagram}{\string\corasriskref\space is only allowed in treatment-oriented diagrams}{%
+        Use it in `corastreatmentdiagram` or `corastreatmentoverviewdiagram`.%
+      }%
+    }%
+  \fi
   \corasdiagram@ensurename\corasriskref@name
   \corasdiagram@normalize\corasriskref@tikz
   \edef\corasdiagram@riskrefoptions{coras/risk ref box,\corasriskref@tikz}%
@@ -604,76 +1250,165 @@
   \corasdiagram@fitpublicnode{\corasriskref@name}{(\corasriskref@name-body) (\corasriskref@name-icon)}%
 }
 
-\NewDocumentCommand{\corasasset}{O{}m}{%
-  \corasnode[type=asset,label={#2},#1]%
+\NewDocumentCommand{\corasasset}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=asset,#1]%
+  }{%
+    \corasnode[type=asset,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasstakeholder}{O{}m}{%
-  \corasnode[type=stakeholder,label={#2},#1]%
+\NewDocumentCommand{\corasstakeholder}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=stakeholder,#1]%
+  }{%
+    \corasnode[type=stakeholder,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasthreataccidental}{O{}m}{%
-  \corasnode[type=threataccidental,label={#2},#1]%
+\NewDocumentCommand{\corasthreataccidental}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=threataccidental,#1]%
+  }{%
+    \corasnode[type=threataccidental,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasthreatdeliberate}{O{}m}{%
-  \corasnode[type=threatdeliberate,label={#2},#1]%
+\NewDocumentCommand{\corasthreatdeliberate}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=threatdeliberate,#1]%
+  }{%
+    \corasnode[type=threatdeliberate,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasthreatnonhuman}{O{}m}{%
-  \corasnode[type=threatnonhuman,label={#2},#1]%
+\NewDocumentCommand{\corasthreatnonhuman}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=threatnonhuman,#1]%
+  }{%
+    \corasnode[type=threatnonhuman,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasvulnerability}{O{}m}{%
-  \corasnode[type=vulnerability,label={#2},#1]%
+\NewDocumentCommand{\corasthreatsource}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=threataccidental,#1]%
+  }{%
+    \corasnode[type=threataccidental,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasscenario}{O{}m}{%
-  \corasnode[type=scenario,label={#2},#1]%
+\NewDocumentCommand{\corasvulnerability}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=vulnerability,#1]%
+  }{%
+    \corasnode[type=vulnerability,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasincident}{O{}m}{%
-  \corasnode[type=incident,label={#2},#1]%
+\NewDocumentCommand{\corasscenario}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=scenario,#1]%
+  }{%
+    \corasnode[type=scenario,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corasrisk}{O{}mm}{%
-  \corasnode[type=risk,label={#2},value={#3},#1]%
+\NewDocumentCommand{\corasincident}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=incident,#1]%
+  }{%
+    \corasnode[type=incident,title={#2},#1]%
+  }%
 }
 
-\NewDocumentCommand{\corastreatment}{O{}m}{%
-  \corasnode[type=treatment,label={#2},#1]%
+\NewDocumentCommand{\corasunwantedincident}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=incident,#1]%
+  }{%
+    \corasnode[type=incident,title={#2},#1]%
+  }%
+}
+
+\NewDocumentCommand{\corasrisk}{O{}gg}{%
+  \IfNoValueTF{#2}{%
+    \IfNoValueTF{#3}{%
+      \corasnode[type=risk,#1]%
+    }{%
+      \corasnode[type=risk,level={#3},#1]%
+    }%
+  }{%
+    \IfNoValueTF{#3}{%
+      \corasnode[type=risk,title={#2},#1]%
+    }{%
+      \corasnode[type=risk,title={#2},level={#3},#1]%
+    }%
+  }%
+}
+
+\NewDocumentCommand{\corastreatment}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=treatment,#1]%
+  }{%
+    \corasnode[type=treatment,title={#2},#1]%
+  }%
 }
 
 \NewDocumentCommand{\corasjunction}{O{}}{%
   \corasnode[type=junction,#1]%
 }
 
+\NewDocumentCommand{\corascauses}{O{}}{%
+  \corasedge[semantic=causal,type=causal,#1]%
+}
+
+\NewDocumentCommand{\corasrelates}{O{}}{%
+  \corasedge[semantic=relation,type=relation,#1]%
+}
+
+\NewDocumentCommand{\corasconcerns}{O{}}{%
+  \corasedge[semantic=concern,type=concern,#1]%
+}
+
+\NewDocumentCommand{\corasassociates}{O{}}{%
+  \corasedge[semantic=association,type=association,#1]%
+}
+
+\NewDocumentCommand{\corastreats}{O{}}{%
+  \corasedge[semantic=treatment,type=treatment,#1]%
+}
+
 \NewDocumentEnvironment{corasassetdiagram}{O{}}{%
-  \begin{tikzpicture}[corasdiagram,coras/asset diagram,#1]%
+  \corasdiagram@begindiagram{asset}%
+  \begin{tikzpicture}[corasdiagram,layout=auto,coras/asset diagram,#1]%
 }{%
   \end{tikzpicture}%
 }
 
 \NewDocumentEnvironment{corasthreatdiagram}{O{}}{%
-  \begin{tikzpicture}[corasdiagram,coras/threat diagram,#1]%
+  \corasdiagram@begindiagram{threat}%
+  \begin{tikzpicture}[corasdiagram,layout=auto,coras/threat diagram,#1]%
 }{%
   \end{tikzpicture}%
 }
 
 \NewDocumentEnvironment{corasriskdiagram}{O{}}{%
-  \begin{tikzpicture}[corasdiagram,coras/risk diagram,#1]%
+  \corasdiagram@begindiagram{risk}%
+  \begin{tikzpicture}[corasdiagram,layout=auto,coras/risk diagram,#1]%
 }{%
   \end{tikzpicture}%
 }
 
 \NewDocumentEnvironment{corastreatmentdiagram}{O{}}{%
-  \begin{tikzpicture}[corasdiagram,coras/treatment diagram,#1]%
+  \corasdiagram@begindiagram{treatment}%
+  \begin{tikzpicture}[corasdiagram,layout=auto,coras/treatment diagram,#1]%
 }{%
   \end{tikzpicture}%
 }
 
 \NewDocumentEnvironment{corastreatmentoverviewdiagram}{O{}}{%
-  \begin{tikzpicture}[corasdiagram,coras/treatment overview diagram,#1]%
+  \corasdiagram@begindiagram{treatmentoverview}%
+  \begin{tikzpicture}[corasdiagram,layout=auto,coras/treatment overview diagram,#1]%
 }{%
   \end{tikzpicture}%
 }

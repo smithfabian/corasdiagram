@@ -1,12 +1,41 @@
-%   TEXINPUTS=tex/latex//: lualatex examples/corasdiagram-minimal.tex
+% Compile from the repository root:
+%   TEXINPUTS=tex/latex//: pdflatex examples/corasdiagram-minimal.tex
 \documentclass{article}
 
 \usepackage{corasdiagram}
+\pagestyle{empty}
 
 \begin{document}
 
-\begin{corasassetdiagram}
-  \corasasset[name=asset,at={(0,0)}]{Example asset}
+\begin{corasassetdiagram}[x=1cm,y=1cm]
+  \corasstakeholder[
+    name=stakeholder,
+    scope=minimal-scope,
+    at={(1.5,4.4)},
+    title={Stakeholder}
+  ]
+  \corasasset[
+    name=asset,
+    scope=minimal-scope,
+    at={(4.3,2.0)},
+    title={Asset}
+  ]
+  \corasasset[
+    name=indirect,
+    scope=minimal-scope,
+    at={(8.1,3.8)},
+    title={Indirect\\Asset}
+  ]
+
+  \corasscope[
+    name=minimal-box,
+    scope=minimal-scope,
+    kind=asset-scope,
+    stakeholder=stakeholder,
+    stakeholder corner=left
+  ]
+
+  \corasrelates[from=asset,to=indirect]
 \end{corasassetdiagram}
 
 \end{document}

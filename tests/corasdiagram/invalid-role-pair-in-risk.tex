@@ -1,0 +1,23 @@
+\documentclass{article}
+
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{corasriskdiagram}
+  \corasthreataccidental[
+    name=insider,
+    title={Insider}
+  ]
+  \corasasset[
+    name=brand,
+    title={Brand}
+  ]
+  \corasrelates[
+    from=insider,
+    to=brand
+  ]
+\end{corasriskdiagram}
+
+\end{document}

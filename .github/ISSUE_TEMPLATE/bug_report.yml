@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a notation bug, layout regression, build failure, or packaging issue.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem in `corasdiagram`.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: The treatment overview arrows terminate inside the icon instead of at the border.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the project is affected?
+      options:
+        - Package API / notation
+        - Layout / rendering
+        - Documentation
+        - Examples
+        - CI / release tooling
+        - Installation / packaging
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal source, command, or steps to reproduce.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: TeX engine
+      description: `pdflatex`, `lualatex`, or another engine/version.
+      placeholder: pdflatex (TeX Live 2026)
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

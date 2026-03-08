@@ -1,0 +1,24 @@
+- name: bug
+  color: d73a4a
+  description: Something is broken or behaving incorrectly.
+- name: enhancement
+  color: a2eeef
+  description: New feature or improvement request.
+- name: documentation
+  color: 0075ca
+  description: Documentation, examples, or manual changes.
+- name: notation
+  color: 0e8a16
+  description: CORAS notation semantics or rendering behavior.
+- name: layout
+  color: fbca04
+  description: Diagram layout, spacing, routing, or positioning.
+- name: ci
+  color: 5319e7
+  description: Continuous integration, release, or publishing work.
+- name: good first issue
+  color: 7057ff
+  description: Small, self-contained issue suitable for new contributors.
+- name: help wanted
+  color: 008672
+  description: Maintainer would welcome an external contribution.

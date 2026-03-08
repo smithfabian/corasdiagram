@@ -1,0 +1,42 @@
+# TeX build products
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.ilg
+*.idx
+*.ind
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.xdv
+
+# Generated documentation and example output
+docs/*.pdf
+examples/*.pdf
+examples/*.png
+examples/.ci-*
+dist/
+site/
+build/
+
+# Local package build output
+/corasdiagram-*.aux
+/corasdiagram-*.log
+/corasdiagram-*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Editor and OS files
+.DS_Store

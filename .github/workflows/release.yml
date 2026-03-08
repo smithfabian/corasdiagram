@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+  pages: write
+
+jobs:
+  build-release:
+    name: Build release artifacts
+    runs-on: ubuntu-latest
+    env:
+      TEXINPUTS: tex/latex//:
+      TEXMFVAR: ${{ runner.temp }}/texmf-var
+      TEXMFCACHE: ${{ runner.temp }}/texmf-var
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install TeX and site tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            latexmk \
+            poppler-utils \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended \
+            texlive-luatex \
+            texlive-pictures
+
+      - name: Prepare LuaTeX cache
+        run: mkdir -p "$TEXMFVAR"
+
+      - name: Build docs and examples
+        run: |
+          latexmk -pdf -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
+
+      - name: Build black-and-white demo variant
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path("examples/corasdiagram-demo.tex").read_text(encoding="utf-8")
+          marker = r"\usepackage{corasdiagram}"
+          replacement = r"\usepackage[iconset=bw]{corasdiagram}"
+          if marker not in source:
+              raise SystemExit("missing package line in examples/corasdiagram-demo.tex")
+          Path("examples/.ci-corasdiagram-demo-bw.tex").write_text(
+              source.replace(marker, replacement, 1),
+              encoding="utf-8",
+          )
+          PY
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/.ci-corasdiagram-demo-bw.tex
+
+      - name: Run semantic failure fixtures
+        run: python3 tools/check_negative_tests.py --engine pdflatex
+
+      - name: Build release bundle
+        run: python3 tools/build_release.py --doc-pdf docs/corasdiagram-doc.pdf
+
+      - name: Build Pages site
+        run: |
+          python3 tools/build_site.py \
+            --docs-pdf docs/corasdiagram-doc.pdf \
+            --demo-pdf examples/corasdiagram-demo.pdf \
+            --minimal-pdf examples/corasdiagram-minimal.pdf
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: corasdiagram-release
+          path: |
+            dist/corasdiagram-*.zip
+            corasdiagram-doc.pdf
+            dist/site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/corasdiagram-*.zip
+            corasdiagram-doc.pdf
+
+  deploy-pages:
+    name: Deploy GitHub Pages
+    needs: build-release
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

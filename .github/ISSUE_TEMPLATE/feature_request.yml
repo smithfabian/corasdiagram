@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a new diagram helper, documentation improvement, or packaging feature.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for notation, layout, documentation, or release feature requests.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or need
+      description: What are you trying to accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the API, workflow, or behavior you want.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Asset diagrams
+        - Threat diagrams
+        - Risk diagrams
+        - Treatment diagrams
+        - Treatment overview diagrams
+        - Documentation
+        - CI / release tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. Mention workarounds or rejected ideas.
