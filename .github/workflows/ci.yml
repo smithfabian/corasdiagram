@@ -20,8 +20,6 @@ jobs:
           - lualatex
     env:
       TEXINPUTS: 'tex/latex//:'
-      TEXMFVAR: ${{ runner.temp }}/texmf-var
-      TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,6 +42,10 @@ jobs:
 
       - name: Build manual and examples
         run: |
+          if [ "${{ matrix.engine }}" = "lualatex" ]; then
+            export TEXMFVAR="$RUNNER_TEMP/texmf-var"
+            export TEXMFCACHE="$TEXMFVAR"
+          fi
           if [ "${{ matrix.engine }}" = "pdflatex" ]; then
             latexmk -pdf -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
             latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
@@ -56,6 +58,10 @@ jobs:
 
       - name: Build black-and-white demo variant
         run: |
+          if [ "${{ matrix.engine }}" = "lualatex" ]; then
+            export TEXMFVAR="$RUNNER_TEMP/texmf-var"
+            export TEXMFCACHE="$TEXMFVAR"
+          fi
           python3 - <<'PY'
           from pathlib import Path
           source = Path("examples/corasdiagram-demo.tex").read_text(encoding="utf-8")
@@ -79,8 +85,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TEXINPUTS: 'tex/latex//:'
-      TEXMFVAR: ${{ runner.temp }}/texmf-var
-      TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,8 +107,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TEXINPUTS: 'tex/latex//:'
-      TEXMFVAR: ${{ runner.temp }}/texmf-var
-      TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
       - name: Checkout
         uses: actions/checkout@v4

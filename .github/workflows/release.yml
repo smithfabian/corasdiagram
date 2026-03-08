@@ -17,8 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TEXINPUTS: 'tex/latex//:'
-      TEXMFVAR: ${{ runner.temp }}/texmf-var
-      TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,9 +33,6 @@ jobs:
             texlive-latex-recommended \
             texlive-luatex \
             texlive-pictures
-
-      - name: Prepare LuaTeX cache
-        run: mkdir -p "$TEXMFVAR"
 
       - name: Build docs and examples
         run: |
