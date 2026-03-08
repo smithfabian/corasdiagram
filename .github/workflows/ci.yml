@@ -19,7 +19,7 @@ jobs:
           - pdflatex
           - lualatex
     env:
-      TEXINPUTS: tex/latex//:
+      TEXINPUTS: 'tex/latex//:'
       TEXMFVAR: ${{ runner.temp }}/texmf-var
       TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
@@ -78,7 +78,7 @@ jobs:
     name: Negative semantic tests
     runs-on: ubuntu-latest
     env:
-      TEXINPUTS: tex/latex//:
+      TEXINPUTS: 'tex/latex//:'
       TEXMFVAR: ${{ runner.temp }}/texmf-var
       TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
@@ -102,7 +102,7 @@ jobs:
     name: Packaging smoke test
     runs-on: ubuntu-latest
     env:
-      TEXINPUTS: tex/latex//:
+      TEXINPUTS: 'tex/latex//:'
       TEXMFVAR: ${{ runner.temp }}/texmf-var
       TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:

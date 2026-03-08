@@ -37,6 +37,20 @@ build/
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+.mypy_cache/
+.tox/
+venv/
+env/
+.venv/
 
 # Editor and OS files
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes

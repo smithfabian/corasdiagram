@@ -16,7 +16,7 @@ jobs:
     name: Build release artifacts
     runs-on: ubuntu-latest
     env:
-      TEXINPUTS: tex/latex//:
+      TEXINPUTS: 'tex/latex//:'
       TEXMFVAR: ${{ runner.temp }}/texmf-var
       TEXMFCACHE: ${{ runner.temp }}/texmf-var
     steps:
