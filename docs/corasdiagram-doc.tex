@@ -75,9 +75,8 @@ icons-path=<path> & package icons & Override the icon directory path. \\
   \item[\texttt{corasassetdiagram}] Stakeholders, assets, asset relations,
     and scope containers.
   \item[\texttt{corasthreatdiagram}] Threat sources, vulnerabilities, threat
-    scenarios, unwanted incidents, impacted assets, and threat scopes.
-  \item[\texttt{corasriskdiagram}] Threat sources, risks, assets, and risk
-    group containers.
+    scenarios, unwanted incidents, and impacted assets.
+  \item[\texttt{corasriskdiagram}] Threat sources, risks, and impacted assets.
   \item[\texttt{corastreatmentdiagram}] Treatment nodes together with the
     selected threat chain they mitigate.
   \item[\texttt{corastreatmentoverviewdiagram}] Treatments, risks, assets, and
@@ -142,15 +141,16 @@ important keys are:
   \item \texttt{name}
   \item \texttt{scope}
   \item \texttt{fit}
-  \item \texttt{kind=system|asset-scope|analysis|risk-group|treatment-scope}
+  \item \texttt{kind=asset-scope|system|analysis|risk-group|treatment-scope}
   \item \texttt{padding}
   \item \texttt{stakeholder}
   \item \texttt{stakeholder corner=left|right}
   \item \texttt{tikz}
 \end{itemize}
 
-The \texttt{asset-scope} kind renders a rounded container and can draw the
-stakeholder corner compartment shown in the asset-diagram notation examples.
+The \texttt{asset-scope} kind renders the rounded asset-diagram container with
+the stakeholder corner compartment. The official threat, risk, treatment, and
+treatment overview examples do not use containers.
 
 \subsection{Advanced Compatibility API}
 
@@ -170,7 +170,7 @@ Important layout-related keys:
 \begin{itemize}
   \item \texttt{at} for direct placement
   \item \texttt{order} for lane ordering in auto mode
-  \item \texttt{scope} for fit-based container grouping
+  \item \texttt{scope} for fit-based asset-diagram grouping
   \item \texttt{right of}, \texttt{below of}, \texttt{incident of},
     \texttt{treats}, and \texttt{harms} for relative placement
   \item \texttt{layout=auto|manual}
@@ -185,19 +185,19 @@ Important layout-related keys:
   \corasstakeholder[
     name=doc-stakeholder,
     scope=doc-asset-scope,
-    at={(1.5,4.4)},
+    order=1,
     title={Stakeholder}
   ]
   \corasasset[
     name=doc-asset,
     scope=doc-asset-scope,
-    at={(4.3,2.0)},
+    order=1,
     title={Asset}
   ]
   \corasasset[
     name=doc-indirect,
     scope=doc-asset-scope,
-    at={(8.1,3.8)},
+    order=2,
     title={Indirect\\Asset}
   ]
   \corasscope[
@@ -215,31 +215,31 @@ Important layout-related keys:
 
 \begin{center}
 \begin{corasthreatdiagram}[x=.75cm,y=.75cm]
-  \corasthreataccidental[name=doc-employee,at={(0,0)},title={Employee}]
+  \corasthreataccidental[name=doc-employee,order=1,title={Employee}]
   \corasscenario[
     name=doc-remote,
-    at={(2.6,.2)},
+    order=1,
     title={Remote access},
     meta={1 per 6 months}
   ]
   \corasvulnerability[
     name=doc-oldweb,
-    at={(5.1,.2)},
+    order=1,
     title={Old\\webserver}
   ]
   \corasunwantedincident[
     name=doc-disclosure,
-    at={(7.8,.2)},
+    order=1,
     title={Disclosure\\of data}
   ]
   \corasasset[
     name=doc-privacy,
-    at={(10.1,.2)},
+    order=1,
     title={Data\\privacy}
   ]
-  \corascauses[from=doc-employee,to=doc-remote]
-  \corascauses[from=doc-remote,to=doc-oldweb]
-  \corascauses[from=doc-oldweb,to=doc-disclosure]
+  \corascauses[from=doc-employee,to=doc-oldweb]
+  \corascauses[from=doc-oldweb,to=doc-remote]
+  \corascauses[from=doc-remote,to=doc-disclosure]
   \corasrelates[from=doc-disclosure,to=doc-privacy]
 \end{corasthreatdiagram}
 \end{center}
@@ -250,19 +250,19 @@ Important layout-related keys:
 \begin{corasriskdiagram}[x=.8cm,y=.8cm]
   \corasthreatnonhuman[
     name=doc-infra,
-    at={(0,0)},
+    order=1,
     title={IT-infrastructure}
   ]
   \corasrisk[
     name=doc-risk,
-    at={(4.3,0)},
+    order=1,
     title={Application\\outage},
     meta={1 per year},
     level=medium
   ]
   \corasasset[
     name=doc-availability,
-    at={(8,0)},
+    order=1,
     title={Application\\availability}
   ]
   \corascauses[from=doc-infra,to=doc-risk]
@@ -274,30 +274,36 @@ Important layout-related keys:
 
 \begin{center}
 \begin{corastreatmentdiagram}[x=.75cm,y=.75cm]
-  \corasthreataccidental[name=doc-user,at={(0,0)},title={Employee}]
+  \corasthreataccidental[name=doc-user,order=1,title={Employee}]
+  \corasvulnerability[
+    name=doc-vulnerability,
+    order=1,
+    title={Old\\webserver}
+  ]
   \corasscenario[
     name=doc-threat,
-    at={(2.6,.2)},
+    order=1,
     title={Remote access},
     meta={1 per 6 months}
   ]
   \corasunwantedincident[
     name=doc-incident,
-    at={(5.5,.2)},
+    order=1,
     title={Disclosure\\of data},
     meta={1 per year}
   ]
   \corasasset[
     name=doc-asset2,
-    at={(8.2,.2)},
+    order=1,
     title={Data\\privacy}
   ]
   \corastreatment[
     name=doc-training,
-    at={(2.6,2.6)},
+    order=1,
     title={Security\\training}
   ]
-  \corascauses[from=doc-user,to=doc-threat]
+  \corascauses[from=doc-user,to=doc-vulnerability]
+  \corascauses[from=doc-vulnerability,to=doc-threat]
   \corascauses[from=doc-threat,to=doc-incident]
   \corasrelates[from=doc-incident,to=doc-asset2]
   \corastreats[from=doc-training,to=doc-threat]
@@ -310,25 +316,25 @@ Important layout-related keys:
 \begin{corastreatmentoverviewdiagram}[x=.75cm,y=.75cm]
   \corasrisk[
     name=doc-risk1,
-    at={(3.5,1.1)},
+    order=1,
     title={Disclosure\\of data},
     meta={direct asset},
     level=unacceptable
   ]
   \corasasset[
     name=doc-asset3,
-    at={(7.2,1.1)},
+    order=1,
     title={Data\\privacy}
   ]
-  \corasjunction[name=doc-junction,at={(3.8,-1.5)}]
+  \corasjunction[name=doc-junction]
   \corastreatment[
     name=doc-treatment1,
-    at={(1.8,-3.2)},
+    order=1,
     title={Limit access}
   ]
   \corastreatment[
     name=doc-treatment2,
-    at={(5.8,-3.2)},
+    order=2,
     title={Upgrade\\server}
   ]
   \corasrelates[from=doc-risk1,to=doc-asset3]

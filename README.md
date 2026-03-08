@@ -50,19 +50,19 @@ the normal package manager for the TeX distribution.
   \corasstakeholder[
     name=stakeholder,
     scope=asset-scope,
-    at={(1.5,4.4)},
+    order=1,
     title={Stakeholder}
   ]
   \corasasset[
     name=asset,
     scope=asset-scope,
-    at={(4.3,2.0)},
+    order=1,
     title={Asset}
   ]
   \corasasset[
     name=indirect,
     scope=asset-scope,
-    at={(8.1,3.8)},
+    order=2,
     title={Indirect\\Asset}
   ]
   \corasscope[

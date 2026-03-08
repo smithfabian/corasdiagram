@@ -1,0 +1,18 @@
+\documentclass{article}
+
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasthreatdiagram}
+  \corasthreataccidental[name=attacker,title={Employee}]
+  \corasscenario[name=scenario,order=1,title={Remote access}]
+  \corasscope[
+    name=scope,
+    fit={(attacker) (scenario)},
+    kind=system,
+    title={Not allowed}
+  ]
+\end{corasthreatdiagram}
+
+\end{document}

@@ -16,26 +16,26 @@
   \corasstakeholder[
     name=management,
     scope=asset-scope,
-    at={(1.6,4.6)},
+    order=1,
     title={Stakeholder}
   ]
 
   \corasasset[
     name=privacy,
     scope=asset-scope,
-    at={(4.3,2.2)},
+    order=1,
     title={Asset}
   ]
   \corasasset[
     name=reputation,
     scope=asset-scope,
-    at={(8.3,3.8)},
+    order=2,
     title={Indirect\\Asset}
   ]
   \corasasset[
     name=availability,
     scope=asset-scope,
-    at={(8.1,1.3)},
+    order=3,
     title={Supporting\\Asset}
   ]
 
@@ -54,147 +54,68 @@
 
 \subsection*{2. Threat Diagram}
 \begin{center}
-\begin{corasthreatdiagram}[x=.95cm,y=1cm]
+\begin{corasthreatdiagram}[x=1cm,y=1cm]
   \corasthreataccidental[
     name=employee,
-    at={(0.2,2.8)},
+    order=1,
     title={Employee}
-  ]
-  \corasscenario[
-    name=remote,
-    scope=threat-scope,
-    at={(2.8,3.1)},
-    title={Remote access\\used from infected PC},
-    meta={1 per 6 months}
   ]
   \corasvulnerability[
     name=oldweb,
-    scope=threat-scope,
-    at={(5.2,3.1)},
+    order=1,
     title={Old version of\\webserver}
   ]
   \corasscenario[
     name=serverinfected,
-    scope=threat-scope,
-    at={(7.8,3.1)},
+    order=1,
     title={Servers infected\\by malicious code},
-    meta={1 per year}
-  ]
-  \corasscenario[
-    name=maliciousdistributes,
-    scope=threat-scope,
-    at={(10.2,3.7)},
-    title={Malicious code\\distributes data},
     meta={1 per year}
   ]
   \corasunwantedincident[
     name=disc,
-    scope=threat-scope,
-    at={(12.6,3.7)},
-    title={1. Disclosure\\of data}
+    order=1,
+    title={1. Disclosure\\of data},
+    meta={1 per year}
   ]
   \corasasset[
     name=gdi1a,
-    scope=threat-scope,
-    at={(15.0,3.7)},
+    order=1,
     title={GDI1. Data\\privacy}
-  ]
-
-  \corasscenario[
-    name=malcode,
-    scope=threat-scope,
-    at={(2.8,1.0)},
-    title={Malicious code\\spreads via LAN},
-    meta={1 per year}
-  ]
-  \corasscenario[
-    name=trafficjam,
-    scope=threat-scope,
-    at={(5.8,1.0)},
-    title={Traffic jam\\on the network},
-    meta={1 per year}
-  ]
-  \corasscenario[
-    name=serversdown,
-    scope=threat-scope,
-    at={(10.2,1.0)},
-    title={Application servers\\malfunctioning},
-    meta={1 per 5 years}
-  ]
-  \corasunwantedincident[
-    name=corr,
-    scope=threat-scope,
-    at={(12.6,1.0)},
-    title={2. Corruption\\of data}
-  ]
-  \corasasset[
-    name=cm2a,
-    scope=threat-scope,
-    at={(15.0,1.0)},
-    title={CM2. Data\\privacy}
   ]
 
   \corasthreatnonhuman[
     name=infra,
-    at={(0.2,-1.8)},
+    order=2,
     title={IT-infrastructure}
-  ]
-  \corasscenario[
-    name=servercrash,
-    scope=threat-scope,
-    at={(3.2,-1.8)},
-    title={Server crash},
-    meta={1 per year}
   ]
   \corasvulnerability[
     name=poorbackup,
-    scope=threat-scope,
-    at={(5.8,-1.8)},
+    order=2,
     title={Poor backup\\solution}
   ]
   \corasscenario[
     name=dbfail,
-    scope=threat-scope,
-    at={(8.8,-1.8)},
+    order=2,
     title={Database fails to switch\\to backup},
     meta={1 per year}
   ]
   \corasunwantedincident[
     name=unavail,
-    scope=threat-scope,
-    at={(12.6,-1.8)},
+    order=2,
     title={3. Unavailability\\of application}
   ]
   \corasasset[
     name=cm3a,
-    scope=threat-scope,
-    at={(15.0,-1.8)},
+    order=2,
     title={CM3. Application\\availability}
   ]
 
-  \corasscope[
-    name=threat-box,
-    scope=threat-scope,
-    title={Web application},
-    kind=system
-  ]
-
-  \corascauses[from=employee,to=remote]
-  \corascauses[from=employee,to=malcode]
-  \corascauses[from=remote,to=oldweb]
+  \corascauses[from=employee,to=oldweb]
   \corascauses[from=oldweb,to=serverinfected]
-  \corascauses[from=malcode,to=serverinfected]
-  \corascauses[from=malcode,to=trafficjam]
-  \corascauses[from=serverinfected,to=maliciousdistributes]
-  \corascauses[from=serverinfected,to=serversdown]
-  \corascauses[from=trafficjam,to=serversdown]
-  \corascauses[from=maliciousdistributes,to=disc]
-  \corascauses[from=serversdown,to=corr]
+  \corascauses[from=serverinfected,to=disc]
   \corasrelates[from=disc,to=gdi1a]
-  \corasrelates[from=corr,to=cm2a]
 
-  \corascauses[from=infra,to=servercrash]
-  \corascauses[from=servercrash,to=poorbackup]
+  \corascauses[from=infra,to=poorbackup]
   \corascauses[from=poorbackup,to=dbfail]
   \corascauses[from=dbfail,to=unavail]
   \corasrelates[from=unavail,to=cm3a]
@@ -217,7 +138,6 @@
 
   \corasrisk[
     name=r11,
-    scope=risk-scope,
     title={1.1 Disclosure\\of data},
     meta={1 per year},
     level=medium,
@@ -225,189 +145,108 @@
   ]
   \corasrisk[
     name=r12,
-    scope=risk-scope,
-    title={1.2 Disclosure\\of data},
-    meta={1 per year},
+    title={1.2 Service\\degradation},
+    meta={1 per 6 months},
     level=low,
     order=2
   ]
   \corasrisk[
     name=r22,
-    scope=risk-scope,
-    title={2.2 Corruption\\of data},
+    title={2.2 Unavailability\\of application},
     meta={1 per year},
     level=major,
     order=3
   ]
-  \corasrisk[
-    name=r31,
-    scope=risk-scope,
-    title={3.1 Unavailability\\of application},
-    meta={1 per year},
-    level=medium,
-    order=4
-  ]
 
   \corasasset[
     name=gdi1b,
-    scope=risk-scope,
     title={GDI1. Data\\privacy},
     order=1
   ]
   \corasasset[
     name=cm2b,
-    scope=risk-scope,
-    title={CM2. Data\\privacy},
+    title={CM2. Service\\quality},
     order=2
   ]
   \corasasset[
     name=cm3b,
-    scope=risk-scope,
     title={CM3. Application\\availability},
     order=3
-  ]
-
-  \corasscope[
-    name=risk-box,
-    scope=risk-scope,
-    title={Risks: direct assets},
-    kind=risk-group
   ]
 
   \corascauses[from=employee2,to=r11]
   \corascauses[from=employee2,to=r12]
   \corascauses[from=infra2,to=r22]
-  \corascauses[from=infra2,to=r31]
   \corasrelates[from=r11,to=gdi1b]
   \corasrelates[from=r12,to=cm2b]
   \corasrelates[from=r22,to=cm2b]
-  \corasrelates[from=r31,to=cm3b]
+  \corasrelates[from=r22,to=cm3b,route=hv]
 \end{corasriskdiagram}
 \end{center}
 
 \subsection*{4. Treatment Diagram}
 \begin{center}
-\begin{corastreatmentdiagram}[x=.95cm,y=1cm]
+\begin{corastreatmentdiagram}[x=1cm,y=1cm]
   \corasthreataccidental[
     name=employee3,
-    at={(0.2,2.0)},
+    order=1,
     title={Employee}
-  ]
-  \corasscenario[
-    name=remote3,
-    scope=treatment-scope,
-    at={(2.7,2.4)},
-    title={Remote access\\used from infected PC},
-    meta={1 per 6 months}
   ]
   \corasvulnerability[
     name=oldweb3,
-    scope=treatment-scope,
-    at={(5.1,2.4)},
+    order=1,
     title={Old version of\\webserver}
   ]
   \corasscenario[
     name=serverinfected3,
-    scope=treatment-scope,
-    at={(7.6,2.4)},
+    order=1,
     title={Servers infected\\by malicious code},
-    meta={1 per year}
-  ]
-  \corasscenario[
-    name=maliciousdistributes3,
-    scope=treatment-scope,
-    at={(10.1,3.0)},
-    title={Malicious code\\distributes data},
     meta={1 per year}
   ]
   \corasunwantedincident[
     name=disc3,
-    scope=treatment-scope,
-    at={(12.5,3.0)},
+    order=1,
     title={Disclosure\\of data},
     meta={1 per year}
   ]
   \corasasset[
     name=gdi1c,
-    scope=treatment-scope,
-    at={(14.9,3.0)},
+    order=1,
     title={GDI1. Data\\privacy}
-  ]
-
-  \corasscenario[
-    name=malcode3,
-    scope=treatment-scope,
-    at={(2.7,0.6)},
-    title={Malicious code\\spreads via LAN},
-    meta={1 per year}
-  ]
-  \corasscenario[
-    name=serversdown3,
-    scope=treatment-scope,
-    at={(10.1,0.6)},
-    title={Application servers\\malfunctioning},
-    meta={1 per 5 years}
-  ]
-  \corasunwantedincident[
-    name=corr3,
-    scope=treatment-scope,
-    at={(12.5,0.6)},
-    title={Corruption\\of data},
-    meta={1 per year}
   ]
 
   \corastreatment[
     name=tawareness,
-    at={(1.7,5.1)},
     title={Increase awareness\\of security risks},
     order=1
   ]
   \corastreatment[
     name=tupgrade,
-    at={(5.1,5.1)},
     title={Upgrade\\server},
     order=2
   ]
   \corastreatment[
     name=tlimit,
-    at={(8.6,5.1)},
-    title={Limit access\\to network},
+    title={Limit remote\\access},
     order=3
   ]
 
-  \corasscope[
-    name=treatment-box,
-    scope=treatment-scope,
-    title={Network related threat scenarios: direct assets},
-    kind=treatment-scope
-  ]
-
-  \corascauses[from=employee3,to=remote3]
-  \corascauses[from=employee3,to=malcode3]
-  \corascauses[from=remote3,to=oldweb3]
+  \corascauses[from=employee3,to=oldweb3]
   \corascauses[from=oldweb3,to=serverinfected3]
-  \corascauses[from=malcode3,to=serverinfected3]
-  \corascauses[from=serverinfected3,to=maliciousdistributes3]
-  \corascauses[from=serverinfected3,to=serversdown3]
-  \corascauses[from=maliciousdistributes3,to=disc3]
-  \corascauses[from=serversdown3,to=corr3]
+  \corascauses[from=serverinfected3,to=disc3]
   \corasrelates[from=disc3,to=gdi1c]
-  \corasrelates[from=corr3,to=gdi1c]
 
   \corasriskref[
     name=rr11,
-    at={(12.8,2.8)},
+    from=disc3,
+    to=gdi1c,
+    pos=.55,
     label={Risk 1.1}
   ]
-  \corasriskref[
-    name=rr22,
-    at={(11.2,1.1)},
-    label={Risk 2.2}
-  ]
 
-  \corastreats[from=tawareness,to=remote3]
+  \corastreats[from=tawareness,to=employee3]
   \corastreats[from=tupgrade,to=oldweb3]
-  \corastreats[from=tlimit,to=employee3]
+  \corastreats[from=tlimit,to=serverinfected3]
 \end{corastreatmentdiagram}
 \end{center}
 
@@ -416,7 +255,6 @@
 \begin{corastreatmentoverviewdiagram}[x=1cm,y=1cm]
   \corasrisk[
     name=or11,
-    scope=overview-scope,
     title={1.1 Disclosure\\of data},
     meta={direct asset},
     level=unacceptable,
@@ -424,18 +262,20 @@
   ]
   \corasrisk[
     name=or22,
-    scope=overview-scope,
-    title={2.2 Corruption\\of data},
+    title={2.2 Unavailability\\of application},
     meta={direct asset},
     level=acceptable,
-    order=2,
-    tikz={fill=gray!12}
+    order=2
   ]
   \corasasset[
     name=gdi1d,
-    scope=overview-scope,
-    right of=or11,
+    order=1,
     title={GDI1. Data\\privacy}
+  ]
+  \corasasset[
+    name=cm3d,
+    order=2,
+    title={CM3. Application\\availability}
   ]
 
   \corasjunction[name=joverview]
@@ -455,15 +295,8 @@
     order=3
   ]
 
-  \corasscope[
-    name=overview-box,
-    scope=overview-scope,
-    title={Treatments for direct asset},
-    kind=treatment-scope
-  ]
-
   \corasrelates[from=or11,to=gdi1d]
-  \corasrelates[from=or22,to=gdi1d]
+  \corasrelates[from=or22,to=cm3d]
   \corastreats[from=otlimit,to=joverview]
   \corastreats[from=otaware,to=joverview]
   \corastreats[from=otupgrade,to=joverview]

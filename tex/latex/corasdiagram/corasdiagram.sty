@@ -123,7 +123,7 @@
   },
   coras/treatment body/.style={
     coras/ellipse,
-    fill=gray!12,
+    fill=white,
     minimum height=9mm
   },
   coras/junction/.style={
@@ -291,10 +291,10 @@
 }
 
 \expandafter\def\csname corasdiagram@allowednodes@asset\endcsname{stakeholder,asset,scope}
-\expandafter\def\csname corasdiagram@allowednodes@threat\endcsname{threatsource,vulnerability,scenario,incident,asset,scope}
-\expandafter\def\csname corasdiagram@allowednodes@risk\endcsname{threatsource,risk,asset,scope}
-\expandafter\def\csname corasdiagram@allowednodes@treatment\endcsname{treatment,threatsource,vulnerability,scenario,incident,asset,scope}
-\expandafter\def\csname corasdiagram@allowednodes@treatmentoverview\endcsname{treatment,risk,asset,junction,scope}
+\expandafter\def\csname corasdiagram@allowednodes@threat\endcsname{threatsource,vulnerability,scenario,incident,asset}
+\expandafter\def\csname corasdiagram@allowednodes@risk\endcsname{threatsource,risk,asset}
+\expandafter\def\csname corasdiagram@allowednodes@treatment\endcsname{treatment,threatsource,vulnerability,scenario,incident,asset}
+\expandafter\def\csname corasdiagram@allowednodes@treatmentoverview\endcsname{treatment,risk,asset,junction}
 
 \newcommand{\corasdiagram@getallowedroles}[1]{%
   \expandafter\ifcsname corasdiagram@allowednodes@#1\endcsname
@@ -686,6 +686,10 @@
   \node[inner sep=0pt,outer sep=0pt,fit=#2] (#1) {};
 }
 
+\newcommand{\corasdiagram@fitanchor}[3]{%
+  \node[#1,fit=(#3),inner sep=0pt,outer sep=0pt] (#2-anchor) {};
+}
+
 \newcommand{\corasdiagram@resolveendpoint}[1]{%
   \edef\corasdiagram@rawendpoint{#1}%
   \in@{(}{\corasdiagram@rawendpoint}%
@@ -831,22 +835,29 @@
 
 \newcommand{\corasdiagram@render@scenario}{%
   \corasdiagram@setdefault\corasnode@textwidth{28mm}%
+  \corasdiagram@setdefault\corasnode@iconwidth{6.2mm}%
   \corasdiagram@placenode{%
     coras/ellipse,
     text width=\corasnode@textwidth
-  }{\corasnode@name}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \node[coras/base node,anchor=south] (\corasnode@name-icon)
+    at ([yshift=-0.7mm]\corasnode@name-body.north)
+    {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
+  \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
+  \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
 }
 
 \newcommand{\corasdiagram@render@incident}{%
   \corasdiagram@setdefault\corasnode@textwidth{25mm}%
-  \corasdiagram@setdefault\corasnode@iconwidth{5mm}%
+  \corasdiagram@setdefault\corasnode@iconwidth{5.6mm}%
   \corasdiagram@placenode{%
     coras/incident body,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
-  \node[coras/base node,anchor=west] (\corasnode@name-icon)
-    at ([xshift=-1.2mm,yshift=1.0mm]\corasnode@name-body.east)
+  \node[coras/base node,anchor=south east] (\corasnode@name-icon)
+    at ([xshift=-0.8mm,yshift=-0.7mm]\corasnode@name-body.north east)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{unwanted-incident}};
+  \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
 }
 
@@ -860,6 +871,7 @@
   \node[coras/base node,anchor=south] (\corasnode@name-icon)
     at ([yshift=0.5mm]\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
+  \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
 }
 
@@ -871,13 +883,15 @@
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
   \node[coras/base node,anchor=south] (\corasnode@name-icon)
-    at ([yshift=-0.8mm]\corasnode@name-body.north)
+    at ([yshift=-0.7mm]\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{treatment}};
+  \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
 }
 
 \newcommand{\corasdiagram@render@junction}{%
   \corasdiagram@placenode{coras/junction}{\corasnode@name}{}%
+  \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name}%
 }
 
 \pgfkeys{
