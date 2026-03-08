@@ -38,7 +38,8 @@ jobs:
             texlive-pictures
 
       - name: Prepare LuaTeX cache
-        run: mkdir -p "$TEXMFVAR"
+        if: matrix.engine == 'lualatex'
+        run: mkdir -p "$RUNNER_TEMP/texmf-var"
 
       - name: Build manual and examples
         run: |
