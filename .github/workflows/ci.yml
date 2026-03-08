@@ -63,22 +63,24 @@ jobs:
             export TEXMFVAR="$RUNNER_TEMP/texmf-var"
             export TEXMFCACHE="$TEXMFVAR"
           fi
+          export CORAS_BW_TEX="$RUNNER_TEMP/corasdiagram-demo-bw.tex"
           python3 - <<'PY'
+          import os
           from pathlib import Path
           source = Path("examples/corasdiagram-demo.tex").read_text(encoding="utf-8")
           marker = r"\usepackage{corasdiagram}"
           replacement = r"\usepackage[iconset=bw]{corasdiagram}"
           if marker not in source:
               raise SystemExit("missing package line in examples/corasdiagram-demo.tex")
-          Path("examples/.ci-corasdiagram-demo-bw.tex").write_text(
+          Path(os.environ["CORAS_BW_TEX"]).write_text(
               source.replace(marker, replacement, 1),
               encoding="utf-8",
           )
           PY
           if [ "${{ matrix.engine }}" = "pdflatex" ]; then
-            latexmk -pdf -interaction=nonstopmode -halt-on-error examples/.ci-corasdiagram-demo-bw.tex
+            latexmk -pdf -interaction=nonstopmode -halt-on-error "$CORAS_BW_TEX"
           else
-            latexmk -lualatex -interaction=nonstopmode -halt-on-error examples/.ci-corasdiagram-demo-bw.tex
+            latexmk -lualatex -interaction=nonstopmode -halt-on-error "$CORAS_BW_TEX"
           fi
 
   negative-tests:
