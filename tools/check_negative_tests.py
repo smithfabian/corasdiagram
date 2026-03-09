@@ -33,7 +33,7 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
     tests_dir = repo_root / "tests" / "corasdiagram"
-    test_files = sorted(tests_dir.glob("*.tex"))
+    test_files = sorted(tests_dir.glob("invalid-*.tex"))
 
     if not test_files:
         print(f"No test files found in {tests_dir}", file=sys.stderr)

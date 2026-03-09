@@ -105,6 +105,38 @@ jobs:
       - name: Run semantic failure fixtures
         run: python3 tools/check_negative_tests.py --engine pdflatex
 
+  visual-regressions:
+    name: Visual regression tests
+    runs-on: ubuntu-latest
+    env:
+      TEXINPUTS: 'tex/latex//:'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install TeX and raster tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            poppler-utils \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended \
+            texlive-pictures
+
+      - name: Run visual regression checks
+        run: |
+          python3 tools/check_visual_regressions.py \
+            --artifact-dir "$RUNNER_TEMP/visual-regressions"
+
+      - name: Upload actual renders on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corasdiagram-visual-regressions
+          path: ${{ runner.temp }}/visual-regressions/
+
   package-smoke:
     name: Packaging smoke test
     runs-on: ubuntu-latest

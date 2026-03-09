@@ -44,6 +44,19 @@ Run the semantic failure checks:
 python3 tools/check_negative_tests.py --engine pdflatex
 ```
 
+Run the visual regression checks:
+
+```bash
+python3 tools/check_visual_regressions.py
+```
+
+Regenerate committed snapshot baselines after an intentional notation or layout
+change:
+
+```bash
+python3 tools/check_visual_regressions.py --update
+```
+
 Build a release bundle after compiling the manual:
 
 ```bash
@@ -67,6 +80,8 @@ python3 tools/build_site.py \
 - Default to ASCII in source files unless there is a clear reason not to.
 - Update examples and the manual when public behavior changes.
 - Add or update semantic regression tests when notation validation changes.
+- Update visual snapshot baselines in the same change when rendered notation or
+  layout intentionally changes.
 - Keep CI-friendly commands shell-friendly and reproducible from the repository
   root.
 

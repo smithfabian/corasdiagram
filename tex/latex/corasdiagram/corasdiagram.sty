@@ -5,7 +5,7 @@
 \RequirePackage{pgfkeys}
 \RequirePackage{tikz}
 \RequirePackage{xparse}
-\usetikzlibrary{arrows.meta,calc,fit,positioning,shapes.geometric}
+\usetikzlibrary{arrows.meta,calc,decorations.markings,fit,positioning,shapes.geometric}
 \pgfdeclarelayer{corasbackground}
 \pgfsetlayers{corasbackground,main}
 
@@ -146,7 +146,8 @@
   coras/scope system/.style={coras/scope base},
   coras/scope asset-scope/.style={
     coras/scope base,
-    rounded corners=8mm
+    fill=white,
+    rounded corners=4mm
   },
   coras/scope analysis/.style={coras/scope base},
   coras/scope risk-group/.style={coras/scope base},
@@ -157,6 +158,18 @@
     outer sep=0pt,
     font=\sffamily\footnotesize\bfseries
   },
+  coras/open arrow/.style={
+    postaction={decorate},
+    decoration={
+      markings,
+      mark=at position 1 with {
+        \draw[solid,line width=\pgflinewidth,line cap=round]
+          (0,0) -- (-2.4mm,0.95mm);
+        \draw[solid,line width=\pgflinewidth,line cap=round]
+          (0,0) -- (-2.4mm,-0.95mm);
+      }
+    }
+  },
   coras/risk ref box/.style={
     coras/box,
     minimum height=5mm,
@@ -166,31 +179,31 @@
   },
   coras/causal/.style={
     draw,
-    -{Latex[length=2mm,width=1.2mm,open]},
-    line width=0.45pt
+    line width=0.45pt,
+    coras/open arrow
   },
   coras/relation/.style={
     draw,
-    -{Latex[length=2mm,width=1.2mm,open]},
-    line width=0.45pt
+    line width=0.45pt,
+    coras/open arrow
   },
   coras/concern/.style={
     draw,
     dashed,
-    -{Latex[length=2mm,width=1.2mm,open]},
-    line width=0.45pt
+    line width=0.45pt,
+    coras/open arrow
   },
   coras/association/.style={
     draw,
     dashed,
-    -{Latex[length=2mm,width=1.2mm,open]},
-    line width=0.45pt
+    line width=0.45pt,
+    coras/open arrow
   },
   coras/treatment/.style={
     draw,
     dashed,
-    -{Latex[length=2mm,width=1.2mm,open]},
-    line width=0.45pt
+    line width=0.45pt,
+    coras/open arrow
   },
   coras/overview/.style={
     coras/treatment
@@ -199,6 +212,33 @@
 
 \newcount\corasdiagram@autonode
 \newcount\corasdiagram@diagramseq
+\newcount\corasdiagram@placedcount
+\newcount\corasdiagram@placedindex
+\newdimen\corasdiagram@tmpdimen
+\newdimen\corasdiagram@compartmentwidth
+\newdimen\corasdiagram@compartmentheight
+\newdimen\corasdiagram@compartmentside
+\newdimen\corasdiagram@halfcompartmentside
+\newdimen\corasdiagram@scopewidth
+\newdimen\corasdiagram@scopeheight
+\newdimen\corasdiagram@finalscopewidth
+\newdimen\corasdiagram@finalscopeheight
+\newdimen\corasdiagram@labelwidth
+\newdimen\corasdiagram@labelheight
+\newdimen\corasdiagram@estimatedwidth
+\newdimen\corasdiagram@estimatedheight
+\newdimen\corasdiagram@currentx
+\newdimen\corasdiagram@currenty
+\newdimen\corasdiagram@previousx
+\newdimen\corasdiagram@previousy
+\newdimen\corasdiagram@currenthalfwidth
+\newdimen\corasdiagram@currenthalfheight
+\newdimen\corasdiagram@previoushalfwidth
+\newdimen\corasdiagram@previoushalfheight
+\newdimen\corasdiagram@overlapx
+\newdimen\corasdiagram@requiredy
+\newdimen\corasdiagram@overlapmarginx
+\newdimen\corasdiagram@overlapmarginy
 
 \def\corasdiagram@knownroles{stakeholder,asset,threatsource,vulnerability,scenario,incident,risk,treatment,junction,scope}
 \def\corasdiagram@currentfamily{}
@@ -452,6 +492,7 @@
   \edef\corasdiagram@currentdiagramid{diagram-\the\corasdiagram@diagramseq}%
   \def\corasdiagram@currentfamily{#1}%
   \def\corasdiagram@layoutmode{auto}%
+  \global\corasdiagram@placedcount=0\relax
   \@for\corasdiagram@role:=\corasdiagram@knownroles\do{%
     \expandafter\def\csname corasdiagram@lane@#1@\corasdiagram@role\endcsname{0}%
   }%
@@ -469,6 +510,163 @@
 
 \newcommand{\corasdiagram@setautocoord}[2]{%
   \edef\corasnode@at{(#1,#2)}%
+}
+
+\newcommand{\corasdiagram@measurelabelcontent}{%
+  \ifx\corasnode@textwidth\@empty
+    \setbox\z@=\hbox{\corasdiagram@composeautocontent}%
+  \else
+    \setbox\z@=\hbox{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \fi
+  \corasdiagram@labelwidth=\wd\z@
+  \corasdiagram@labelheight=\dimexpr\ht\z@+\dp\z@\relax
+}
+
+\newcommand{\corasdiagram@measureiconlabelsize}[2]{%
+  \corasdiagram@measurelabelcontent
+  \corasdiagram@estimatedwidth=#1\relax
+  \ifdim\corasdiagram@labelwidth>\corasdiagram@estimatedwidth
+    \corasdiagram@estimatedwidth=\corasdiagram@labelwidth
+  \fi
+  \corasdiagram@estimatedheight=\dimexpr#2+\corasdiagram@labelheight\relax
+  \corasdiagram@tmpdimen=\corasnode@labelgap\relax
+  \ifdim\corasdiagram@tmpdimen<0pt
+    \corasdiagram@tmpdimen=-\corasdiagram@tmpdimen
+  \fi
+  \advance\corasdiagram@estimatedheight by \corasdiagram@tmpdimen
+}
+
+\newcommand{\corasdiagram@measurebodynodesize}[4]{%
+  \corasdiagram@measurelabelcontent
+  \corasdiagram@estimatedwidth=\dimexpr#1+#2\relax
+  \corasdiagram@estimatedheight=\dimexpr\corasdiagram@labelheight+#3\relax
+  \ifdim\corasdiagram@estimatedheight<#4\relax
+    \corasdiagram@estimatedheight=#4\relax
+  \fi
+  \advance\corasdiagram@estimatedheight by \corasnode@iconwidth\relax
+}
+
+\newcommand{\corasdiagram@measureautonodesize}{%
+  \def\corasdiagram@typeasset{asset}%
+  \def\corasdiagram@typestakeholder{stakeholder}%
+  \def\corasdiagram@typethreataccidental{threataccidental}%
+  \def\corasdiagram@typethreatdeliberate{threatdeliberate}%
+  \def\corasdiagram@typethreatnonhuman{threatnonhuman}%
+  \def\corasdiagram@typevulnerability{vulnerability}%
+  \def\corasdiagram@typescenario{scenario}%
+  \def\corasdiagram@typeincident{incident}%
+  \def\corasdiagram@typerisk{risk}%
+  \def\corasdiagram@typetreatment{treatment}%
+  \def\corasdiagram@typejunction{junction}%
+  \ifx\corasnode@type\corasdiagram@typeasset
+    \corasdiagram@setdefault\corasnode@textwidth{26mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{10mm}{10.2mm}%
+  \else\ifx\corasnode@type\corasdiagram@typestakeholder
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{7mm}{9.9mm}%
+  \else\ifx\corasnode@type\corasdiagram@typethreataccidental
+    \corasdiagram@setdefault\corasnode@textwidth{23mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{10mm}{13.0mm}%
+  \else\ifx\corasnode@type\corasdiagram@typethreatdeliberate
+    \corasdiagram@setdefault\corasnode@textwidth{23mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{10mm}{13.6mm}%
+  \else\ifx\corasnode@type\corasdiagram@typethreatnonhuman
+    \corasdiagram@setdefault\corasnode@textwidth{26mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{13mm}{10.8mm}%
+  \else\ifx\corasnode@type\corasdiagram@typevulnerability
+    \corasdiagram@setdefault\corasnode@textwidth{22mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{8mm}{9.0mm}%
+  \else\ifx\corasnode@type\corasdiagram@typescenario
+    \corasdiagram@setdefault\corasnode@textwidth{28mm}%
+    \corasdiagram@setdefault\corasnode@iconwidth{6.2mm}%
+    \corasdiagram@measurebodynodesize{\corasnode@textwidth}{10pt}{6pt}{10mm}%
+  \else\ifx\corasnode@type\corasdiagram@typeincident
+    \corasdiagram@setdefault\corasnode@textwidth{25mm}%
+    \corasdiagram@setdefault\corasnode@iconwidth{5.6mm}%
+    \corasdiagram@measurebodynodesize{\corasnode@textwidth}{8pt}{6pt}{8mm}%
+  \else\ifx\corasnode@type\corasdiagram@typerisk
+    \corasdiagram@setdefault\corasnode@textwidth{27mm}%
+    \corasdiagram@setdefault\corasnode@iconwidth{6.5mm}%
+    \corasdiagram@measurebodynodesize{\corasnode@textwidth}{8pt}{6pt}{11mm}%
+  \else\ifx\corasnode@type\corasdiagram@typetreatment
+    \corasdiagram@setdefault\corasnode@textwidth{24mm}%
+    \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
+    \corasdiagram@measurebodynodesize{\corasnode@textwidth}{10pt}{6pt}{9mm}%
+  \else\ifx\corasnode@type\corasdiagram@typejunction
+    \corasdiagram@estimatedwidth=3.3mm\relax
+    \corasdiagram@estimatedheight=3.3mm\relax
+  \else
+    \corasdiagram@estimatedwidth=15mm\relax
+    \corasdiagram@estimatedheight=10mm\relax
+  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi
+}
+
+\newcommand{\corasdiagram@registerplacednode}[1]{%
+  \global\advance\corasdiagram@placedcount by 1\relax
+  \expandafter\xdef\csname corasdiagram@placed@\corasdiagram@currentdiagramid @\the\corasdiagram@placedcount\endcsname{#1}%
+}
+
+\newcommand{\corasdiagram@getplacednode}[2]{%
+  \expandafter\ifcsname corasdiagram@placed@\corasdiagram@currentdiagramid @#2\endcsname
+    \edef#1{\csname corasdiagram@placed@\corasdiagram@currentdiagramid @#2\endcsname}%
+  \else
+    \let#1\@empty
+  \fi
+}
+
+\def\corasdiagram@splitautocoord(#1,#2){%
+  \def\corasdiagram@rawautox{#1}%
+  \def\corasdiagram@rawautoy{#2}%
+}
+
+\newcommand{\corasdiagram@avoidautolayoutoverlap}{%
+  \corasdiagram@measureautonodesize
+  \expandafter\corasdiagram@splitautocoord\corasnode@at
+  \corasdiagram@currentx=\dimexpr\corasdiagram@rawautox cm\relax
+  \corasdiagram@currenty=\dimexpr\corasdiagram@rawautoy cm\relax
+  \corasdiagram@currenthalfwidth=\dimexpr\corasdiagram@estimatedwidth/2\relax
+  \corasdiagram@currenthalfheight=\dimexpr\corasdiagram@estimatedheight/2\relax
+  \corasdiagram@overlapmarginx=1.5mm\relax
+  \corasdiagram@overlapmarginy=1.8mm\relax
+  \corasdiagram@placedindex=1\relax
+  \loop
+    \ifnum\corasdiagram@placedindex<=\corasdiagram@placedcount
+      \corasdiagram@getplacednode{\corasdiagram@previousnode}{\the\corasdiagram@placedindex}%
+      \ifx\corasdiagram@previousnode\@empty
+      \else
+        \corasdiagram@getnodeprop{publicwidth}{\corasdiagram@previousnode}{\corasdiagram@previouswidth}%
+        \corasdiagram@getnodeprop{publicheight}{\corasdiagram@previousnode}{\corasdiagram@previousheight}%
+        \corasdiagram@getnodeprop{centerx}{\corasdiagram@previousnode}{\corasdiagram@previouscenterx}%
+        \corasdiagram@getnodeprop{centery}{\corasdiagram@previousnode}{\corasdiagram@previouscentery}%
+        \ifx\corasdiagram@previouswidth\@empty
+        \else
+          \corasdiagram@previoushalfwidth=\dimexpr\corasdiagram@previouswidth/2\relax
+          \corasdiagram@previoushalfheight=\dimexpr\corasdiagram@previousheight/2\relax
+          \corasdiagram@previousx=\corasdiagram@previouscenterx\relax
+          \corasdiagram@previousy=\corasdiagram@previouscentery\relax
+          \corasdiagram@overlapx=\dimexpr\corasdiagram@currentx-\corasdiagram@previousx\relax
+          \ifdim\corasdiagram@overlapx<0pt
+            \corasdiagram@overlapx=-\corasdiagram@overlapx
+          \fi
+          \ifdim\corasdiagram@overlapx<\dimexpr\corasdiagram@currenthalfwidth+\corasdiagram@previoushalfwidth+\corasdiagram@overlapmarginx\relax
+            \corasdiagram@requiredy=\dimexpr
+              \corasdiagram@previousy-\corasdiagram@previoushalfheight-\corasdiagram@currenthalfheight-\corasdiagram@overlapmarginy\relax
+            \ifdim\corasdiagram@currenty>\corasdiagram@requiredy
+              \corasdiagram@currenty=\corasdiagram@requiredy
+            \fi
+          \fi
+        \fi
+      \fi
+      \advance\corasdiagram@placedindex by 1\relax
+  \repeat
+  \pgfmathsetmacro{\corasdiagram@autoxcm}{\strip@pt\the\corasdiagram@currentx/28.45274}%
+  \pgfmathsetmacro{\corasdiagram@autoycm}{\strip@pt\the\corasdiagram@currenty/28.45274}%
+  \edef\corasnode@at{(\corasdiagram@autoxcm,\corasdiagram@autoycm)}%
 }
 
 \newcommand{\corasdiagram@usespecifiedorder}{%
@@ -564,93 +762,94 @@
   \else
     \def\corasdiagram@x{10}%
   \fi
-  \pgfmathsetmacro{\corasdiagram@y}{1.6 - 2.6*\corasdiagram@lanegroup}%
+  \pgfmathsetmacro{\corasdiagram@y}{3.1 - 3.4*\corasdiagram@lanegroup}%
 }
 \expandafter\def\csname corasdiagram@autoplace@asset@asset\endcsname{%
   \pgfmathtruncatemacro{\corasdiagram@lanegroup}{int((\corasdiagram@laneindex - 1)/2)}%
   \pgfmathtruncatemacro{\corasdiagram@isright}{mod(\corasdiagram@laneindex,2)}%
   \ifnum\corasdiagram@isright=1\relax
-    \def\corasdiagram@x{3.1}%
+    \def\corasdiagram@x{3.8}%
+    \pgfmathsetmacro{\corasdiagram@y}{1.4 - 2.6*\corasdiagram@lanegroup}%
   \else
-    \def\corasdiagram@x{5.9}%
+    \def\corasdiagram@x{7.2}%
+    \pgfmathsetmacro{\corasdiagram@y}{2.8 - 2.6*\corasdiagram@lanegroup}%
   \fi
-  \pgfmathsetmacro{\corasdiagram@y}{2.6 - 2.1*\corasdiagram@lanegroup}%
 }
 
 \expandafter\def\csname corasdiagram@autoplace@threat@threatsource\endcsname{%
   \def\corasdiagram@x{0}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.8 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@threat@vulnerability\endcsname{%
   \def\corasdiagram@x{3.3}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@threat@scenario\endcsname{%
   \def\corasdiagram@x{6.6}%
-  \pgfmathsetmacro{\corasdiagram@y}{3.2 - 1.9*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{3.8 - 2.4*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@threat@incident\endcsname{%
   \def\corasdiagram@x{10.2}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.8 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@threat@asset\endcsname{%
   \def\corasdiagram@x{13.3}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.2 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.6 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 
 \expandafter\def\csname corasdiagram@autoplace@risk@threatsource\endcsname{%
   \def\corasdiagram@x{0}%
-  \pgfmathsetmacro{\corasdiagram@y}{1.4 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{1.8 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@risk@risk\endcsname{%
   \def\corasdiagram@x{4.2}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 1.9*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.8 - 2.4*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@risk@asset\endcsname{%
   \def\corasdiagram@x{8.1}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.1 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 
 \expandafter\def\csname corasdiagram@autoplace@treatment@treatment\endcsname{%
-  \pgfmathsetmacro{\corasdiagram@x}{1.6 + 3.7*(\corasdiagram@laneindex - 1)}%
-  \def\corasdiagram@y{4.8}%
+  \pgfmathsetmacro{\corasdiagram@x}{1.6 + 4.2*(\corasdiagram@laneindex - 1)}%
+  \def\corasdiagram@y{5.2}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatment@threatsource\endcsname{%
   \def\corasdiagram@x{0}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.6*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatment@vulnerability\endcsname{%
   \def\corasdiagram@x{3.3}%
-  \pgfmathsetmacro{\corasdiagram@y}{1.8 - 2.8*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.1 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatment@scenario\endcsname{%
   \def\corasdiagram@x{6.6}%
-  \pgfmathsetmacro{\corasdiagram@y}{3.0 - 1.9*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{3.3 - 2.4*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatment@incident\endcsname{%
   \def\corasdiagram@x{10.3}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.3 - 2.5*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.6 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatment@asset\endcsname{%
   \def\corasdiagram@x{13.4}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 2.5*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.2 - 3.1*(\corasdiagram@laneindex - 1)}%
 }
 
 \expandafter\def\csname corasdiagram@autoplace@treatmentoverview@risk\endcsname{%
   \def\corasdiagram@x{4.2}%
-  \pgfmathsetmacro{\corasdiagram@y}{2.2 - 2.5*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.4 - 3.0*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatmentoverview@asset\endcsname{%
   \def\corasdiagram@x{7.7}%
-  \pgfmathsetmacro{\corasdiagram@y}{1.7 - 2.5*(\corasdiagram@laneindex - 1)}%
+  \pgfmathsetmacro{\corasdiagram@y}{2.0 - 3.0*(\corasdiagram@laneindex - 1)}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatmentoverview@junction\endcsname{%
   \def\corasdiagram@x{5.0}%
-  \def\corasdiagram@y{-2.6}%
+  \def\corasdiagram@y{-3.2}%
 }
 \expandafter\def\csname corasdiagram@autoplace@treatmentoverview@treatment\endcsname{%
-  \pgfmathsetmacro{\corasdiagram@x}{2.0 + 3.0*(\corasdiagram@laneindex - 1)}%
-  \def\corasdiagram@y{-4.3}%
+  \pgfmathsetmacro{\corasdiagram@x}{2.0 + 3.4*(\corasdiagram@laneindex - 1)}%
+  \def\corasdiagram@y{-5.1}%
 }
 
 \newcommand{\corasdiagram@secondarytext}[1]{%
@@ -672,6 +871,20 @@
   }%
 }
 
+\newcommand{\corasdiagram@composeautocontent}{%
+  \begin{tabular}{@{}c@{}}
+    \strut\corasnode@title\strut
+    \ifx\corasnode@meta\@empty
+    \else
+      \\[-0.1ex]\corasdiagram@secondarytext{\corasnode@meta}%
+    \fi
+    \ifx\corasnode@level\@empty
+    \else
+      \\[-0.1ex]\corasdiagram@secondarytext{[\corasnode@level]}%
+    \fi
+  \end{tabular}%
+}
+
 \newcommand{\corasdiagram@placenode}[3]{%
   \edef\corasdiagram@nodeoptions{#1,\corasnode@tikz}%
   \expandafter\node\expandafter[\corasdiagram@nodeoptions] (#2) at \corasnode@at {#3};
@@ -684,6 +897,29 @@
 
 \newcommand{\corasdiagram@fitpublicnode}[2]{%
   \node[inner sep=0pt,outer sep=0pt,fit=#2] (#1) {};
+}
+
+\newcommand{\corasdiagram@storepublicnodesize}[1]{%
+  \pgfextractx{\corasdiagram@tmpdimen}{%
+    \pgfpointdiff{\pgfpointanchor{#1}{west}}{\pgfpointanchor{#1}{east}}%
+  }%
+  \corasdiagram@compartmentwidth=\corasdiagram@tmpdimen\relax
+  \ifdim\corasdiagram@compartmentwidth<0pt
+    \corasdiagram@compartmentwidth=-\corasdiagram@compartmentwidth
+  \fi
+  \pgfextracty{\corasdiagram@tmpdimen}{%
+    \pgfpointdiff{\pgfpointanchor{#1}{south}}{\pgfpointanchor{#1}{north}}%
+  }%
+  \corasdiagram@compartmentheight=\corasdiagram@tmpdimen\relax
+  \ifdim\corasdiagram@compartmentheight<0pt
+    \corasdiagram@compartmentheight=-\corasdiagram@compartmentheight
+  \fi
+  \corasdiagram@setnodeprop{publicwidth}{#1}{\the\corasdiagram@compartmentwidth}%
+  \corasdiagram@setnodeprop{publicheight}{#1}{\the\corasdiagram@compartmentheight}%
+  \pgfextractx{\corasdiagram@tmpdimen}{\pgfpointanchor{#1}{center}}%
+  \corasdiagram@setnodeprop{centerx}{#1}{\the\corasdiagram@tmpdimen}%
+  \pgfextracty{\corasdiagram@tmpdimen}{\pgfpointanchor{#1}{center}}%
+  \corasdiagram@setnodeprop{centery}{#1}{\the\corasdiagram@tmpdimen}%
 }
 
 \newcommand{\corasdiagram@fitanchor}[3]{%
@@ -751,6 +987,7 @@
   \corasdiagram@setnodeprop{type}{#1}{\corasnode@type}%
   \corasdiagram@setnodeprop{scope}{#1}{\corasnode@scope}%
   \corasdiagram@registerscopemember{\corasnode@scope}{#1}%
+  \corasdiagram@registerplacednode{#1}%
 }
 
 \newcommand{\corasdiagram@rendericonlabelnode}[1]{%
@@ -763,14 +1000,18 @@
   \node[coras/base node] (\corasnode@name-graphic) at \corasnode@at {%
     \corasdiagram@includeicon{\corasnode@iconwidth}{#1}%
   };
-  \corasdiagram@placeauxnode{%
-    coras/base node,
-    text width=\corasnode@textwidth,
-    anchor=north
-  }{\corasnode@name-label}{%
-    \corasdiagram@composecontent{\corasnode@textwidth}%
+  \def\corasdiagram@labelnodeoptions{coras/base node,anchor=north}%
+  \ifx\corasnode@textwidth\@empty
+    \def\corasdiagram@labelcontent{\corasdiagram@composeautocontent}%
+  \else
+    \edef\corasdiagram@labelnodeoptions{\corasdiagram@labelnodeoptions,text width=\corasnode@textwidth}%
+    \def\corasdiagram@labelcontent{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \fi
+  \corasdiagram@placeauxnode{\corasdiagram@labelnodeoptions}{\corasnode@name-label}{%
+    \corasdiagram@labelcontent
   }{at={([yshift=\corasnode@labelgap]\corasnode@name-graphic.south)}}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-graphic) (\corasnode@name-label)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \newcommand{\corasdiagram@render@asset}{%
@@ -784,7 +1025,6 @@
 }
 
 \newcommand{\corasdiagram@render@stakeholder}{%
-  \corasdiagram@setdefault\corasnode@textwidth{23mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
   \corasdiagram@setdefault\corasnode@anchorstyle{coras/anchor rectangle}%
   \corasdiagram@setdefault\corasnode@anchorwidth{5.6mm}%
@@ -840,11 +1080,12 @@
     coras/ellipse,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
-  \node[coras/base node,anchor=south] (\corasnode@name-icon)
-    at ([yshift=-0.7mm]\corasnode@name-body.north)
+  \node[coras/base node,anchor=center] (\corasnode@name-icon)
+    at (\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
   \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \newcommand{\corasdiagram@render@incident}{%
@@ -859,6 +1100,7 @@
     {\corasdiagram@includeicon{\corasnode@iconwidth}{unwanted-incident}};
   \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \newcommand{\corasdiagram@render@risk}{%
@@ -873,6 +1115,7 @@
     {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
   \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \newcommand{\corasdiagram@render@treatment}{%
@@ -882,16 +1125,18 @@
     coras/treatment body,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
-  \node[coras/base node,anchor=south] (\corasnode@name-icon)
-    at ([yshift=-0.7mm]\corasnode@name-body.north)
+  \node[coras/base node,anchor=center] (\corasnode@name-icon)
+    at (\corasnode@name-body.north)
     {\corasdiagram@includeicon{\corasnode@iconwidth}{treatment}};
   \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \newcommand{\corasdiagram@render@junction}{%
   \corasdiagram@placenode{coras/junction}{\corasnode@name}{}%
   \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
 }
 
 \pgfkeys{
@@ -1028,6 +1273,89 @@
   \fi\fi\fi
 }
 
+\newcommand{\corasdiagram@setcurveanchorsfromdelta}{%
+  \pgfmathtruncatemacro{\corasdiagram@verticaldominant}{abs(\corasdiagram@dy) > abs(\corasdiagram@dx) ? 1 : 0}%
+  \ifnum\corasdiagram@verticaldominant=1\relax
+    \pgfmathtruncatemacro{\corasdiagram@targetabove}{\corasdiagram@dy > 0 ? 1 : 0}%
+    \ifnum\corasdiagram@targetabove=1\relax
+      \xdef\corasdiagram@fromanchorsuffix{north}%
+      \xdef\corasdiagram@toanchorsuffix{south}%
+      \xdef\corasdiagram@curveout{90}%
+      \xdef\corasdiagram@curvein{-90}%
+    \else
+      \xdef\corasdiagram@fromanchorsuffix{south}%
+      \xdef\corasdiagram@toanchorsuffix{north}%
+      \xdef\corasdiagram@curveout{-90}%
+      \xdef\corasdiagram@curvein{90}%
+    \fi
+  \else
+    \pgfmathtruncatemacro{\corasdiagram@targetright}{\corasdiagram@dx > 0 ? 1 : 0}%
+    \ifnum\corasdiagram@targetright=1\relax
+      \xdef\corasdiagram@fromanchorsuffix{east}%
+      \xdef\corasdiagram@toanchorsuffix{west}%
+      \xdef\corasdiagram@curveout{0}%
+      \xdef\corasdiagram@curvein{180}%
+    \else
+      \xdef\corasdiagram@fromanchorsuffix{west}%
+      \xdef\corasdiagram@toanchorsuffix{east}%
+      \xdef\corasdiagram@curveout{180}%
+      \xdef\corasdiagram@curvein{0}%
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@drawcurvededge}{%
+  \corasdiagram@endpointbasename{\corasdiagram@curvefrombase}{\corasedge@rawfrom}%
+  \corasdiagram@endpointbasename{\corasdiagram@curvetobase}{\corasedge@rawto}%
+  \ifx\corasdiagram@curvefrombase\@empty
+    \def\corasdiagram@curveavailable{0}%
+  \else\ifx\corasdiagram@curvetobase\@empty
+    \def\corasdiagram@curveavailable{0}%
+  \else
+    \def\corasdiagram@curveavailable{1}%
+  \fi\fi
+  \ifnum\corasdiagram@curveavailable=1\relax
+    \path let \p1=(\corasedge@from), \p2=(\corasedge@to) in \pgfextra{%
+      \pgfmathsetmacro{\corasdiagram@dx}{\x2-\x1}%
+      \pgfmathsetmacro{\corasdiagram@dy}{\y2-\y1}%
+      \corasdiagram@setcurveanchorsfromdelta
+    };
+    \edef\corasdiagram@curvefrom{\corasdiagram@curvefrombase-anchor.\corasdiagram@fromanchorsuffix}%
+    \edef\corasdiagram@curveto{\corasdiagram@curvetobase-anchor.\corasdiagram@toanchorsuffix}%
+    \ifx\corasedge@label\@empty
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasdiagram@curvefrom)
+        .. controls +(\corasdiagram@curveout:8mm) and +(\corasdiagram@curvein:8mm) ..
+        (\corasdiagram@curveto);
+    \else
+      \edef\corasdiagram@edgelabelfragment{%
+        node[\corasdiagram@edgelabeloptions]{%
+          \unexpanded\expandafter{\corasedge@label}%
+        }%
+      }%
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasdiagram@curvefrom)
+        .. controls +(\corasdiagram@curveout:8mm) and +(\corasdiagram@curvein:8mm) ..
+        \corasdiagram@edgelabelfragment
+        (\corasdiagram@curveto);
+    \fi
+  \else
+    \ifx\corasedge@label\@empty
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+    \else
+      \edef\corasdiagram@edgelabelfragment{%
+        node[\corasdiagram@edgelabeloptions]{%
+          \unexpanded\expandafter{\corasedge@label}%
+        }%
+      }%
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
+        \corasdiagram@edgelabelfragment;
+    \fi
+  \fi
+}
+
 \NewDocumentCommand{\corasedge}{O{}}{%
   \pgfkeys{/coras/edge/.cd,%
     from=,%
@@ -1054,6 +1382,8 @@
     }%
   \else
     \corasdiagram@resolvedgesemantic
+    \edef\corasedge@rawfrom{\corasedge@from}%
+    \edef\corasedge@rawto{\corasedge@to}%
     \corasdiagram@lookupendpointrole{\corasedge@fromrole}{\corasedge@from}%
     \corasdiagram@lookupendpointrole{\corasedge@torole}{\corasedge@to}%
     \ifx\corasedge@fromrole\@empty
@@ -1072,18 +1402,39 @@
     \fi
     \edef\corasdiagram@edgeoptions{coras/\corasedge@type,\corasedge@tikz}%
     \edef\corasdiagram@edgelabeloptions{pos=\corasedge@pos,\corasedge@labeloptions}%
-    \ifx\corasedge@label\@empty
-      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+    \def\corasdiagram@treatmentsemantic{treatment}%
+    \ifx\corasedge@semantic\corasdiagram@treatmentsemantic
+      \ifx\corasedge@path\@empty
+        \corasdiagram@drawcurvededge
+      \else
+        \ifx\corasedge@label\@empty
+          \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+            (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+        \else
+          \edef\corasdiagram@edgelabelfragment{%
+            node[\corasdiagram@edgelabeloptions]{%
+              \unexpanded\expandafter{\corasedge@label}%
+            }%
+          }%
+          \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+            (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
+            \corasdiagram@edgelabelfragment;
+        \fi
+      \fi
     \else
-      \edef\corasdiagram@edgelabelfragment{%
-        node[\corasdiagram@edgelabeloptions]{%
-          \unexpanded\expandafter{\corasedge@label}%
+      \ifx\corasedge@label\@empty
+        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+      \else
+        \edef\corasdiagram@edgelabelfragment{%
+          node[\corasdiagram@edgelabeloptions]{%
+            \unexpanded\expandafter{\corasedge@label}%
+          }%
         }%
-      }%
-      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
-        \corasdiagram@edgelabelfragment;
+        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
+          \corasdiagram@edgelabelfragment;
+      \fi
     \fi
   \fi\fi
 }
@@ -1110,30 +1461,60 @@
 \newcommand{\corasdiagram@drawstakeholdercompartment}{%
   \ifx\corasscope@stakeholder\@empty
   \else
-    \ifx\corasscope@stakeholderxsep\@empty
-      \def\corasscope@stakeholderxsep{4mm}%
-    \fi
-    \ifx\corasscope@stakeholderysep\@empty
-      \def\corasscope@stakeholderysep{3mm}%
-    \fi
     \corasdiagram@normalize\corasscope@stakeholdertikz
     \edef\corasdiagram@compartmentoptions{draw,line width=0.45pt,\corasscope@stakeholdertikz}%
+    \edef\corasdiagram@stakeholderzoneside{\the\corasdiagram@compartmentside}%
     \def\corasdiagram@cornerright{right}%
     \ifx\corasscope@stakeholdercorner\corasdiagram@cornerright
-      \coordinate (\corasscope@name-stakeholder-elbow)
-        at ([xshift=-\corasscope@stakeholderxsep,yshift=-\corasscope@stakeholderysep]\corasscope@stakeholder.south west);
+      \coordinate (\corasscope@name-stakeholder-top)
+        at ([xshift=-\corasdiagram@stakeholderzoneside]\corasscope@name.north east);
       \expandafter\draw\expandafter[\corasdiagram@compartmentoptions]
-        ([xshift=-\corasscope@stakeholderxsep]\corasscope@stakeholder.west |- \corasscope@name.north)
-        -- (\corasscope@name-stakeholder-elbow)
-        -- (\corasscope@name.east |- \corasscope@name-stakeholder-elbow);
+        (\corasscope@name-stakeholder-top)
+        -- ([yshift=-\corasdiagram@stakeholderzoneside]\corasscope@name-stakeholder-top)
+        -- ([yshift=-\corasdiagram@stakeholderzoneside]\corasscope@name.north east);
     \else
-      \coordinate (\corasscope@name-stakeholder-elbow)
-        at ([xshift=\corasscope@stakeholderxsep,yshift=-\corasscope@stakeholderysep]\corasscope@stakeholder.south east);
+      \coordinate (\corasscope@name-stakeholder-top)
+        at ([xshift=\corasdiagram@stakeholderzoneside]\corasscope@name.north west);
       \expandafter\draw\expandafter[\corasdiagram@compartmentoptions]
-        ([xshift=\corasscope@stakeholderxsep]\corasscope@stakeholder.east |- \corasscope@name.north)
-        -- (\corasscope@name-stakeholder-elbow)
-        -- (\corasscope@name.west |- \corasscope@name-stakeholder-elbow);
+        (\corasscope@name-stakeholder-top)
+        -- ([yshift=-\corasdiagram@stakeholderzoneside]\corasscope@name-stakeholder-top)
+        -- ([yshift=-\corasdiagram@stakeholderzoneside]\corasscope@name.north west);
     \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@prepareassetscope}{%
+  \ifx\corasscope@stakeholderxsep\@empty
+    \def\corasscope@stakeholderxsep{0.25mm}%
+  \fi
+  \ifx\corasscope@stakeholderysep\@empty
+    \def\corasscope@stakeholderysep{0.25mm}%
+  \fi
+  \ifx\corasscope@stakeholder\@empty
+    \corasdiagram@compartmentside=0pt\relax
+    \corasdiagram@halfcompartmentside=0pt\relax
+  \else
+    \corasdiagram@getnodeprop{publicwidth}{\corasscope@stakeholder}{\corasdiagram@storedstakeholderwidth}%
+    \corasdiagram@getnodeprop{publicheight}{\corasscope@stakeholder}{\corasdiagram@storedstakeholderheight}%
+    \ifx\corasdiagram@storedstakeholderwidth\@empty
+      \corasdiagram@compartmentwidth=0pt\relax
+    \else
+      \corasdiagram@compartmentwidth=\corasdiagram@storedstakeholderwidth\relax
+    \fi
+    \corasdiagram@compartmentwidth=\dimexpr
+      \corasdiagram@compartmentwidth+\corasscope@stakeholderxsep+\corasscope@stakeholderxsep\relax
+    \ifx\corasdiagram@storedstakeholderheight\@empty
+      \corasdiagram@compartmentheight=0pt\relax
+    \else
+      \corasdiagram@compartmentheight=\corasdiagram@storedstakeholderheight\relax
+    \fi
+    \corasdiagram@compartmentheight=\dimexpr
+      \corasdiagram@compartmentheight+\corasscope@stakeholderysep+\corasscope@stakeholderysep\relax
+    \corasdiagram@compartmentside=\corasdiagram@compartmentwidth\relax
+    \ifdim\corasdiagram@compartmentheight>\corasdiagram@compartmentside
+      \corasdiagram@compartmentside=\corasdiagram@compartmentheight
+    \fi
+    \corasdiagram@halfcompartmentside=\dimexpr\corasdiagram@compartmentside/2\relax
   \fi
 }
 
@@ -1156,6 +1537,15 @@
     #1%
   }%
   \corasdiagram@ensurename\corasscope@name
+  \ifx\corasscope@padding\@empty
+    \def\corasdiagram@assetscopekind{asset-scope}%
+    \ifx\corasscope@kind\corasdiagram@assetscopekind
+      \def\corasscope@padding{1.0mm}%
+    \else
+      \def\corasscope@padding{5mm}%
+    \fi
+  \fi
+  \corasdiagram@prepareassetscope
   \ifx\corasscope@title\@empty
     \edef\corasscope@title{\corasscope@label}%
   \fi
@@ -1172,14 +1562,87 @@
       Provide `fit={(a) (b)}` or `scope=<group>` after assigning nodes to that scope.%
     }%
   \else
-    \ifx\corasscope@padding\@empty
-      \def\corasscope@padding{5mm}%
-    \fi
     \corasdiagram@normalize\corasscope@tikz
     \corasdiagram@normalize\corasscope@titletikz
-    \edef\corasdiagram@scopeoptions{coras/scope \corasscope@kind,fit=\corasscope@fit,inner sep=\corasscope@padding,\corasscope@tikz}%
+    \def\corasdiagram@assetscopekind{asset-scope}%
     \begin{pgfonlayer}{corasbackground}%
-      \expandafter\node\expandafter[\corasdiagram@scopeoptions] (\corasscope@name) {};
+      \ifx\corasscope@kind\corasdiagram@assetscopekind
+        \node[draw=none,fit=\corasscope@fit,inner sep=0pt,outer sep=0pt]
+          (\corasscope@name-fit) {};
+        \def\corasdiagram@cornerright{right}%
+        \ifx\corasscope@stakeholdercorner\corasdiagram@cornerright
+          \coordinate (\corasscope@name-cell-ne)
+            at ([xshift=\the\corasdiagram@halfcompartmentside,yshift=\the\corasdiagram@halfcompartmentside]\corasscope@stakeholder.center);
+          \pgfextractx{\corasdiagram@tmpdimen}{%
+            \pgfpointdiff{\pgfpointanchor{\corasscope@name-fit}{west}}{\pgfpointanchor{\corasscope@name-cell-ne}{center}}%
+          }%
+          \corasdiagram@scopewidth=\corasdiagram@tmpdimen\relax
+          \ifdim\corasdiagram@scopewidth<0pt
+            \corasdiagram@scopewidth=-\corasdiagram@scopewidth
+          \fi
+          \corasdiagram@scopewidth=\dimexpr\corasdiagram@scopewidth+\corasscope@padding\relax
+          \pgfextracty{\corasdiagram@tmpdimen}{%
+            \pgfpointdiff{\pgfpointanchor{\corasscope@name-fit}{south}}{\pgfpointanchor{\corasscope@name-cell-ne}{center}}%
+          }%
+          \corasdiagram@scopeheight=\corasdiagram@tmpdimen\relax
+          \ifdim\corasdiagram@scopeheight<0pt
+            \corasdiagram@scopeheight=-\corasdiagram@scopeheight
+          \fi
+          \corasdiagram@scopeheight=\dimexpr\corasdiagram@scopeheight+\corasscope@padding\relax
+          \corasdiagram@finalscopewidth=\corasdiagram@scopewidth\relax
+          \ifdim\corasdiagram@finalscopewidth<\dimexpr2\corasdiagram@compartmentside\relax
+            \corasdiagram@finalscopewidth=\dimexpr2\corasdiagram@compartmentside\relax
+          \fi
+          \corasdiagram@finalscopeheight=\corasdiagram@scopeheight\relax
+          \ifdim\corasdiagram@finalscopeheight<\dimexpr2\corasdiagram@compartmentside\relax
+            \corasdiagram@finalscopeheight=\dimexpr2\corasdiagram@compartmentside\relax
+          \fi
+          \coordinate (\corasscope@name-nw)
+            at ([xshift=-\the\corasdiagram@finalscopewidth]\corasscope@name-cell-ne);
+          \coordinate (\corasscope@name-se)
+            at ([yshift=-\the\corasdiagram@finalscopeheight]\corasscope@name-cell-ne);
+        \else
+          \coordinate (\corasscope@name-cell-nw)
+            at ([xshift=-\the\corasdiagram@halfcompartmentside,yshift=\the\corasdiagram@halfcompartmentside]\corasscope@stakeholder.center);
+          \pgfextractx{\corasdiagram@tmpdimen}{%
+            \pgfpointdiff{\pgfpointanchor{\corasscope@name-cell-nw}{center}}{\pgfpointanchor{\corasscope@name-fit}{east}}%
+          }%
+          \corasdiagram@scopewidth=\corasdiagram@tmpdimen\relax
+          \ifdim\corasdiagram@scopewidth<0pt
+            \corasdiagram@scopewidth=-\corasdiagram@scopewidth
+          \fi
+          \corasdiagram@scopewidth=\dimexpr\corasdiagram@scopewidth+\corasscope@padding\relax
+          \pgfextracty{\corasdiagram@tmpdimen}{%
+            \pgfpointdiff{\pgfpointanchor{\corasscope@name-fit}{south}}{\pgfpointanchor{\corasscope@name-cell-nw}{center}}%
+          }%
+          \corasdiagram@scopeheight=\corasdiagram@tmpdimen\relax
+          \ifdim\corasdiagram@scopeheight<0pt
+            \corasdiagram@scopeheight=-\corasdiagram@scopeheight
+          \fi
+          \corasdiagram@scopeheight=\dimexpr\corasdiagram@scopeheight+\corasscope@padding\relax
+          \corasdiagram@finalscopewidth=\corasdiagram@scopewidth\relax
+          \ifdim\corasdiagram@finalscopewidth<\dimexpr2\corasdiagram@compartmentside\relax
+            \corasdiagram@finalscopewidth=\dimexpr2\corasdiagram@compartmentside\relax
+          \fi
+          \corasdiagram@finalscopeheight=\corasdiagram@scopeheight\relax
+          \ifdim\corasdiagram@finalscopeheight<\dimexpr2\corasdiagram@compartmentside\relax
+            \corasdiagram@finalscopeheight=\dimexpr2\corasdiagram@compartmentside\relax
+          \fi
+          \coordinate (\corasscope@name-nw) at (\corasscope@name-cell-nw);
+          \coordinate (\corasscope@name-se)
+            at ([xshift=\the\corasdiagram@finalscopewidth,yshift=-\the\corasdiagram@finalscopeheight]\corasscope@name-cell-nw);
+        \fi
+        \expandafter\node\expandafter[
+          coras/scope \corasscope@kind,
+          fit=(\corasscope@name-nw) (\corasscope@name-se),
+          inner sep=0pt,
+          outer sep=0pt,
+          \corasscope@tikz
+        ] (\corasscope@name) {};
+      \else
+        \edef\corasdiagram@scopeoptions{coras/scope \corasscope@kind,fit=\corasscope@fit,inner sep=\corasscope@padding,\corasscope@tikz}%
+        \expandafter\node\expandafter[\corasdiagram@scopeoptions] (\corasscope@name) {};
+      \fi
     \end{pgfonlayer}%
     \corasdiagram@setnodeprop{role}{\corasscope@name}{scope}%
     \corasdiagram@setnodeprop{type}{\corasscope@name}{scope}%

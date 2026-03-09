@@ -18,8 +18,9 @@ engines are `pdflatex` and `lualatex`.
 
 The package source lives in [`tex/latex/corasdiagram/`](tex/latex/corasdiagram),
 examples live in [`examples/`](examples), the manual source lives in
-[`docs/`](docs), and semantic regression tests live in
-[`tests/corasdiagram/`](tests/corasdiagram).
+[`docs/`](docs), semantic regression tests live in
+[`tests/corasdiagram/`](tests/corasdiagram), and committed visual baselines
+live in [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots).
 
 ## Installation
 
@@ -116,6 +117,27 @@ TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error docs/cor
 
 The release workflow publishes the manual PDF and rendered example screenshots
 as CI artifacts and as a GitHub Pages site.
+
+## Regression Tests
+
+Run the semantic failure fixtures with:
+
+```bash
+python3 tools/check_negative_tests.py --engine pdflatex
+```
+
+Run the visual regression suite with:
+
+```bash
+python3 tools/check_visual_regressions.py
+```
+
+If a notation or layout change is intentional, regenerate the baselines in the
+same change with:
+
+```bash
+python3 tools/check_visual_regressions.py --update
+```
 
 ## Contributing
 

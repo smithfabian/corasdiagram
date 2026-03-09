@@ -25,6 +25,10 @@ docs/*.pdf
 examples/*.pdf
 examples/*.png
 examples/.ci-*
+tests/corasdiagram/*.pdf
+tests/corasdiagram/*.png
+!tests/corasdiagram/snapshots/
+!tests/corasdiagram/snapshots/*.png
 dist/
 site/
 build/

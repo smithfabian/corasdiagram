@@ -1,0 +1,368 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=18mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Auto Layout Regression Fixture}
+
+\subsection*{1. Asset Diagram}
+\begin{center}
+\begin{corasassetdiagram}[x=1cm,y=1cm]
+  \corasstakeholder[
+    name=serviceowner,
+    scope=asset-scope,
+    title={Service owner}
+  ]
+  \corasstakeholder[
+    name=auditor,
+    title={External auditor}
+  ]
+
+  \corasasset[
+    name=customerdata,
+    scope=asset-scope,
+    title={Customer\\account data}
+  ]
+  \corasasset[
+    name=portal,
+    scope=asset-scope,
+    title={Self-service\\portal}
+  ]
+  \corasasset[
+    name=backup,
+    scope=asset-scope,
+    title={Backup\\infrastructure}
+  ]
+  \corasasset[
+    name=reputation,
+    scope=asset-scope,
+    title={Public trust\\and reputation}
+  ]
+
+  \corasscope[
+    name=asset-box,
+    scope=asset-scope,
+    kind=asset-scope,
+    stakeholder=serviceowner,
+    stakeholder corner=left
+  ]
+
+  \corasrelates[from=portal,to=customerdata]
+  \corasrelates[from=backup,to=customerdata]
+  \corasrelates[from=customerdata,to=reputation]
+  \corasconcerns[from=serviceowner,to=customerdata,label={primary concern}]
+  \corasconcerns[from=auditor,to=reputation,label={compliance focus}]
+\end{corasassetdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{2. Threat Diagram}
+\begin{center}
+\begin{corasthreatdiagram}[x=1cm,y=1cm]
+  \corasthreataccidental[
+    name=employee,
+    title={Internal\\employee}
+  ]
+  \corasvulnerability[
+    name=legacyportal,
+    title={Legacy portal\\software}
+  ]
+  \corasscenario[
+    name=credentialabuse,
+    title={Remote session established\\from compromised endpoint},
+    meta={2 per year}
+  ]
+  \corasunwantedincident[
+    name=disclosure,
+    title={1. Disclosure\\of customer data},
+    meta={1 per year}
+  ]
+  \corasasset[
+    name=privacy,
+    title={GDI1. Data\\privacy}
+  ]
+
+  \corasthreatdeliberate[
+    name=attacker,
+    title={External\\attacker}
+  ]
+  \corasvulnerability[
+    name=adminapi,
+    title={Exposed admin\\API}
+  ]
+  \corasscenario[
+    name=fraudscenario,
+    title={Privileged transactions\\initiated without review},
+    meta={1 per 18 months}
+  ]
+  \corasunwantedincident[
+    name=fraudincident,
+    title={2. Fraudulent\\transactions}
+  ]
+  \corasasset[
+    name=integrity,
+    title={CM1. Payment\\integrity}
+  ]
+
+  \corasthreatnonhuman[
+    name=network,
+    title={Network\\infrastructure}
+  ]
+  \corasvulnerability[
+    name=clusterfailover,
+    title={Stale failover\\cluster}
+  ]
+  \corasscenario[
+    name=outagescenario,
+    title={Primary cluster unavailable\\during maintenance window},
+    meta={1 per year}
+  ]
+  \corasunwantedincident[
+    name=outageincident,
+    title={3. Service\\interruption}
+  ]
+  \corasasset[
+    name=availability,
+    title={CM3. Application\\availability}
+  ]
+
+  \corascauses[from=employee,to=legacyportal]
+  \corascauses[from=legacyportal,to=credentialabuse]
+  \corascauses[from=credentialabuse,to=disclosure]
+  \corasrelates[from=disclosure,to=privacy]
+
+  \corascauses[from=attacker,to=adminapi]
+  \corascauses[from=adminapi,to=fraudscenario]
+  \corascauses[from=fraudscenario,to=fraudincident]
+  \corasrelates[from=fraudincident,to=integrity]
+
+  \corascauses[from=network,to=clusterfailover]
+  \corascauses[from=clusterfailover,to=outagescenario]
+  \corascauses[from=outagescenario,to=outageincident]
+  \corasrelates[from=outageincident,to=availability]
+\end{corasthreatdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{3. Risk Diagram}
+\begin{center}
+\begin{corasriskdiagram}[x=1cm,y=1cm]
+  \corasthreataccidental[
+    name=employee-risk,
+    title={Internal\\employee}
+  ]
+  \corasthreatdeliberate[
+    name=attacker-risk,
+    title={External\\attacker}
+  ]
+  \corasthreatnonhuman[
+    name=network-risk,
+    title={Network\\infrastructure}
+  ]
+
+  \corasrisk[
+    name=risk-disclosure,
+    title={1.1 Disclosure\\of customer data},
+    meta={1 per year},
+    level=high
+  ]
+  \corasrisk[
+    name=risk-fraud,
+    title={2.1 Fraudulent\\transactions},
+    meta={1 per 18 months},
+    level=high
+  ]
+  \corasrisk[
+    name=risk-outage,
+    title={3.2 Service\\interruption},
+    meta={1 per year},
+    level=major
+  ]
+
+  \corasasset[
+    name=privacy-risk,
+    title={GDI1. Data\\privacy}
+  ]
+  \corasasset[
+    name=integrity-risk,
+    title={CM1. Payment\\integrity}
+  ]
+  \corasasset[
+    name=availability-risk,
+    title={CM3. Application\\availability}
+  ]
+
+  \corascauses[from=employee-risk,to=risk-disclosure]
+  \corascauses[from=attacker-risk,to=risk-fraud]
+  \corascauses[from=network-risk,to=risk-outage]
+  \corasrelates[from=risk-disclosure,to=privacy-risk]
+  \corasrelates[from=risk-fraud,to=integrity-risk]
+  \corasrelates[from=risk-outage,to=availability-risk]
+\end{corasriskdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{4. Treatment Diagram}
+\begin{center}
+\begin{corastreatmentdiagram}[x=1cm,y=1cm]
+  \corasthreataccidental[
+    name=employee-treatment,
+    title={Internal\\employee}
+  ]
+  \corasvulnerability[
+    name=legacyportal-treatment,
+    title={Legacy portal\\software}
+  ]
+  \corasscenario[
+    name=credentialabuse-treatment,
+    title={Remote session established\\from compromised endpoint},
+    meta={2 per year}
+  ]
+  \corasunwantedincident[
+    name=disclosure-treatment,
+    title={Disclosure\\of customer data},
+    meta={1 per year}
+  ]
+  \corasasset[
+    name=privacy-treatment,
+    title={GDI1. Data\\privacy}
+  ]
+
+  \corasthreatnonhuman[
+    name=network-treatment,
+    title={Network\\infrastructure}
+  ]
+  \corasvulnerability[
+    name=backup-treatment,
+    title={Unrehearsed backup\\failover}
+  ]
+  \corasscenario[
+    name=outagescenario-treatment,
+    title={Primary cluster unavailable\\during maintenance window},
+    meta={1 per year}
+  ]
+  \corasunwantedincident[
+    name=outage-treatment,
+    title={Service\\interruption},
+    meta={1 per year}
+  ]
+  \corasasset[
+    name=availability-treatment,
+    title={CM3. Application\\availability}
+  ]
+
+  \corastreatment[
+    name=awareness-treatment,
+    title={Run focused\\security awareness}
+  ]
+  \corastreatment[
+    name=patch-treatment,
+    title={Retire legacy\\portal release}
+  ]
+  \corastreatment[
+    name=backup-rehearsal,
+    title={Rehearse backup\\failover monthly}
+  ]
+
+  \corascauses[from=employee-treatment,to=legacyportal-treatment]
+  \corascauses[from=legacyportal-treatment,to=credentialabuse-treatment]
+  \corascauses[from=credentialabuse-treatment,to=disclosure-treatment]
+  \corasrelates[from=disclosure-treatment,to=privacy-treatment]
+
+  \corascauses[from=network-treatment,to=backup-treatment]
+  \corascauses[from=backup-treatment,to=outagescenario-treatment]
+  \corascauses[from=outagescenario-treatment,to=outage-treatment]
+  \corasrelates[from=outage-treatment,to=availability-treatment]
+
+  \corasriskref[
+    name=riskref-disclosure,
+    from=disclosure-treatment,
+    to=privacy-treatment,
+    pos=.56,
+    label={Risk 1.1}
+  ]
+  \corasriskref[
+    name=riskref-outage,
+    from=outage-treatment,
+    to=availability-treatment,
+    pos=.56,
+    label={Risk 3.2}
+  ]
+
+  \corastreats[from=awareness-treatment,to=employee-treatment]
+  \corastreats[from=patch-treatment,to=legacyportal-treatment]
+  \corastreats[from=backup-rehearsal,to=outagescenario-treatment]
+\end{corastreatmentdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{5. Treatment Overview Diagram}
+\begin{center}
+\begin{corastreatmentoverviewdiagram}[x=1cm,y=1cm]
+  \corasrisk[
+    name=overview-disclosure,
+    title={1.1 Disclosure\\of customer data},
+    meta={direct asset},
+    level=unacceptable
+  ]
+  \corasrisk[
+    name=overview-fraud,
+    title={2.1 Fraudulent\\transactions},
+    meta={direct asset},
+    level=high
+  ]
+  \corasrisk[
+    name=overview-outage,
+    title={3.2 Service\\interruption},
+    meta={supporting asset},
+    level=unacceptable
+  ]
+
+  \corasasset[
+    name=overview-privacy,
+    title={GDI1. Data\\privacy}
+  ]
+  \corasasset[
+    name=overview-integrity,
+    title={CM1. Payment\\integrity}
+  ]
+  \corasasset[
+    name=overview-availability,
+    title={CM3. Application\\availability}
+  ]
+
+  \corasjunction[name=overview-junction]
+
+  \corastreatment[
+    name=overview-network-limit,
+    title={Limit access\\to management network}
+  ]
+  \corastreatment[
+    name=overview-awareness,
+    title={Increase awareness\\of phishing indicators}
+  ]
+  \corastreatment[
+    name=overview-upgrade,
+    title={Upgrade exposed\\service components}
+  ]
+
+  \corasrelates[from=overview-disclosure,to=overview-privacy]
+  \corasrelates[from=overview-fraud,to=overview-integrity]
+  \corasrelates[from=overview-outage,to=overview-availability]
+  \corastreats[from=overview-network-limit,to=overview-junction]
+  \corastreats[from=overview-awareness,to=overview-junction]
+  \corastreats[from=overview-upgrade,to=overview-junction]
+  \corastreats[from=overview-junction,to=overview-disclosure]
+  \corastreats[from=overview-junction,to=overview-fraud]
+  \corastreats[from=overview-junction,to=overview-outage]
+\end{corastreatmentoverviewdiagram}
+\end{center}
+
+\end{document}
