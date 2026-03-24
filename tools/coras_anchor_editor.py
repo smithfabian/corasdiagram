@@ -248,10 +248,10 @@ def apply_anchor_updates(text: str, updates: dict[str, dict[str, dict[str, float
             if match.group("symbol") != symbol:
                 return match.group(0)
             anchor_name = match.group("anchor")
-            if anchor_name not in symbol_updates:
+            if symbol_updates and anchor_name not in symbol_updates:
                 return match.group(0)
-            x_candidate = float(symbol_updates[anchor_name]["x"])
-            y_candidate = float(symbol_updates[anchor_name]["y"])
+            x_candidate = float(symbol_updates[anchor_name]["x"]) if symbol_updates else parse_mm_value(match.group("x"))
+            y_candidate = float(symbol_updates[anchor_name]["y"]) if symbol_updates else parse_mm_value(match.group("y"))
             if mm_values_match(match.group("x"), x_candidate) and mm_values_match(
                 match.group("y"), y_candidate
             ):
@@ -405,7 +405,7 @@ def build_state(force_preview_rebuild: bool = False) -> dict[str, Any]:
 class AnchorEditorHandler(BaseHTTPRequestHandler):
     server_version = "CorasAnchorEditor/0.1"
 
-    def log_message(self, fmt: str, *args: object) -> None:
+    def log_message(self, fmt: str, *args: object) -> None: # type: ignore
         return
 
     def do_GET(self) -> None:  # noqa: N802
