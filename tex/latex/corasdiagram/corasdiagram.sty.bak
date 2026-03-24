@@ -506,14 +506,14 @@
   \corasdiagram@setsymbolmetric{vulnerability}{bodyhalfy}{4.1mm}%
   \corasdiagram@setsymbolmetric{vulnerability}{basey}{-3.1mm}%
   \corasdiagram@setsymbolmetric{vulnerability}{midy}{0.4mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{north}{-0.35mm}{5.2mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{northeast}{2.3mm}{3.15mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{east}{3.7mm}{-0.15mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{southeast}{3.4mm}{-2.55mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{south}{0mm}{-5.25mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{southwest}{-3.4mm}{-3.1mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{west}{-3.25mm}{-0.15mm}%
-  \corasdiagram@setsymbolanchor{vulnerability}{northwest}{-3.25mm}{3.8mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{north}{0.1mm}{5.05mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{northeast}{2.95mm}{3.95mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{east}{3.8mm}{1.1mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{southeast}{2.6mm}{-2.35mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{south}{-1mm}{-5.3mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{southwest}{-4.05mm}{-3mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{west}{-3.7mm}{1.25mm}%
+  \corasdiagram@setsymbolanchor{vulnerability}{northwest}{-2.5mm}{3.75mm}%
   \corasdiagram@setsymboloutline{vulnerability}{north,northeast,east,southeast,south,southwest,west,northwest}%
 }
 

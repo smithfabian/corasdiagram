@@ -57,6 +57,18 @@ change:
 python3 tools/check_visual_regressions.py --update
 ```
 
+Run the local browser-based anchor editor:
+
+```bash
+python3 tools/coras_anchor_editor.py
+```
+
+Smoke-test the parser/writer logic for the anchor editor:
+
+```bash
+python3 -m unittest tests/test_coras_anchor_editor.py
+```
+
 Build a release bundle after compiling the manual:
 
 ```bash

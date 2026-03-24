@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CORAS Anchor Editor</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>CORAS Anchor Editor</h1>
+          <p class="subtitle">Drag directional anchors and save them back into <code>corasdiagram.sty</code>.</p>
+        </div>
+        <div class="status-pill" id="status-pill">Loading…</div>
+      </header>
+
+      <div class="tab-row">
+        <button class="tab-button active" data-tab="editor">Directional Anchors</button>
+        <button class="tab-button" data-tab="previews">Body-shape Previews</button>
+      </div>
+
+      <main>
+        <section class="tab-panel active" id="tab-editor">
+          <div class="layout">
+            <aside class="sidebar">
+              <h2>Symbols</h2>
+              <div id="symbol-list" class="symbol-list"></div>
+
+              <div class="sidebar-section">
+                <h3>Actions</h3>
+                <button id="reset-symbol-button">Reset symbol</button>
+                <button id="revert-all-button">Revert unsaved</button>
+                <button id="save-button" class="primary">Save to package</button>
+                <button id="rebuild-previews-button">Rebuild previews</button>
+              </div>
+
+              <div class="sidebar-section">
+                <h3>Package</h3>
+                <p class="meta-block" id="package-path">Loading…</p>
+              </div>
+
+              <div class="sidebar-section">
+                <h3>Preview-only nodes</h3>
+                <ul id="preview-node-list" class="preview-node-list"></ul>
+              </div>
+            </aside>
+
+            <section class="canvas-panel">
+              <div class="canvas-card">
+                <div class="canvas-header">
+                  <h2 id="symbol-title">Loading…</h2>
+                  <div class="symbol-badges">
+                    <span class="badge" id="icon-width-badge">–</span>
+                    <span class="badge">Grid in mm</span>
+                  </div>
+                </div>
+                <svg id="anchor-canvas" viewBox="-45 -32 90 64" aria-label="Anchor editor canvas"></svg>
+                <p class="hint">
+                  Drag the handle at each arrow tip, or edit the numbers in the table.
+                  Values are rounded to 0.05&nbsp;mm when saved.
+                </p>
+              </div>
+            </section>
+
+            <aside class="inspector">
+              <div class="inspector-card">
+                <h2>Directional Anchors</h2>
+                <table class="anchor-table">
+                  <thead>
+                    <tr>
+                      <th>Anchor</th>
+                      <th>x (mm)</th>
+                      <th>y (mm)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="anchor-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="inspector-card">
+                <h2>Body Metrics</h2>
+                <table class="metrics-table">
+                  <tbody id="metrics-table-body"></tbody>
+                </table>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-previews">
+          <div class="preview-panel">
+            <div class="preview-notice">
+              <p>These nodes use separate ellipse/rectangle anchor logic in the package. They are shown here for reference only in v1.</p>
+              <p id="preview-error" class="error-text"></p>
+            </div>
+            <div id="preview-gallery" class="preview-gallery"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

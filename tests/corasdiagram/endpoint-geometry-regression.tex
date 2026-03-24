@@ -1,0 +1,112 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=12mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Endpoint Geometry Regression}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=1cm,y=1cm]
+  \corasthreataccidental[
+    name=endpoint-employee,
+    at={(0,0)},
+    title={Employee}
+  ]
+  \corasvulnerability[
+    name=endpoint-oldweb,
+    at={(2.8,0.2)},
+    title={Old webserver}
+  ]
+  \corasscenario[
+    name=endpoint-scenario,
+    at={(6.1,1.3)},
+    title={Servers infected},
+    meta={1 per year}
+  ]
+  \corasunwantedincident[
+    name=endpoint-incident,
+    at={(9.8,0.0)},
+    title={Disclosure of data}
+  ]
+  \corasasset[
+    name=endpoint-asset,
+    at={(13.1,-0.2)},
+    title={Data privacy}
+  ]
+
+  \corascauses[from=endpoint-employee,to=endpoint-oldweb]
+  \corascauses[from=endpoint-oldweb,to=endpoint-scenario]
+  \corascauses[from=endpoint-scenario,to=endpoint-incident]
+  \corasrelates[from=endpoint-incident,to=endpoint-asset,route=vh]
+\end{corasthreatdiagram}
+\end{center}
+
+\vspace{8mm}
+
+\begin{center}
+\begin{corasriskdiagram}[x=1cm,y=1cm]
+  \corasthreatnonhuman[
+    name=endpoint-infra,
+    at={(0,0)},
+    title={IT-infrastructure}
+  ]
+  \corasrisk[
+    name=endpoint-risk,
+    at={(4.3,0)},
+    title={Unavailability},
+    meta={1 per year},
+    level=major
+  ]
+  \corasasset[
+    name=endpoint-quality,
+    at={(8.7,1.2)},
+    title={Service quality}
+  ]
+  \corasasset[
+    name=endpoint-availability,
+    at={(8.7,-1.2)},
+    title={Application availability}
+  ]
+
+  \corascauses[from=endpoint-infra,to=endpoint-risk]
+  \corasrelates[from=endpoint-risk,to=endpoint-quality,route=hv]
+  \corasrelates[from=endpoint-risk,to=endpoint-availability,route=vh]
+\end{corasriskdiagram}
+\end{center}
+
+\vspace{8mm}
+
+\begin{center}
+\begin{corastreatmentdiagram}[x=1cm,y=1cm]
+  \corastreatment[
+    name=endpoint-treatment,
+    at={(5.6,2.9)},
+    title={Upgrade server}
+  ]
+  \corasscenario[
+    name=endpoint-treatment-scenario,
+    at={(5.9,0.8)},
+    title={Remote code execution},
+    meta={1 per year}
+  ]
+  \corasunwantedincident[
+    name=endpoint-treatment-incident,
+    at={(9.5,-0.2)},
+    title={Disclosure of data}
+  ]
+  \corasasset[
+    name=endpoint-treatment-asset,
+    at={(12.7,-0.2)},
+    title={Data privacy}
+  ]
+
+  \corastreats[from=endpoint-treatment,to=endpoint-treatment-scenario]
+  \corascauses[from=endpoint-treatment-scenario,to=endpoint-treatment-incident]
+  \corasrelates[from=endpoint-treatment-incident,to=endpoint-treatment-asset]
+\end{corastreatmentdiagram}
+\end{center}
+
+\end{document}

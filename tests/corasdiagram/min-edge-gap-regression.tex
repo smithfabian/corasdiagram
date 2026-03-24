@@ -1,0 +1,182 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=14mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\makeatletter
+\newdimen\corastest@first
+\newdimen\corastest@second
+\newdimen\corastest@gap
+
+\newcommand{\corastest@getborderx}[3]{%
+  \corasdiagram@getnodeprop{bordernode}{#1}{\corastest@bordernode}%
+  \pgf@process{%
+    \pgfpointshapeborder{\corastest@bordernode}{\pgfpointanchor{#2}{center}}%
+  }%
+  #3=\pgf@x\relax
+}
+
+\newcommand{\corastest@getbordery}[3]{%
+  \corasdiagram@getnodeprop{bordernode}{#1}{\corastest@bordernode}%
+  \pgf@process{%
+    \pgfpointshapeborder{\corastest@bordernode}{\pgfpointanchor{#2}{center}}%
+  }%
+  #3=\pgf@y\relax
+}
+
+\newcommand{\corastestassertminhorizontalgap}[3]{%
+  \corastest@getborderx{#1}{#2}{\corastest@first}%
+  \corastest@getborderx{#2}{#1}{\corastest@second}%
+  \corastest@gap=\dimexpr\corastest@second-\corastest@first\relax
+  \ifdim\corastest@gap<#3\relax
+    \PackageError{corasdiagram-tests}{Horizontal gap between `#1' and `#2' is \the\corastest@gap, expected at least #3}{%
+      Auto and relative placement should preserve the configured minimum edge gap.%
+    }%
+  \fi
+}
+
+\newcommand{\corastestassertminverticalgap}[3]{%
+  \corastest@getbordery{#1}{#2}{\corastest@first}%
+  \corastest@getbordery{#2}{#1}{\corastest@second}%
+  \corastest@gap=\dimexpr\corastest@first-\corastest@second\relax
+  \ifdim\corastest@gap<#3\relax
+    \PackageError{corasdiagram-tests}{Vertical gap between `#1' and `#2' is \the\corastest@gap, expected at least #3}{%
+      Auto and relative placement should preserve the configured minimum edge gap.%
+    }%
+  \fi
+}
+
+\newcommand{\corastestassertmaxhorizontalgap}[3]{%
+  \corastest@getborderx{#1}{#2}{\corastest@first}%
+  \corastest@getborderx{#2}{#1}{\corastest@second}%
+  \corastest@gap=\dimexpr\corastest@second-\corastest@first\relax
+  \ifdim\corastest@gap>#3\relax
+    \PackageError{corasdiagram-tests}{Horizontal gap between `#1' and `#2' is \the\corastest@gap, expected at most #3}{%
+      Absolute coordinates should bypass minimum edge gap enforcement.%
+    }%
+  \fi
+}
+\makeatother
+
+\begin{document}
+
+\section*{Minimum Edge Gap Regression}
+
+\subsection*{1. Auto Layout}
+\begin{center}
+\begin{corasthreatdiagram}[x=1cm,y=1cm,min edge gap=8mm]
+  \corasthreataccidental[
+    name=gap-employee,
+    title={Internal\\employee}
+  ]
+  \corasvulnerability[
+    name=gap-legacy,
+    title={Legacy portal\\software}
+  ]
+  \corasscenario[
+    name=gap-scenario,
+    title={Remote session established\\from compromised endpoint},
+    meta={2 per year}
+  ]
+  \corasunwantedincident[
+    name=gap-incident,
+    title={Disclosure\\of customer data},
+    meta={1 per year}
+  ]
+  \corasasset[
+    name=gap-asset,
+    title={GDI1. Data\\privacy}
+  ]
+
+  \corascauses[from=gap-employee,to=gap-legacy]
+  \corascauses[from=gap-legacy,to=gap-scenario]
+  \corascauses[from=gap-scenario,to=gap-incident]
+  \corasrelates[from=gap-incident,to=gap-asset]
+
+  \corastestassertminhorizontalgap{gap-legacy}{gap-scenario}{8mm}
+  \corastestassertminhorizontalgap{gap-scenario}{gap-incident}{8mm}
+  \corastestassertminhorizontalgap{gap-incident}{gap-asset}{8mm}
+\end{corasthreatdiagram}
+\end{center}
+
+\vspace{7mm}
+
+\subsection*{2. Relative Helpers}
+\begin{center}
+\begin{corastreatmentdiagram}[x=1cm,y=1cm,min edge gap=8mm]
+  \corasscenario[
+    name=helper-scenario,
+    at={(5.5,0)},
+    title={Database failover\\does not start},
+    meta={1 per year}
+  ]
+  \corastreatment[
+    name=helper-treatment,
+    treats=helper-scenario,
+    vertical gap=1mm,
+    title={Upgrade\\failover agent}
+  ]
+  \corasunwantedincident[
+    name=helper-incident,
+    incident of=helper-scenario,
+    horizontal gap=1mm,
+    title={Service\\interruption}
+  ]
+  \corasasset[
+    name=helper-asset,
+    right of=helper-incident,
+    horizontal gap=1mm,
+    title={CM3. Application\\availability}
+  ]
+  \corasthreataccidental[
+    name=helper-threat,
+    harms=helper-scenario,
+    horizontal gap=1mm,
+    title={Operator}
+  ]
+  \corasvulnerability[
+    name=helper-below,
+    below of=helper-scenario,
+    vertical gap=1mm,
+    title={Outdated\\runbook}
+  ]
+
+  \corastreats[from=helper-treatment,to=helper-scenario]
+  \corascauses[from=helper-threat,to=helper-scenario]
+  \corascauses[from=helper-scenario,to=helper-incident]
+  \corasrelates[from=helper-incident,to=helper-asset]
+  \corascauses[from=helper-below,to=helper-scenario]
+
+  \corastestassertminverticalgap{helper-treatment}{helper-scenario}{8mm}
+  \corastestassertminhorizontalgap{helper-scenario}{helper-incident}{8mm}
+  \corastestassertminhorizontalgap{helper-incident}{helper-asset}{8mm}
+  \corastestassertminhorizontalgap{helper-threat}{helper-scenario}{8mm}
+  \corastestassertminverticalgap{helper-scenario}{helper-below}{8mm}
+\end{corastreatmentdiagram}
+\end{center}
+
+\vspace{7mm}
+
+\subsection*{3. Absolute Coordinates Bypass}
+\begin{center}
+\begin{corasriskdiagram}[x=1cm,y=1cm,min edge gap=8mm]
+  \corasrisk[
+    name=manual-risk,
+    at={(3.0,0)},
+    title={Disclosure\\of data},
+    meta={1 per year},
+    level=medium
+  ]
+  \corasasset[
+    name=manual-asset,
+    at={(5.1,0)},
+    title={Data\\privacy}
+  ]
+
+  \corasrelates[from=manual-risk,to=manual-asset]
+  \corastestassertmaxhorizontalgap{manual-risk}{manual-asset}{6mm}
+\end{corasriskdiagram}
+\end{center}
+
+\end{document}

@@ -9,48 +9,53 @@
 \begin{document}
 
 \section*{CORAS Diagram Package Demo}
-
 \subsection*{1. Asset Diagram}
-\begin{center}
-\begin{corasassetdiagram}[x=1cm,y=1cm]
-  \corasstakeholder[
-    name=management,
-    scope=asset-scope,
-    order=1,
-    title={Stakeholder}
-  ]
+\begin{figure}[h]
+  \centering
+  \begin{corasassetdiagram}[x=1cm,y=1cm]
+    \corasstakeholder[
+      name=management,
+      scope=asset-scope,
+      title={Stakeholder}
+    ]
 
-  \corasasset[
-    name=privacy,
-    scope=asset-scope,
-    order=1,
-    title={Asset}
-  ]
-  \corasasset[
-    name=reputation,
-    scope=asset-scope,
-    order=2,
-    title={Indirect\\Asset}
-  ]
-  \corasasset[
-    name=availability,
-    scope=asset-scope,
-    order=3,
-    title={Supporting\\Asset}
-  ]
+    \corasasset[
+      name=reputation,
+      scope=asset-scope,
+      title={Indirect\\Asset}
+    ]
 
-  \corasscope[
-    name=asset-box,
-    scope=asset-scope,
-    kind=asset-scope,
-    stakeholder=management,
-    stakeholder corner=left
-  ]
+    \corasasset[
+      name=privacy,
+      scope=asset-scope,
+      title={Asset},
+      below of=reputation,
+      vertical gap=18mm
+    ]
 
-  \corasrelates[from=privacy,to=reputation]
-  \corasrelates[from=availability,to=reputation]
-\end{corasassetdiagram}
-\end{center}
+    \corasasset[
+      name=availability,
+      scope=asset-scope,
+      title={Supporting\\Asset},
+      right of=privacy,
+      horizontal gap=22mm
+    ]
+
+    \corasscope[
+      name=asset-box,
+      scope=asset-scope,
+      kind=asset-scope,
+      stakeholder=management,
+      stakeholder corner=left
+    ]
+
+    \corasrelates[from=privacy,to=reputation]
+    \corasrelates[from=availability,to=reputation]
+  \end{corasassetdiagram}
+  \caption{Asset diagram}
+\end{figure}
+
+
 
 \subsection*{2. Threat Diagram}
 \begin{center}
@@ -240,7 +245,6 @@
     name=rr11,
     from=disc3,
     to=gdi1c,
-    pos=.55,
     label={Risk 1.1}
   ]
 

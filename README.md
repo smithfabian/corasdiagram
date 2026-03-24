@@ -1,7 +1,8 @@
 # corasdiagram
 
 `corasdiagram` is a LaTeX package for authoring CORAS diagrams with reusable
-notation macros, package-managed icons, and semantic diagram environments.
+notation macros, package-managed icons, semantic diagram environments, and
+high-level analysis tables.
 
 The package currently supports the five basic CORAS diagram families:
 
@@ -10,6 +11,8 @@ The package currently supports the five basic CORAS diagram families:
 - risk diagrams
 - treatment diagrams
 - treatment overview diagrams
+
+It also supports high-level analysis risk tables with CORAS header icons.
 
 Version `0.1.0` is the first open-source release target. The supported TeX
 engines are `pdflatex` and `lualatex`.
@@ -93,11 +96,15 @@ The supported `0.1.0` surface is the current semantic package API:
 - diagram environments:
   `corasassetdiagram`, `corasthreatdiagram`, `corasriskdiagram`,
   `corastreatmentdiagram`, `corastreatmentoverviewdiagram`
+- high-level analysis table environments:
+  `corashighlevelanalysistable`, `corashighlevelrisktable`
 - concept node macros such as `\corasasset`, `\corasstakeholder`,
   `\corasrisk`, `\corastreatment`, and the threat/vulnerability/scenario
   family
 - semantic edge macros such as `\corascauses`, `\corasrelates`,
   `\corasconcerns`, `\corasassociates`, and `\corastreats`
+- table row macros:
+  `\corashighlevelanalysisrow`, `\corashighlevelriskrow`
 - `\corasscope`, including `kind=asset-scope` and the stakeholder corner
   compartment options
 
@@ -138,6 +145,22 @@ same change with:
 ```bash
 python3 tools/check_visual_regressions.py --update
 ```
+
+## Anchor Editor
+
+For interactive tuning of the symbol-table anchor maps, run:
+
+```bash
+python3 tools/coras_anchor_editor.py
+```
+
+This starts a local browser-based editor that lets you drag the directional
+anchors for `asset`, `stakeholder`, the threat variants, and `vulnerability`,
+then save the values directly back into
+[`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty).
+
+The app also shows read-only previews for `scenario`, `treatment`, `incident`,
+and `risk`, using locally rebuilt images from the anchor regression fixture.
 
 ## Contributing
 

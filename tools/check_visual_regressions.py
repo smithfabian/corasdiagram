@@ -47,9 +47,25 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "examples" / "corasdiagram-demo.tex",
             pages=(1, 2, 3),
         ),
+        "corasdiagram-high-level-analysis-table": Fixture(
+            source=repo_root / "examples" / "corasdiagram-high-level-analysis-table.tex",
+            pages=(1,),
+        ),
         "auto-layout-regression": Fixture(
             source=repo_root / "tests" / "corasdiagram" / "auto-layout-regression.tex",
             pages=(1, 2, 3, 4, 5),
+        ),
+        "endpoint-geometry-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "endpoint-geometry-regression.tex",
+            pages=(1,),
+        ),
+        "icon-anchor-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "icon-anchor-regression.tex",
+            pages=(1, 2, 3, 4),
+        ),
+        "min-edge-gap-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "min-edge-gap-regression.tex",
+            pages=(1,),
         ),
     }
 
@@ -117,7 +133,7 @@ def rasterize_fixture(stem: str, pdf_path: Path, temp_root: Path) -> dict[int, P
     render_dir = temp_root / "renders" / stem
     render_dir.mkdir(parents=True, exist_ok=True)
     prefix = render_dir / stem
-    command = ["pdftoppm", "-r", "144", "-png", str(pdf_path), str(prefix)]
+    command = ["pdftoppm", "-r", "216", "-png", str(pdf_path), str(prefix)]
     result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"{pdf_path.name}: pdftoppm failed\n{result.stdout}{result.stderr}")
