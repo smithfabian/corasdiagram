@@ -1,0 +1,110 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=12mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Automatic Icon Edge Attachment}
+
+\begin{center}
+\begin{corasassetdiagram}[x=1cm,y=1cm]
+  \corasstakeholder[
+    name=auto-owner,
+    at={(0.3,2.4)},
+    title={Owner}
+  ]
+  \corasasset[
+    name=auto-core,
+    at={(4.0,2.4)},
+    title={Core asset}
+  ]
+  \corasasset[
+    name=auto-right,
+    at={(7.8,2.4)},
+    title={Right asset}
+  ]
+  \corasasset[
+    name=auto-upper,
+    at={(4.0,5.0)},
+    title={Upper asset}
+  ]
+  \corasasset[
+    name=auto-lower,
+    at={(4.0,-0.2)},
+    title={Lower asset}
+  ]
+  \corasasset[
+    name=auto-lowerleft,
+    at={(1.2,0.4)},
+    title={Lower-left asset}
+  ]
+
+  \corasconcerns[from=auto-owner,to=auto-core]
+  \corasrelates[from=auto-core,to=auto-right]
+  \corasrelates[from=auto-core,to=auto-upper]
+  \corasrelates[from=auto-core,to=auto-lower]
+  \corasrelates[from=auto-core,to=auto-lowerleft]
+\end{corasassetdiagram}
+\end{center}
+
+\newpage
+
+\section*{Automatic Icon To Body Attachment}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=1cm,y=1cm]
+  \corasthreataccidental[
+    name=auto-accidental,
+    at={(0.6,4.5)},
+    title={Accidental}
+  ]
+  \corasthreatdeliberate[
+    name=auto-deliberate,
+    at={(0.8,1.8)},
+    title={Deliberate}
+  ]
+  \corasthreatnonhuman[
+    name=auto-nonhuman,
+    at={(0.8,-1.4)},
+    title={Non-human}
+  ]
+  \corasvulnerability[
+    name=auto-vulnerability-left,
+    at={(3.7,1.8)},
+    title={Gateway}
+  ]
+  \corasvulnerability[
+    name=auto-vulnerability-bottom,
+    at={(6.4,-1.0)},
+    title={Backup flaw}
+  ]
+  \corasscenario[
+    name=auto-scenario,
+    at={(6.6,2.5)},
+    title={Servers infected},
+    meta={1 per year}
+  ]
+  \corasunwantedincident[
+    name=auto-incident,
+    at={(10.4,1.2)},
+    title={Disclosure of data}
+  ]
+  \corasasset[
+    name=auto-asset,
+    at={(13.6,1.2)},
+    title={Data privacy}
+  ]
+
+  \corascauses[from=auto-accidental,to=auto-vulnerability-left]
+  \corascauses[from=auto-deliberate,to=auto-vulnerability-left]
+  \corascauses[from=auto-nonhuman,to=auto-vulnerability-bottom]
+  \corascauses[from=auto-vulnerability-left,to=auto-scenario]
+  \corascauses[from=auto-vulnerability-bottom,to=auto-scenario]
+  \corascauses[from=auto-scenario,to=auto-incident]
+  \corasrelates[from=auto-incident,to=auto-asset]
+\end{corasthreatdiagram}
+\end{center}
+
+\end{document}

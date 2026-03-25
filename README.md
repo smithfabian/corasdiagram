@@ -212,6 +212,28 @@ TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error docs/cor
 The release workflow publishes the manual PDF and rendered example screenshots
 as CI artifacts and as a GitHub Pages site.
 
+## Release and Deployment
+
+The repository has separate CI and release workflows:
+
+- CI runs on pull requests, on pushes to `main`/`master`, and on manual
+  dispatch.
+- Release runs on manual dispatch and on version tags matching `v*`.
+
+Important Pages deployment rule:
+
+- The `github-pages` environment currently allows deployments only from the
+  `main` branch.
+- A tag push such as `v0.1.0` will still build the release artifacts and
+  publish GitHub release assets, but the Pages deployment step will be rejected
+  unless the environment protection rules are changed.
+
+Current contributor guidance:
+
+- Use a tag push to publish a versioned release.
+- Use a manual `Release` workflow run from `main` when you want to deploy the
+  GitHub Pages site.
+
 ## Regression Tests
 
 Run the semantic failure fixtures with:

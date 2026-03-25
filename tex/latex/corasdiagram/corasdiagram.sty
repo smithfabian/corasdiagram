@@ -332,69 +332,10 @@
 \newcommand{\corasdiagram@symbolborderintersection}[1]{%
   \pgf@xa=\pgf@x%
   \pgf@ya=\pgf@y%
-  \ifdim\pgf@xa=0pt\relax
-    \ifdim\pgf@ya=0pt\relax
-      \corasdiagram@setsymbolpoint{#1}{north}%
-    \else
-      \pgfmathsetmacro{\corasdiagram@borderangle}{atan2(\the\pgf@ya,\the\pgf@xa)}%
-      \pgfmathtruncatemacro{\corasdiagram@borderslice}{%
-        (\corasdiagram@borderangle > 157.5) ? 0 :
-        (\corasdiagram@borderangle > 112.5) ? 1 :
-        (\corasdiagram@borderangle > 67.5) ? 2 :
-        (\corasdiagram@borderangle > 22.5) ? 3 :
-        (\corasdiagram@borderangle > -22.5) ? 4 :
-        (\corasdiagram@borderangle > -67.5) ? 5 :
-        (\corasdiagram@borderangle > -112.5) ? 6 :
-        (\corasdiagram@borderangle > -157.5) ? 7 : 0
-      }%
-      \ifcase\corasdiagram@borderslice\relax
-        \corasdiagram@setsymbolpoint{#1}{west}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{northwest}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{north}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{northeast}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{east}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{southeast}%
-      \or
-        \corasdiagram@setsymbolpoint{#1}{south}%
-      \else
-        \corasdiagram@setsymbolpoint{#1}{southwest}%
-      \fi
-    \fi
-  \else
-    \pgfmathsetmacro{\corasdiagram@borderangle}{atan2(\the\pgf@ya,\the\pgf@xa)}%
-    \pgfmathtruncatemacro{\corasdiagram@borderslice}{%
-      (\corasdiagram@borderangle > 157.5) ? 0 :
-      (\corasdiagram@borderangle > 112.5) ? 1 :
-      (\corasdiagram@borderangle > 67.5) ? 2 :
-      (\corasdiagram@borderangle > 22.5) ? 3 :
-      (\corasdiagram@borderangle > -22.5) ? 4 :
-      (\corasdiagram@borderangle > -67.5) ? 5 :
-      (\corasdiagram@borderangle > -112.5) ? 6 :
-      (\corasdiagram@borderangle > -157.5) ? 7 : 0
-    }%
-    \ifcase\corasdiagram@borderslice\relax
-      \corasdiagram@setsymbolpoint{#1}{west}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{northwest}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{north}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{northeast}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{east}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{southeast}%
-    \or
-      \corasdiagram@setsymbolpoint{#1}{south}%
-    \else
-      \corasdiagram@setsymbolpoint{#1}{southwest}%
-    \fi
-  \fi
+  \pgfmathsetmacro{\corasdiagram@dx}{\the\pgf@xa}%
+  \pgfmathsetmacro{\corasdiagram@dy}{\the\pgf@ya}%
+  \corasdiagram@setsnappeddirectionalanchor
+  \expandafter\corasdiagram@setsymbolpoint\expandafter{#1}{\corasdiagram@snappeddirectionalanchor}%
 }
 
 \newcommand{\corasdiagram@declareiconsymbolshape}[2]{%
@@ -2096,17 +2037,82 @@
   \path coordinate (#1) at #2;
 }
 
-\newcommand{\corasdiagram@makebordercoord}[3]{%
+\newcommand{\corasdiagram@setsnappeddirectionalanchor}{%
+  \pgfmathtruncatemacro{\corasdiagram@zerodelta}{abs(\corasdiagram@dx) < 0.02 && abs(\corasdiagram@dy) < 0.02 ? 1 : 0}%
+  \ifnum\corasdiagram@zerodelta=1\relax
+    \xdef\corasdiagram@snappeddirectionalanchor{north}%
+  \else
+    \pgfmathsetmacro{\corasdiagram@borderangle}{atan2(\corasdiagram@dy,\corasdiagram@dx)}%
+    \ifdim\corasdiagram@borderangle pt>157.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{west}%
+    \else\ifdim\corasdiagram@borderangle pt>112.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{northwest}%
+    \else\ifdim\corasdiagram@borderangle pt>67.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{north}%
+    \else\ifdim\corasdiagram@borderangle pt>22.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{northeast}%
+    \else\ifdim\corasdiagram@borderangle pt>-22.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{east}%
+    \else\ifdim\corasdiagram@borderangle pt>-67.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{southeast}%
+    \else\ifdim\corasdiagram@borderangle pt>-112.5pt\relax
+      \xdef\corasdiagram@snappeddirectionalanchor{south}%
+    \else
+      \ifdim\corasdiagram@borderangle pt>-157.5pt\relax
+        \xdef\corasdiagram@snappeddirectionalanchor{southwest}%
+      \else
+        \xdef\corasdiagram@snappeddirectionalanchor{west}%
+      \fi
+    \fi\fi\fi\fi\fi\fi\fi
+  \fi
+}
+
+\newcommand{\corasdiagram@getnodeanchorname}[2]{%
+  \expandafter\ifx\csname corasdiagram@nodeanchorname@#2\endcsname\relax
+    \edef#1{west}%
+  \else
+    \edef#1{\csname corasdiagram@nodeanchorname@#2\endcsname}%
+  \fi
+}
+\expandafter\def\csname corasdiagram@nodeanchorname@north\endcsname{north}
+\expandafter\def\csname corasdiagram@nodeanchorname@northeast\endcsname{north east}
+\expandafter\def\csname corasdiagram@nodeanchorname@east\endcsname{east}
+\expandafter\def\csname corasdiagram@nodeanchorname@southeast\endcsname{south east}
+\expandafter\def\csname corasdiagram@nodeanchorname@south\endcsname{south}
+\expandafter\def\csname corasdiagram@nodeanchorname@southwest\endcsname{south west}
+\expandafter\def\csname corasdiagram@nodeanchorname@west\endcsname{west}
+\expandafter\def\csname corasdiagram@nodeanchorname@northwest\endcsname{north west}
+
+\newcommand{\corasdiagram@makeiconbordercoord}[3]{%
   \corasdiagram@getbordernode{\corasdiagram@bordernodename}{#1}%
-  \edef\corasdiagram@borderrefname{#2}%
-  \pgf@process{%
-    \expandafter\pgfpointshapeborder\expandafter{\corasdiagram@bordernodename}{%
-      \expandafter\pgfpointanchor\expandafter{\corasdiagram@borderrefname}{center}%
-    }%
-  }%
+  \path let \p1=(\corasdiagram@bordernodename.center), \p2=(#2.center) in \pgfextra{%
+    \pgfmathsetmacro{\corasdiagram@dx}{\x2-\x1}%
+    \pgfmathsetmacro{\corasdiagram@dy}{\y2-\y1}%
+    \corasdiagram@setsnappeddirectionalanchor
+  };%
+  \corasdiagram@getnodeanchorname{\corasdiagram@nodeanchorname}{\corasdiagram@snappeddirectionalanchor}%
+  \pgf@process{\pgfpointanchor{\corasdiagram@bordernodename}{\corasdiagram@nodeanchorname}}%
   \edef\corasdiagram@borderx{\the\pgf@x}%
   \edef\corasdiagram@bordery{\the\pgf@y}%
   \path coordinate (#3) at (\corasdiagram@borderx,\corasdiagram@bordery);
+}
+
+\newcommand{\corasdiagram@makebordercoord}[3]{%
+  \corasdiagram@getnodeprop{anchorsymbol}{#1}{\corasdiagram@bordersymbol}%
+  \ifx\corasdiagram@bordersymbol\@empty
+    \corasdiagram@getbordernode{\corasdiagram@bordernodename}{#1}%
+    \edef\corasdiagram@borderrefname{#2}%
+    \pgf@process{%
+      \expandafter\pgfpointshapeborder\expandafter{\corasdiagram@bordernodename}{%
+        \expandafter\pgfpointanchor\expandafter{\corasdiagram@borderrefname}{center}%
+      }%
+    }%
+    \edef\corasdiagram@borderx{\the\pgf@x}%
+    \edef\corasdiagram@bordery{\the\pgf@y}%
+    \path coordinate (#3) at (\corasdiagram@borderx,\corasdiagram@bordery);
+  \else
+    \corasdiagram@makeiconbordercoord{#1}{#2}{#3}%
+  \fi
 }
 
 \newcommand{\corasdiagram@applyexactborderanchors}{%

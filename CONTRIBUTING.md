@@ -84,6 +84,30 @@ python3 tools/build_site.py \
   --minimal-pdf examples/corasdiagram-minimal.pdf
 ```
 
+## CI, Release, and Pages
+
+The repository uses two GitHub Actions workflows:
+
+- `CI`: runs on pull requests, pushes to `main`/`master`, and manual dispatch
+- `Release`: runs on manual dispatch and on pushed tags matching `v*`
+
+Pages deployment is intentionally more restricted than release artifact
+publication:
+
+- the `github-pages` environment currently allows deployments only from the
+  `main` branch
+- a pushed version tag still builds the release bundle and GitHub release
+  assets, but the Pages deploy job will be rejected unless the environment
+  rules are changed
+
+For contributors, that means:
+
+- push a `v*` tag when you want to publish a versioned release
+- run the `Release` workflow manually from `main` when you want to deploy the
+  GitHub Pages site
+- do not expect a tag push alone to update Pages under the current repository
+  protection rules
+
 ## Coding and Documentation Style
 
 - Prefer the current semantic CORAS macros in docs and examples.

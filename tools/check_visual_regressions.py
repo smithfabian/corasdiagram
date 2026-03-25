@@ -58,6 +58,10 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "tests" / "corasdiagram" / "endpoint-geometry-regression.tex",
             pages=(1,),
         ),
+        "icon-auto-edge-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "icon-auto-edge-regression.tex",
+            pages=(1, 2),
+        ),
         "icon-anchor-regression": Fixture(
             source=repo_root / "tests" / "corasdiagram" / "icon-anchor-regression.tex",
             pages=(1, 2, 3, 4),
