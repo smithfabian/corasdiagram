@@ -42,6 +42,93 @@ The release workflow also assembles a CTAN-friendly distribution bundle. Once
 the package is published to CTAN or TeX Live, installation can happen through
 the normal package manager for the TeX distribution.
 
+## Using In Your Own Project
+
+The package can be used directly in both Overleaf projects and ordinary local
+LaTeX projects by copying the package file together with its icon assets.
+
+### Overleaf
+
+Upload these from the repository:
+
+- [`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty)
+- the full [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons) directory
+
+The simplest Overleaf layout is:
+
+```text
+main.tex
+corasdiagram.sty
+icons/
+  asset.pdf
+  stakeholder.pdf
+  risk.pdf
+  ...
+```
+
+Then load the package normally:
+
+```latex
+\usepackage{corasdiagram}
+```
+
+This works because the package resolves the default icon path relative to the
+location of `corasdiagram.sty`.
+
+If you prefer to keep the package in a subfolder, keep the `icons/` directory
+beside the `.sty` file, for example:
+
+```text
+main.tex
+corasdiagram/
+  corasdiagram.sty
+  icons/
+    asset.pdf
+    stakeholder.pdf
+    ...
+```
+
+and load it with:
+
+```latex
+\usepackage{corasdiagram/corasdiagram}
+```
+
+If your icon directory is somewhere else, set it explicitly:
+
+```latex
+\usepackage[icons-path=coras-assets/icons]{corasdiagram}
+```
+
+### Local LaTeX Projects
+
+For a normal local project outside this repository, copy the same files into
+your project tree:
+
+```text
+my-project/
+  main.tex
+  corasdiagram.sty
+  icons/
+```
+
+and load the package with:
+
+```latex
+\usepackage{corasdiagram}
+```
+
+You can also keep the package in a subdirectory and point LaTeX at it in the
+usual way, either by using a TEXMF tree or by loading the package through its
+relative path:
+
+```latex
+\usepackage{vendor/corasdiagram/corasdiagram}
+```
+
+In that case, keep the `icons/` folder next to the `.sty` file or pass an
+explicit `icons-path=...`.
+
 ## Minimal Example
 
 ```latex
