@@ -47,10 +47,9 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "examples" / "corasdiagram-demo.tex",
             pages=(1, 2, 3),
         ),
-        "corasdiagram-high-level-analysis-table": Fixture(
-            source=repo_root / "examples" / "corasdiagram-high-level-analysis-table.tex",
-            pages=(1,),
-        ),
+        # The high-level analysis table is still compile-tested in CI, but not
+        # snapshot-tested here because longtable text wrapping drifts across TeX
+        # toolchains and causes false-positive byte-level PNG diffs.
         "auto-layout-regression": Fixture(
             source=repo_root / "tests" / "corasdiagram" / "auto-layout-regression.tex",
             pages=(1, 2, 3, 4, 5),
