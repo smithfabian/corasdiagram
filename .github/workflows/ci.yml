@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload actual renders on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: corasdiagram-visual-regressions
           path: ${{ runner.temp }}/visual-regressions/
@@ -176,7 +176,7 @@ jobs:
             --minimal-pdf examples/corasdiagram-minimal.pdf
 
       - name: Upload packaging artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: corasdiagram-package-smoke
           path: |
