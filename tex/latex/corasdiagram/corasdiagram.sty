@@ -541,7 +541,7 @@
 }
 
 \newcommand{\corasdiagram@highlevelcauseicons}{%
-  \begin{tikzpicture}[baseline=(current bounding box.center),x=1mm,y=1mm]
+  \begin{tikzpicture}[baseline=(current bounding box.center),x=1mm,y=1mm,scale=\corashlatable@iconscale,transform shape]
     \node[inner sep=0pt,outer sep=0pt] (deliberate) at (0,0)
       {\corasdiagram@includeicon{7.4mm}{threat-human-deliberate}};
     \node[inner sep=0pt,outer sep=0pt] (accidental) at (10.5,0)
@@ -552,7 +552,7 @@
 }
 
 \newcommand{\corasdiagram@highleveleventicons}{%
-  \begin{tikzpicture}[baseline=(current bounding box.center),x=1mm,y=1mm]
+  \begin{tikzpicture}[baseline=(current bounding box.center),x=1mm,y=1mm,scale=\corashlatable@iconscale,transform shape]
     \node[coras/ellipse,minimum width=19mm,minimum height=8.5mm,inner sep=0pt] (scenario) at (0,0) {};
     \node[coras/base node,anchor=center] at (scenario.north)
       {\corasdiagram@includeicon{5.1mm}{risk}};
@@ -565,7 +565,7 @@
 }
 
 \newcommand{\corasdiagram@highlevelpossibilityicons}{%
-  \begin{tikzpicture}[baseline=(current bounding box.center)]
+  \begin{tikzpicture}[baseline=(current bounding box.center),scale=\corashlatable@iconscale,transform shape]
     \node[coras/base node,inner sep=0pt,outer sep=0pt]
       {\corasdiagram@includeicon{8.0mm}{vulnerability}};
   \end{tikzpicture}%
@@ -2741,6 +2741,7 @@
   possibility width/.store in=\corashlatable@possibilitywidth,
   column sep/.store in=\corashlatable@columnsep,
   row sep/.store in=\corashlatable@rowsep,
+  icon scale/.store in=\corashlatable@iconscale,
   cause icons/.store in=\corashlatable@causeicons,
   event icons/.store in=\corashlatable@eventicons,
   possibility icons/.store in=\corashlatable@possibilityicons,
@@ -2757,6 +2758,7 @@
   \def\corashlatable@possibilitywidth{\dimexpr3\textwidth/10\relax}%
   \def\corashlatable@columnsep{10pt}%
   \def\corashlatable@rowsep{0.8ex}%
+  \def\corashlatable@iconscale{1}%
   \def\corashlatable@causeicons{\corasdiagram@highlevelcauseicons}%
   \def\corashlatable@eventicons{\corasdiagram@highleveleventicons}%
   \def\corashlatable@possibilityicons{\corasdiagram@highlevelpossibilityicons}%

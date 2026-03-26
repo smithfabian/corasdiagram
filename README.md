@@ -14,6 +14,10 @@ The package currently supports the five basic CORAS diagram families:
 
 It also supports high-level analysis risk tables with CORAS header icons.
 
+For narrow layouts such as a side-by-side `minipage` in Overleaf, the high-level
+analysis table accepts `icon scale=<factor>` to shrink the header icon groups,
+for example `icon scale=0.6`.
+
 Version `0.1.0` is the first open-source release target. The supported TeX
 engines are `pdflatex` and `lualatex`.
 
