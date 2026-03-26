@@ -11,10 +11,15 @@ on:
       - master
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   compile:
     name: Build (${{ matrix.engine }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -29,16 +34,21 @@ jobs:
 
       - name: Install TeX and site tooling
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            latexmk \
-            poppler-utils \
-            texlive-fonts-recommended \
-            texlive-latex-base \
-            texlive-latex-extra \
-            texlive-latex-recommended \
-            texlive-luatex \
+          packages=(
+            latexmk
+            lmodern
+            poppler-utils
+            texlive-fonts-recommended
+            texlive-latex-base
+            texlive-latex-extra
+            texlive-latex-recommended
             texlive-pictures
+          )
+          if [ "${{ matrix.engine }}" = "lualatex" ]; then
+            packages+=(texlive-luatex)
+          fi
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${packages[@]}"
 
       - name: Prepare LuaTeX cache
         if: matrix.engine == 'lualatex'
@@ -89,6 +99,7 @@ jobs:
   negative-tests:
     name: Negative semantic tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       TEXINPUTS: 'tex/latex//:'
     steps:
@@ -97,8 +108,9 @@ jobs:
 
       - name: Install TeX
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            lmodern \
             texlive-fonts-recommended \
             texlive-latex-base \
             texlive-latex-extra \
@@ -111,6 +123,7 @@ jobs:
   visual-regressions:
     name: Visual regression tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       TEXINPUTS: 'tex/latex//:'
     steps:
@@ -119,8 +132,9 @@ jobs:
 
       - name: Install TeX and raster tooling
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            lmodern \
             poppler-utils \
             texlive-fonts-recommended \
             texlive-latex-base \
@@ -143,6 +157,7 @@ jobs:
   package-smoke:
     name: Packaging smoke test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       TEXINPUTS: 'tex/latex//:'
     steps:
@@ -151,9 +166,10 @@ jobs:
 
       - name: Install TeX and site tooling
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             latexmk \
+            lmodern \
             poppler-utils \
             texlive-fonts-recommended \
             texlive-latex-base \

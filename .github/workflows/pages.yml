@@ -18,6 +18,7 @@ jobs:
   build-site:
     name: Build documentation site
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       TEXINPUTS: 'tex/latex//:'
     steps:
@@ -26,15 +27,15 @@ jobs:
 
       - name: Install TeX and site tooling
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             latexmk \
+            lmodern \
             poppler-utils \
             texlive-fonts-recommended \
             texlive-latex-base \
             texlive-latex-extra \
             texlive-latex-recommended \
-            texlive-luatex \
             texlive-pictures
 
       - name: Build docs and examples
