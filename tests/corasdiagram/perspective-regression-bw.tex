@@ -1,0 +1,31 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=12mm]{geometry}
+\usepackage[iconset=bw]{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Perspective Regression: Black-and-White}
+
+\begin{center}
+\begin{tikzpicture}[corasdiagram,x=1mm,y=1mm]
+  \node[font=\bfseries] at (35,180) {before};
+  \node[font=\bfseries] at (95,180) {before-after};
+  \node[font=\bfseries] at (155,180) {after};
+
+  \corasasset[name=persp-bw-asset-before,at={(35,146)},title={Asset},perspective=before]
+  \corasasset[name=persp-bw-asset-outline,at={(95,146)},title={Asset},perspective=before-after]
+  \corasasset[name=persp-bw-asset-after,at={(155,146)},title={Asset},perspective=after]
+
+  \corasindirectasset[name=persp-bw-indirect-before,at={(35,92)},title={Indirect\\Asset},perspective=before]
+  \corasindirectasset[name=persp-bw-indirect-outline,at={(95,92)},title={Indirect\\Asset},perspective=before-after]
+  \corasindirectasset[name=persp-bw-indirect-after,at={(155,92)},title={Indirect\\Asset},perspective=after]
+
+  \corasrisk[name=persp-bw-risk-before,at={(35,38)},title={Risk},level={medium},perspective=before]
+  \corasrisk[name=persp-bw-risk-outline,at={(95,38)},title={Risk},level={medium},perspective=before-after]
+  \corasrisk[name=persp-bw-risk-after,at={(155,38)},title={Risk},level={medium},perspective=after]
+\end{tikzpicture}
+\end{center}
+
+\end{document}

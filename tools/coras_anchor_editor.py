@@ -78,6 +78,7 @@ class SymbolConfig:
 
 EDITABLE_SYMBOLS = (
     SymbolConfig("asset", "Asset", "asset.svg", 10.0),
+    SymbolConfig("indirectasset", "Indirect asset", "indirect-asset.svg", 10.0),
     SymbolConfig("stakeholder", "Stakeholder", "stakeholder.svg", 7.0),
     SymbolConfig("threataccidental", "Threat: accidental", "threat-human-accidental.svg", 10.0),
     SymbolConfig("threatdeliberate", "Threat: deliberate", "threat-human-deliberate.svg", 10.0),
@@ -182,7 +183,7 @@ def find_symbol_block(text: str, symbol: str) -> tuple[int, int, int, int]:
 
 
 def parse_svg_aspect_ratio(path: Path) -> float:
-    root = ET.fromstring(read_text(path))
+    root = ET.fromstring(sanitize_svg_for_browser(read_text(path)))
     view_box = root.attrib.get("viewBox")
     if view_box:
         parts = [float(part) for part in view_box.replace(",", " ").split()]

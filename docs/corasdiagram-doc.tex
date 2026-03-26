@@ -65,7 +65,7 @@ published, installation can happen through the normal TeX package manager.
 \hline
 Option & Default & Meaning \\
 \hline
-iconset=color|bw & color & Select the color or black-and-white icon set. \\
+iconset=color|bw & color & Select the color or black-and-white icon set for the base, outlined, and shaded icon variants. \\
 icons-path=<path> & package icons & Override the icon directory path. \\
 \hline
 \end{tabular}
@@ -148,6 +148,7 @@ Macro & Meaning \\
 \textbackslash corashighlevelanalysisrow & One data row in a high-level analysis table. \\
 \textbackslash corashighlevelriskrow & Alias for \textbackslash corashighlevelanalysisrow. \\
 \textbackslash corasasset & Asset node with CORAS asset icon. \\
+\textbackslash corasindirectasset & Indirect asset node with the dotted indirect-asset icon. \\
 \textbackslash corasstakeholder & Stakeholder node with stakeholder icon. \\
 \textbackslash corasthreataccidental & Accidental human threat source. \\
 \textbackslash corasthreatdeliberate & Deliberate human threat source. \\
@@ -163,7 +164,84 @@ Macro & Meaning \\
 \end{tabular}
 \end{center}
 
+\paragraph{Indirect Assets}
+
+\texttt{\textbackslash corasindirectasset} is semantically an asset node with a
+distinct dotted indirect-asset symbol. It can therefore be used anywhere the
+package expects an asset concept, including asset-diagram auto-layout lanes,
+asset-scope grouping, and the normal asset relation macros.
+
+\paragraph{Change-Modeling Perspectives}
+
+The \texttt{perspective} key is the public change-modeling switch used across
+icon-backed nodes and mounted-icon body nodes:
+\texttt{before} keeps the base icon,
+\texttt{before-after} selects the outlined transition variant, and
+\texttt{after} selects the shaded result variant.
+
+This applies to icon-backed nodes such as
+\texttt{\textbackslash corasasset},
+\texttt{\textbackslash corasindirectasset},
+\texttt{\textbackslash corasstakeholder},
+the threat-source macros, and
+\texttt{\textbackslash corasvulnerability};
+to mounted-icon body nodes such as
+\texttt{\textbackslash corasscenario},
+\texttt{\textbackslash corasunwantedincident},
+\texttt{\textbackslash corasrisk}, and
+\texttt{\textbackslash corastreatment};
+and to
+\texttt{\textbackslash corasriskref}.
+
 Underlined values in the key tables below are the defaults used by the package.
+
+\paragraph{Worked Perspective Example}
+
+\begin{center}
+\begin{corasassetdiagram}[x=.85cm,y=.85cm,layout=manual]
+  \corasasset[
+    at={(0,0)},
+    title={Asset},
+    perspective=before
+  ]
+  \corasindirectasset[
+    at={(3.2,0)},
+    title={Indirect\\Asset},
+    perspective=before-after
+  ]
+  \corasstakeholder[
+    at={(6.4,0)},
+    title={Stakeholder},
+    perspective=after
+  ]
+\end{corasassetdiagram}
+\end{center}
+
+\begin{center}
+\begin{corastreatmentdiagram}[x=.85cm,y=.85cm,layout=manual]
+  \corasscenario[
+    at={(0,0)},
+    title={Scenario},
+    meta={1 per year},
+    perspective=before
+  ]
+  \corasunwantedincident[
+    at={(4.5,0)},
+    title={Incident},
+    perspective=before-after
+  ]
+  \corastreatment[
+    at={(8.6,0)},
+    title={Treatment},
+    perspective=after
+  ]
+\end{corastreatmentdiagram}
+\end{center}
+
+\noindent
+The first row shows the three perspective states on icon-backed nodes. The
+second row shows the same key on mounted-icon body nodes, where only the icon
+changes and the underlying ellipse or rectangle geometry stays the same.
 
 \begin{center}
 \begin{tabular}{>{\ttfamily}p{0.18\linewidth}p{0.27\linewidth}p{0.45\linewidth}}
@@ -174,6 +252,7 @@ name & auto-generated identifier & Public node name used by later edges, scopes,
 title & free text & Primary label text rendered in the node. \\
 meta & empty or free text & Secondary metadata line below the title. \\
 level & empty or free text & Secondary level line, mainly used by risk nodes. \\
+perspective & \keydefault{before} | \texttt{before-after} | \texttt{after} & Selects the CORAS change-modeling perspective: base icon, outlined icon, or shaded icon. \\
 scope & empty or scope name & Adds the node to a named scope fit group. \\
 at & empty or TikZ coordinate & Explicit placement; wins over automatic placement. \\
 order & empty or positive integer & Sets the lane order used by auto layout. \\
@@ -302,6 +381,10 @@ harms & empty or node name & Places a node to the left of the harmed node. \\
 
 \subsection{Asset Diagram}
 
+This example uses \texttt{\textbackslash corasindirectasset} for the dependent
+asset. Semantically it is still an asset node, but it renders with the dotted
+indirect-asset symbol.
+
 \begin{center}
 \begin{corasassetdiagram}[x=.8cm,y=.8cm]
   \corasstakeholder[
@@ -316,7 +399,7 @@ harms & empty or node name & Places a node to the left of the harmed node. \\
     order=1,
     title={Asset}
   ]
-  \corasasset[
+  \corasindirectasset[
     name=doc-indirect,
     scope=doc-asset-scope,
     order=2,

@@ -154,7 +154,7 @@ explicit `icons-path=...`.
     order=1,
     title={Asset}
   ]
-  \corasasset[
+  \corasindirectasset[
     name=indirect,
     scope=asset-scope,
     order=2,
@@ -184,12 +184,13 @@ the package sources and example `.tex` files.
 The supported `0.1.0` surface is the current semantic package API:
 
 - package options: `iconset`, `icons-path`
+- common node keys such as `perspective=before|before-after|after`
 - diagram environments:
   `corasassetdiagram`, `corasthreatdiagram`, `corasriskdiagram`,
   `corastreatmentdiagram`, `corastreatmentoverviewdiagram`
 - high-level analysis table environments:
   `corashighlevelanalysistable`, `corashighlevelrisktable`
-- concept node macros such as `\corasasset`, `\corasstakeholder`,
+- concept node macros such as `\corasasset`, `\corasindirectasset`, `\corasstakeholder`,
   `\corasrisk`, `\corastreatment`, and the threat/vulnerability/scenario
   family
 - semantic edge macros such as `\corascauses`, `\corasrelates`,
@@ -198,6 +199,28 @@ The supported `0.1.0` surface is the current semantic package API:
   `\corashighlevelanalysisrow`, `\corashighlevelriskrow`
 - `\corasscope`, including `kind=asset-scope` and the stakeholder corner
   compartment options
+
+The `perspective` key applies to the public node macros and mounted-icon body
+nodes. `before` uses the base icon, `before-after` uses the outlined variant,
+and `after` uses the shaded variant.
+
+```latex
+\corasasset[
+  name=baseline,
+  title={Asset},
+  perspective=before
+]
+\corasindirectasset[
+  name=transition,
+  title={Indirect\\Asset},
+  perspective=before-after
+]
+\corastreatment[
+  name=target,
+  title={Treatment},
+  perspective=after
+]
+```
 
 Low-level primitives such as `\corasnode`, `\corasedge`, and `\corascontainer`
 remain available for compatibility, but they are documented as advanced

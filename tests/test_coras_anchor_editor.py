@@ -48,6 +48,9 @@ class CorasAnchorEditorTests(unittest.TestCase):
     def test_apply_anchor_updates_changes_only_requested_anchor_line(self) -> None:
         symbols = self.module.parse_package_symbols(self.package_path)
         original_north = symbols["asset"]["anchors"]["north"]
+        stakeholder_north = symbols["stakeholder"]["anchors"]["north"]
+        expected_north_x = self.module.format_mm_value(original_north["x"] + 0.1)
+        expected_north_y = self.module.format_mm_value(original_north["y"])
         updates = {
             "asset": {
                 "north": {"x": original_north["x"] + 0.1, "y": original_north["y"]},
@@ -59,9 +62,12 @@ class CorasAnchorEditorTests(unittest.TestCase):
         changed_lines = [index for index, pair in enumerate(zip(original_lines, rewritten_lines)) if pair[0] != pair[1]]
         self.assertEqual(len(changed_lines), 1)
         changed_line = rewritten_lines[changed_lines[0]]
-        self.assertIn(r"\corasdiagram@setsymbolanchor{asset}{north}{0.1mm}{5.75mm}%", changed_line)
         self.assertIn(
-            r"\corasdiagram@setsymbolanchor{stakeholder}{north}{0mm}{5.55mm}%",
+            rf"\corasdiagram@setsymbolanchor{{asset}}{{north}}{{{expected_north_x}}}{{{expected_north_y}}}%",
+            changed_line,
+        )
+        self.assertIn(
+            rf"\corasdiagram@setsymbolanchor{{stakeholder}}{{north}}{{{self.module.format_mm_value(stakeholder_north['x'])}}}{{{self.module.format_mm_value(stakeholder_north['y'])}}}%",
             rewritten,
         )
 

@@ -70,6 +70,14 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "tests" / "corasdiagram" / "min-edge-gap-regression.tex",
             pages=(1,),
         ),
+        "perspective-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "perspective-regression.tex",
+            pages=(1, 2),
+        ),
+        "perspective-regression-bw": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "perspective-regression-bw.tex",
+            pages=(1,),
+        ),
     }
 
 

@@ -216,6 +216,10 @@
     coras/invisible anchor,
     shape=corasassetanchorshape
   },
+  coras/indirect asset anchor/.style={
+    coras/invisible anchor,
+    shape=corasindirectassetanchorshape
+  },
   coras/stakeholder anchor/.style={
     coras/invisible anchor,
     shape=corasstakeholderanchorshape
@@ -394,6 +398,22 @@
   \corasdiagram@setsymboloutline{asset}{north,northeast,east,southeast,south,southwest,west,northwest}%
 }
 
+\newcommand{\corasdiagram@defineanchors@indirectasset}{%
+  \corasdiagram@setsymbolmetric{indirectasset}{bodyhalfx}{4.15mm}%
+  \corasdiagram@setsymbolmetric{indirectasset}{bodyhalfy}{4.85mm}%
+  \corasdiagram@setsymbolmetric{indirectasset}{basey}{-3.9mm}%
+  \corasdiagram@setsymbolmetric{indirectasset}{midy}{0.35mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{north}{0mm}{5.9mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{northeast}{3.15mm}{1.15mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{east}{5.25mm}{-1.45mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{southeast}{3.9mm}{-4.05mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{south}{0mm}{-5.8mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{southwest}{-4.45mm}{-3.75mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{west}{-4.8mm}{-1.25mm}%
+  \corasdiagram@setsymbolanchor{indirectasset}{northwest}{-2.3mm}{1.25mm}%
+  \corasdiagram@setsymboloutline{indirectasset}{north,northeast,east,southeast,south,southwest,west,northwest}%
+}
+
 \newcommand{\corasdiagram@defineanchors@threataccidental}{%
   \corasdiagram@setsymbolmetric{threataccidental}{bodyhalfx}{2.8mm}%
   \corasdiagram@setsymbolmetric{threataccidental}{bodyhalfy}{5.4mm}%
@@ -459,6 +479,7 @@
 }
 
 \corasdiagram@defineanchors@asset
+\corasdiagram@defineanchors@indirectasset
 \corasdiagram@defineanchors@stakeholder
 \corasdiagram@defineanchors@threataccidental
 \corasdiagram@defineanchors@threatdeliberate
@@ -466,6 +487,7 @@
 \corasdiagram@defineanchors@vulnerability
 
 \corasdiagram@declareiconsymbolshape{corasassetanchorshape}{asset}
+\corasdiagram@declareiconsymbolshape{corasindirectassetanchorshape}{indirectasset}
 \corasdiagram@declareiconsymbolshape{corasstakeholderanchorshape}{stakeholder}
 \corasdiagram@declareiconsymbolshape{corasthreataccidentalanchorshape}{threataccidental}
 \corasdiagram@declareiconsymbolshape{corasthreatdeliberateanchorshape}{threatdeliberate}
@@ -534,6 +556,29 @@
 
 \newcommand{\corasdiagram@iconfile}[1]{%
   \corasdiagram@iconspath/#1\corasdiagram@iconsuffix.pdf%
+}
+
+\newcommand{\corasdiagram@resolveiconperspectivesuffix}[1]{%
+  \def\corasdiagram@resolvedperspectivesuffix{}%
+  \def\corasdiagram@perspectivebefore{before}%
+  \def\corasdiagram@perspectivebeforeafter{before-after}%
+  \def\corasdiagram@perspectiveafter{after}%
+  \ifx#1\@empty
+  \else\ifx#1\corasdiagram@perspectivebefore
+  \else\ifx#1\corasdiagram@perspectivebeforeafter
+    \def\corasdiagram@resolvedperspectivesuffix{_outlined}%
+  \else\ifx#1\corasdiagram@perspectiveafter
+    \def\corasdiagram@resolvedperspectivesuffix{_shaded}%
+  \else
+    \PackageError{corasdiagram}{Unknown perspective `#1'}{%
+      Use `perspective=before`, `perspective=before-after`, or `perspective=after`.%
+    }%
+  \fi\fi\fi\fi
+}
+
+\newcommand{\corasdiagram@resolveiconstem}[3]{%
+  \corasdiagram@resolveiconperspectivesuffix{#2}%
+  \edef#3{#1\corasdiagram@resolvedperspectivesuffix}%
 }
 
 \newcommand{\corasdiagram@includeicon}[2]{%
@@ -771,6 +816,10 @@
 
 \newcommand{\corasdiagram@maptyperole}[1]{%
   \def\corasdiagram@mappedrole{#1}%
+  \def\corasdiagram@typeindirectasset{indirectasset}%
+  \ifx#1\corasdiagram@typeindirectasset
+    \def\corasdiagram@mappedrole{asset}%
+  \fi
   \corasdiagram@ifincsv{#1}{threataccidental,threatdeliberate,threatnonhuman}{%
     \def\corasdiagram@mappedrole{threatsource}%
   }{}%
@@ -944,6 +993,7 @@
 
 \newcommand{\corasdiagram@measureautonodesize}{%
   \def\corasdiagram@typeasset{asset}%
+  \def\corasdiagram@typeindirectasset{indirectasset}%
   \def\corasdiagram@typestakeholder{stakeholder}%
   \def\corasdiagram@typethreataccidental{threataccidental}%
   \def\corasdiagram@typethreatdeliberate{threatdeliberate}%
@@ -955,6 +1005,10 @@
   \def\corasdiagram@typetreatment{treatment}%
   \def\corasdiagram@typejunction{junction}%
   \ifx\corasnode@type\corasdiagram@typeasset
+    \corasdiagram@setdefault\corasnode@textwidth{26mm}%
+    \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+    \corasdiagram@measureiconlabelsize{10mm}{10.2mm}%
+  \else\ifx\corasnode@type\corasdiagram@typeindirectasset
     \corasdiagram@setdefault\corasnode@textwidth{26mm}%
     \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
     \corasdiagram@measureiconlabelsize{10mm}{10.2mm}%
@@ -999,7 +1053,7 @@
   \else
     \corasdiagram@estimatedwidth=15mm\relax
     \corasdiagram@estimatedheight=10mm\relax
-  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi
+  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi
 }
 
 \newcommand{\corasdiagram@resolveeffectivegap}{%
@@ -1707,8 +1761,23 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{asset}%
-  \corasdiagram@rendericonlabelnode{asset}%
+  \corasdiagram@resolveiconstem{asset}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
+}
+
+\newcommand{\corasdiagram@render@indirectasset}{%
+  \corasdiagram@setdefault\corasnode@textwidth{26mm}%
+  \corasdiagram@setdefault\corasnode@iconwidth{10mm}%
+  \corasdiagram@setdefault\corasnode@anchorstyle{coras/indirect asset anchor}%
+  \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
+  \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
+  \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
+  \def\corasnode@anchorsymbol{indirectasset}%
+  \corasdiagram@resolveiconstem{indirect-asset}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@stakeholder}{%
@@ -1717,8 +1786,10 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{stakeholder}%
-  \corasdiagram@rendericonlabelnode{stakeholder}%
+  \corasdiagram@resolveiconstem{stakeholder}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@threataccidental}{%
@@ -1728,8 +1799,10 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{threataccidental}%
-  \corasdiagram@rendericonlabelnode{threat-human-accidental}%
+  \corasdiagram@resolveiconstem{threat-human-accidental}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@threatdeliberate}{%
@@ -1739,8 +1812,10 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{threatdeliberate}%
-  \corasdiagram@rendericonlabelnode{threat-human-deliberate}%
+  \corasdiagram@resolveiconstem{threat-human-deliberate}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@threatnonhuman}{%
@@ -1750,8 +1825,10 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{threatnonhuman}%
-  \corasdiagram@rendericonlabelnode{threat-non-human}%
+  \corasdiagram@resolveiconstem{threat-non-human}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@vulnerability}{%
@@ -1761,20 +1838,24 @@
   \corasdiagram@setdefault\corasnode@anchorwidth{0pt}%
   \corasdiagram@setdefault\corasnode@anchorheight{0pt}%
   \corasdiagram@setdefault\corasnode@labelgap{-0.4mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{vulnerability}%
-  \corasdiagram@rendericonlabelnode{vulnerability}%
+  \corasdiagram@resolveiconstem{vulnerability}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
 }
 
 \newcommand{\corasdiagram@render@scenario}{%
   \corasdiagram@setdefault\corasnode@textwidth{28mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{6.2mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \corasdiagram@placenode{%
     coras/ellipse,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \corasdiagram@resolveiconstem{risk}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
   \node[coras/base node,anchor=center] (\corasnode@name-icon)
     at (\corasnode@name-body.north)
-    {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
+    {\corasdiagram@includeicon{\corasnode@iconwidth}{\corasdiagram@resolvediconstem}};
   \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
   \corasdiagram@storepublicnodesize{\corasnode@name}%
@@ -1784,13 +1865,15 @@
 \newcommand{\corasdiagram@render@incident}{%
   \corasdiagram@setdefault\corasnode@textwidth{25mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{5.6mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \corasdiagram@placenode{%
     coras/incident body,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \corasdiagram@resolveiconstem{unwanted-incident}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
   \node[coras/base node,anchor=center] (\corasnode@name-icon)
     at ([xshift=-1.6mm]\corasnode@name-body.north east)
-    {\corasdiagram@includeicon{\corasnode@iconwidth}{unwanted-incident}};
+    {\corasdiagram@includeicon{\corasnode@iconwidth}{\corasdiagram@resolvediconstem}};
   \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
   \corasdiagram@storepublicnodesize{\corasnode@name}%
@@ -1800,13 +1883,15 @@
 \newcommand{\corasdiagram@render@risk}{%
   \corasdiagram@setdefault\corasnode@textwidth{27mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{6.5mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \corasdiagram@placenode{%
     coras/risk body,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \corasdiagram@resolveiconstem{risk}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
   \node[coras/base node,anchor=south] (\corasnode@name-icon)
     at ([yshift=0.5mm]\corasnode@name-body.north)
-    {\corasdiagram@includeicon{\corasnode@iconwidth}{risk}};
+    {\corasdiagram@includeicon{\corasnode@iconwidth}{\corasdiagram@resolvediconstem}};
   \corasdiagram@fitanchor{coras/anchor rectangle}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
   \corasdiagram@storepublicnodesize{\corasnode@name}%
@@ -1816,13 +1901,15 @@
 \newcommand{\corasdiagram@render@treatment}{%
   \corasdiagram@setdefault\corasnode@textwidth{24mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{7mm}%
+  \corasdiagram@setdefault\corasnode@perspective{before}%
   \corasdiagram@placenode{%
     coras/treatment body,
     text width=\corasnode@textwidth
   }{\corasnode@name-body}{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \corasdiagram@resolveiconstem{treatment}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
   \node[coras/base node,anchor=center] (\corasnode@name-icon)
     at (\corasnode@name-body.north)
-    {\corasdiagram@includeicon{\corasnode@iconwidth}{treatment}};
+    {\corasdiagram@includeicon{\corasnode@iconwidth}{\corasdiagram@resolvediconstem}};
   \corasdiagram@fitanchor{coras/anchor ellipse}{\corasnode@name}{\corasnode@name-body}%
   \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-body) (\corasnode@name-icon)}%
   \corasdiagram@storepublicnodesize{\corasnode@name}%
@@ -1846,6 +1933,7 @@
   meta/.store in=\corasnode@meta,
   level/.store in=\corasnode@level,
   value/.store in=\corasnode@value,
+  perspective/.store in=\corasnode@perspective,
   at/.store in=\corasnode@at,
   scope/.store in=\corasnode@scope,
   order/.store in=\corasnode@order,
@@ -1876,6 +1964,7 @@
     meta=,%
     level=,%
     value=,%
+    perspective=before,%
     at=,%
     scope=,%
     order=,%
@@ -1916,7 +2005,7 @@
   \@ifundefined{corasdiagram@render@\corasnode@type}{%
     \PackageError{corasdiagram}{Unknown node type `\corasnode@type'}{%
       Valid node types are asset, stakeholder, threataccidental,
-      threatdeliberate, threatnonhuman, vulnerability, scenario,
+      threatdeliberate, threatnonhuman, vulnerability, indirectasset, scenario,
       incident, risk, treatment, and junction.%
     }%
   }{%
@@ -2544,6 +2633,7 @@
   to/.store in=\corasriskref@to,
   pos/.store in=\corasriskref@pos,
   at/.store in=\corasriskref@at,
+  perspective/.store in=\corasriskref@perspective,
   tikz/.store in=\corasriskref@tikz,
   icon width/.store in=\corasriskref@iconwidth,
 }
@@ -2556,6 +2646,7 @@
     to=,%
     pos=.5,%
     at=,%
+    perspective=before,%
     tikz=,%
     icon width=5mm,%
     #1%
@@ -2570,6 +2661,7 @@
   \fi
   \corasdiagram@ensurename\corasriskref@name
   \corasdiagram@normalize\corasriskref@tikz
+  \corasdiagram@resolveiconstem{risk}{\corasriskref@perspective}{\corasdiagram@resolvediconstem}%
   \edef\corasdiagram@riskrefoptions{coras/risk ref box,\corasriskref@tikz}%
   \ifx\corasriskref@at\@empty
     \ifx\corasriskref@from\@empty
@@ -2596,7 +2688,7 @@
   \fi
   \node[coras/base node,anchor=east] (\corasriskref@name-icon)
     at ([xshift=-0.7mm]\corasriskref@name-body.west)
-    {\corasdiagram@includeicon{\corasriskref@iconwidth}{risk}};
+    {\corasdiagram@includeicon{\corasriskref@iconwidth}{\corasdiagram@resolvediconstem}};
   \corasdiagram@fitpublicnode{\corasriskref@name}{(\corasriskref@name-body) (\corasriskref@name-icon)}%
 }
 
@@ -2605,6 +2697,14 @@
     \corasnode[type=asset,#1]%
   }{%
     \corasnode[type=asset,title={#2},#1]%
+  }%
+}
+
+\NewDocumentCommand{\corasindirectasset}{O{}g}{%
+  \IfNoValueTF{#2}{%
+    \corasnode[type=indirectasset,#1]%
+  }{%
+    \corasnode[type=indirectasset,title={#2},#1]%
   }%
 }
 

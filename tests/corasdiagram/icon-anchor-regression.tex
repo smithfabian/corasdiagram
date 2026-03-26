@@ -136,16 +136,25 @@
 \begin{tikzpicture}[corasdiagram,x=1mm,y=1mm]
   \corasasset[
     name=anchor-asset,
-    at={(93,196)},
+    at={(93,224)},
     title={Asset}
   ]
   \corastestdrawanchorgrid{anchor-asset}
   \corastestdrawiconanchorfan{anchor-asset}
   \corastestdrawanchortable{anchor-asset}
 
+  \corasindirectasset[
+    name=anchor-indirect-asset,
+    at={(93,132)},
+    title={Indirect\\Asset}
+  ]
+  \corastestdrawanchorgrid{anchor-indirect-asset}
+  \corastestdrawiconanchorfan{anchor-indirect-asset}
+  \corastestdrawanchortable{anchor-indirect-asset}
+
   \corasstakeholder[
     name=anchor-stakeholder,
-    at={(93,82)},
+    at={(93,40)},
     title={Stakeholder}
   ]
   \corastestdrawanchorgrid{anchor-stakeholder}

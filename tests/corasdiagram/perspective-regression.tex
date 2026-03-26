@@ -1,0 +1,63 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=12mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Perspective Regression: Icon Nodes}
+
+\begin{center}
+\begin{tikzpicture}[corasdiagram,x=1mm,y=1mm]
+  \node[font=\bfseries] at (35,208) {before};
+  \node[font=\bfseries] at (95,208) {before-after};
+  \node[font=\bfseries] at (155,208) {after};
+
+  \corasasset[name=persp-asset-before,at={(35,172)},title={Asset},perspective=before]
+  \corasasset[name=persp-asset-outline,at={(95,172)},title={Asset},perspective=before-after]
+  \corasasset[name=persp-asset-after,at={(155,172)},title={Asset},perspective=after]
+
+  \corasindirectasset[name=persp-indirect-before,at={(35,118)},title={Indirect\\Asset},perspective=before]
+  \corasindirectasset[name=persp-indirect-outline,at={(95,118)},title={Indirect\\Asset},perspective=before-after]
+  \corasindirectasset[name=persp-indirect-after,at={(155,118)},title={Indirect\\Asset},perspective=after]
+
+  \corasstakeholder[name=persp-stake-before,at={(35,62)},title={Stakeholder},perspective=before]
+  \corasstakeholder[name=persp-stake-outline,at={(95,62)},title={Stakeholder},perspective=before-after]
+  \corasstakeholder[name=persp-stake-after,at={(155,62)},title={Stakeholder},perspective=after]
+
+  \corasthreataccidental[name=persp-threat-before,at={(35,16)},title={Accidental},perspective=before]
+  \corasthreataccidental[name=persp-threat-outline,at={(95,16)},title={Accidental},perspective=before-after]
+  \corasthreataccidental[name=persp-threat-after,at={(155,16)},title={Accidental},perspective=after]
+\end{tikzpicture}
+\end{center}
+
+\newpage
+
+\section*{Perspective Regression: Mounted Icons}
+
+\begin{center}
+\begin{tikzpicture}[corasdiagram,x=1mm,y=1mm]
+  \node[font=\bfseries] at (35,202) {before};
+  \node[font=\bfseries] at (95,202) {before-after};
+  \node[font=\bfseries] at (155,202) {after};
+
+  \corasscenario[name=persp-scenario-before,at={(35,168)},title={Scenario},meta={1 per year},perspective=before]
+  \corasscenario[name=persp-scenario-outline,at={(95,168)},title={Scenario},meta={1 per year},perspective=before-after]
+  \corasscenario[name=persp-scenario-after,at={(155,168)},title={Scenario},meta={1 per year},perspective=after]
+
+  \corasunwantedincident[name=persp-incident-before,at={(35,116)},title={Incident},perspective=before]
+  \corasunwantedincident[name=persp-incident-outline,at={(95,116)},title={Incident},perspective=before-after]
+  \corasunwantedincident[name=persp-incident-after,at={(155,116)},title={Incident},perspective=after]
+
+  \corasrisk[name=persp-risk-before,at={(35,62)},title={Risk},level={medium},perspective=before]
+  \corasrisk[name=persp-risk-outline,at={(95,62)},title={Risk},level={medium},perspective=before-after]
+  \corasrisk[name=persp-risk-after,at={(155,62)},title={Risk},level={medium},perspective=after]
+
+  \corastreatment[name=persp-treatment-before,at={(35,16)},title={Treatment},perspective=before]
+  \corastreatment[name=persp-treatment-outline,at={(95,16)},title={Treatment},perspective=before-after]
+  \corastreatment[name=persp-treatment-after,at={(155,16)},title={Treatment},perspective=after]
+\end{tikzpicture}
+\end{center}
+
+\end{document}

@@ -25,6 +25,11 @@
     at={(7.8,2.4)},
     title={Right asset}
   ]
+  \corasindirectasset[
+    name=auto-indirect,
+    at={(7.8,5.0)},
+    title={Indirect asset}
+  ]
   \corasasset[
     name=auto-upper,
     at={(4.0,5.0)},
@@ -43,6 +48,7 @@
 
   \corasconcerns[from=auto-owner,to=auto-core]
   \corasrelates[from=auto-core,to=auto-right]
+  \corasrelates[from=auto-core,to=auto-indirect]
   \corasrelates[from=auto-core,to=auto-upper]
   \corasrelates[from=auto-core,to=auto-lower]
   \corasrelates[from=auto-core,to=auto-lowerleft]

@@ -1,5 +1,17 @@
-This project includes certain images derived from or copied from CORAS-The-Explorer
+This project includes certain CORAS symbol assets derived from or copied from
+CORAS-The-Explorer:
+
 https://github.com/stverdal/CORAS-The-Explorer
+
+The vendored package sources in
+tex/latex/corasdiagram/icons-src/
+are normalized copies of SVG assets from:
+
+src/js/components/molecules/Editor/svg/
+
+The package preserves the upstream CORAS symbol concepts, renames the files to
+package-native stems, and generates package-local PDF and black-and-white
+variants from those vendored SVGs.
 
 Original license:
 
