@@ -25,7 +25,7 @@ jobs:
       TEXINPUTS: 'tex/latex//:'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install TeX and site tooling
         run: |
@@ -93,7 +93,7 @@ jobs:
       TEXINPUTS: 'tex/latex//:'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install TeX
         run: |
@@ -115,7 +115,7 @@ jobs:
       TEXINPUTS: 'tex/latex//:'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install TeX and raster tooling
         run: |
@@ -147,7 +147,7 @@ jobs:
       TEXINPUTS: 'tex/latex//:'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install TeX and site tooling
         run: |
