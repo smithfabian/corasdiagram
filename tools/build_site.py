@@ -1,19 +1,74 @@
 #!/usr/bin/env python3
 """Build the static documentation site published by the Pages workflow.
 
-The site is generated from prebuilt manual/example PDFs plus VERSION. This is a
-packaging helper, not a source of truth: the package, docs, and examples stay
-in the repository, while dist/site/ is disposable output.
+The site is generated from checked-in site templates plus prebuilt package
+artifacts. This keeps the homepage maintainable without introducing a frontend
+framework:
+
+- VERSION is the release number shown on the page
+- ctan/metadata.json provides the package summary/description
+- manual/example PDFs are rasterized into preview images
+- site-src/ contains the homepage template and static assets
+
+The generated dist/site/ tree is disposable output.
 """
 
 from __future__ import annotations
 
 import argparse
+import html
+import json
 import shutil
 import subprocess
 from pathlib import Path
+from textwrap import dedent
 
 from versioning import read_repo_version
+
+
+REPO_URL = "https://github.com/smithfabian/corasdiagram"
+ISSUES_URL = f"{REPO_URL}/issues"
+RELEASES_URL = f"{REPO_URL}/releases"
+
+MINIMAL_SNIPPET = dedent(
+    r"""
+    \documentclass{article}
+    \usepackage{corasdiagram}
+
+    \begin{document}
+    \begin{corasassetdiagram}[x=1cm,y=1cm]
+      \corasstakeholder[name=stakeholder,scope=asset-scope,title={Stakeholder}]
+      \corasasset[name=asset,scope=asset-scope,title={Asset}]
+      \corasindirectasset[name=indirect,scope=asset-scope,title={Indirect\\Asset}]
+      \corasscope[
+        name=asset-box,
+        scope=asset-scope,
+        kind=asset-scope,
+        stakeholder=stakeholder,
+        stakeholder corner=left
+      ]
+      \corasrelates[from=asset,to=indirect]
+    \end{corasassetdiagram}
+    \end{document}
+    """
+).strip()
+
+HOW_IT_WORKS_SNIPPET = dedent(
+    r"""
+    \begin{corasthreatdiagram}[x=1cm,y=1cm]
+      \corasthreataccidental[name=employee,title={Employee}]
+      \corasvulnerability[name=web,title={Old version of\\webserver}]
+      \corasscenario[name=scenario,title={Servers infected},meta={1 per year}]
+      \corasunwantedincident[name=incident,title={Disclosure of data}]
+      \corasasset[name=asset,title={Data privacy}]
+
+      \corascauses[from=employee,to=web]
+      \corascauses[from=web,to=scenario]
+      \corascauses[from=scenario,to=incident]
+      \corasrelates[from=incident,to=asset]
+    \end{corasthreatdiagram}
+    """
+).strip()
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,6 +80,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--demo-pdf", type=Path, required=True, help="Demo PDF.")
     parser.add_argument(
         "--minimal-pdf", type=Path, required=True, help="Minimal example PDF."
+    )
+    parser.add_argument(
+        "--analysis-table-pdf",
+        type=Path,
+        required=True,
+        help="High-level analysis table PDF.",
     )
     parser.add_argument(
         "--output-dir",
@@ -55,7 +116,9 @@ def resolve_artifact(repo_root: Path, path: Path) -> Path:
     raise FileNotFoundError(path)
 
 
-def rasterize(pdf_path: Path, prefix: Path, first: int | None = None, last: int | None = None) -> None:
+def rasterize(
+    pdf_path: Path, prefix: Path, *, first: int | None = None, last: int | None = None
+) -> None:
     command = ["pdftoppm", "-png"]
     if first is not None:
         command.extend(["-f", str(first)])
@@ -65,11 +128,127 @@ def rasterize(pdf_path: Path, prefix: Path, first: int | None = None, last: int 
     subprocess.run(command, check=True)
 
 
+def render_code_block(block_id: str, title: str, code: str) -> str:
+    escaped = html.escape(code)
+    return dedent(
+        f"""
+        <article class="code-card">
+          <div class="code-card__header">
+            <h3>{html.escape(title)}</h3>
+            <button class="copy-button" type="button" data-copy-target="{block_id}">Copy</button>
+          </div>
+          <pre><code id="{block_id}">{escaped}</code></pre>
+        </article>
+        """
+    ).strip()
+
+
+def render_capability_cards() -> str:
+    cards = [
+        ("Asset diagrams", "Stakeholders, direct assets, indirect assets, and scoped asset structures."),
+        ("Threat diagrams", "Threat sources, vulnerabilities, scenarios, unwanted incidents, and harmed assets."),
+        ("Risk diagrams", "Risk-focused views that connect threat sources, risks, and impacted assets."),
+        ("Treatment diagrams", "Treatment chains that show how mitigations relate to selected threats and incidents."),
+        ("Treatment overview diagrams", "Overview views with risks, treatments, assets, and fan-in through a junction."),
+        ("High-level analysis tables", "CORAS-style report tables with the package-managed header icon groups."),
+    ]
+    return "\n".join(
+        dedent(
+            f"""
+            <article class="capability-card">
+              <h3>{html.escape(title)}</h3>
+              <p>{html.escape(description)}</p>
+            </article>
+            """
+        ).strip()
+        for title, description in cards
+    )
+
+
+def render_example_cards() -> str:
+    cards = [
+        ("Minimal asset example", "minimal-1.png", "Minimal asset diagram with stakeholder, direct asset, and indirect asset."),
+        ("Demo page 1", "demo-1.png", "Asset and threat diagram examples from the full demo document."),
+        ("Demo page 2", "demo-2.png", "Risk and treatment diagram examples from the full demo document."),
+        ("Demo page 3", "demo-3.png", "Treatment overview example and additional reference content from the full demo."),
+        ("High-level analysis table", "analysis-table-1.png", "CORAS high-level analysis table preview rendered from the package example."),
+    ]
+    return "\n".join(
+        dedent(
+            f"""
+            <article class="gallery-card">
+              <img src="{src}" alt="{html.escape(alt)}">
+              <div class="gallery-card__body">
+                <h3>{html.escape(title)}</h3>
+                <p>{html.escape(alt)}</p>
+              </div>
+            </article>
+            """
+        ).strip()
+        for title, src, alt in cards
+    )
+
+
+def render_next_steps() -> str:
+    links = [
+        ("Download the manual PDF", "corasdiagram-doc.pdf"),
+        ("Browse the repository", REPO_URL),
+        ("View releases", RELEASES_URL),
+        ("Report an issue", ISSUES_URL),
+    ]
+    return "\n".join(
+        f'<li><a href="{href}">{html.escape(label)}</a></li>'
+        for label, href in links
+    )
+
+
+def load_metadata(repo_root: Path) -> dict[str, object]:
+    metadata_path = repo_root / "ctan" / "metadata.json"
+    return json.loads(metadata_path.read_text(encoding="utf-8"))
+
+
+def copy_static_assets(source_dir: Path, output_dir: Path) -> None:
+    for path in source_dir.iterdir():
+        if path.name == "index.html":
+            continue
+        destination = output_dir / path.name
+        if path.is_dir():
+            shutil.copytree(path, destination)
+        else:
+            shutil.copy2(path, destination)
+
+
+def render_index(template_text: str, replacements: dict[str, str]) -> str:
+    rendered = template_text
+    for key, value in replacements.items():
+        rendered = rendered.replace(f"__{key}__", value)
+    return rendered
+
+
+def verify_site_output(output_dir: Path) -> None:
+    required_files = [
+        "index.html",
+        "styles.css",
+        "app.js",
+        "corasdiagram-doc.pdf",
+        "minimal-1.png",
+        "demo-1.png",
+        "demo-2.png",
+        "demo-3.png",
+        "analysis-table-1.png",
+    ]
+    missing = [name for name in required_files if not (output_dir / name).exists()]
+    if missing:
+        raise RuntimeError(f"site build missing expected files: {', '.join(missing)}")
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     args = parse_args()
     output_dir = args.output_dir.expanduser().resolve()
+    site_source_dir = repo_root / "site-src"
     version = read_repo_version(repo_root)
+    metadata = load_metadata(repo_root)
 
     if output_dir.exists():
         shutil.rmtree(output_dir)
@@ -78,92 +257,47 @@ def main() -> int:
     docs_pdf = resolve_artifact(repo_root, args.docs_pdf.expanduser())
     demo_pdf = resolve_artifact(repo_root, args.demo_pdf.expanduser())
     minimal_pdf = resolve_artifact(repo_root, args.minimal_pdf.expanduser())
+    analysis_table_pdf = resolve_artifact(repo_root, args.analysis_table_pdf.expanduser())
 
     shutil.copy2(docs_pdf, output_dir / "corasdiagram-doc.pdf")
+    copy_static_assets(site_source_dir, output_dir)
 
     rasterize(demo_pdf, output_dir / "demo", first=1, last=3)
     rasterize(minimal_pdf, output_dir / "minimal", first=1, last=1)
+    rasterize(analysis_table_pdf, output_dir / "analysis-table", first=1, last=1)
 
+    template_text = (site_source_dir / "index.html").read_text(encoding="utf-8")
     index_html = output_dir / "index.html"
     index_html.write_text(
-        f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>corasdiagram {version}</title>
-  <style>
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 2rem;
-      color: #1f2933;
-      background: #f5f7fa;
-    }}
-    main {{
-      max-width: 72rem;
-      margin: 0 auto;
-    }}
-    h1, h2 {{
-      margin-top: 0;
-    }}
-    .card {{
-      background: white;
-      border: 1px solid #d9e2ec;
-      border-radius: 12px;
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }}
-    img {{
-      max-width: 100%;
-      display: block;
-      border: 1px solid #d9e2ec;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      background: white;
-    }}
-    .grid {{
-      display: grid;
-      gap: 1rem;
-    }}
-    @media (min-width: 960px) {{
-      .grid {{
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }}
-    }}
-  </style>
-</head>
-<body>
-  <main>
-    <section class="card">
-      <h1>corasdiagram {version}</h1>
-      <p>
-        Open-source CORAS diagram package release artifacts.
-      </p>
-      <p>
-        <a href="corasdiagram-doc.pdf">Download the manual PDF</a>
-      </p>
-    </section>
-    <section class="card">
-      <h2>Minimal Example</h2>
-      <img src="minimal-1.png" alt="Minimal asset diagram example">
-    </section>
-    <section class="card">
-      <h2>Full Demo</h2>
-      <div class="grid">
-        <img src="demo-1.png" alt="Demo page 1">
-        <img src="demo-2.png" alt="Demo page 2">
-        <img src="demo-3.png" alt="Demo page 3">
-      </div>
-    </section>
-  </main>
-</body>
-</html>
-""",
+        render_index(
+            template_text,
+            {
+                "PAGE_TITLE": f"corasdiagram {html.escape(version)}",
+                "VERSION": html.escape(version),
+                "SUMMARY": html.escape(str(metadata["summary"])),
+                "DESCRIPTION": html.escape(str(metadata["description"])),
+                "REPO_URL": REPO_URL,
+                "ISSUES_URL": ISSUES_URL,
+                "RELEASES_URL": RELEASES_URL,
+                "CAPABILITY_CARDS": render_capability_cards(),
+                "MINIMAL_SNIPPET": render_code_block(
+                    "minimal-snippet",
+                    "Minimal semantic example",
+                    MINIMAL_SNIPPET,
+                ),
+                "HOW_IT_WORKS_SNIPPET": render_code_block(
+                    "how-it-works-snippet",
+                    "Threat flow example",
+                    HOW_IT_WORKS_SNIPPET,
+                ),
+                "EXAMPLE_CARDS": render_example_cards(),
+                "NEXT_STEPS_LINKS": render_next_steps(),
+            },
+        ),
         encoding="utf-8",
     )
 
+    verify_site_output(output_dir)
     print(f"wrote {output_dir}")
     return 0
 

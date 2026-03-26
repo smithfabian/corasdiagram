@@ -44,6 +44,7 @@ jobs:
           latexmk -pdf -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
           latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
           latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-high-level-analysis-table.tex
 
       - name: Build black-and-white demo variant
         run: |
@@ -74,7 +75,8 @@ jobs:
           python3 tools/build_site.py \
             --docs-pdf docs/corasdiagram-doc.pdf \
             --demo-pdf examples/corasdiagram-demo.pdf \
-            --minimal-pdf examples/corasdiagram-minimal.pdf
+            --minimal-pdf examples/corasdiagram-minimal.pdf \
+            --analysis-table-pdf examples/corasdiagram-high-level-analysis-table.pdf
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v7
