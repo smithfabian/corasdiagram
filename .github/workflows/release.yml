@@ -1,15 +1,16 @@
+# Versioned release workflow.
+# Only pushed v* tags enter this workflow. It verifies the tag/version match,
+# builds the release bundle, publishes GitHub release assets, and then waits at
+# the ctan-release environment before any CTAN upload can continue.
 name: Release
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
 
 permissions:
   contents: write
-  id-token: write
-  pages: write
 
 jobs:
   build-release:
@@ -20,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify tag matches VERSION
+        run: python3 tools/check_release_tag.py --tag "${{ github.ref_name }}"
 
       - name: Install TeX and site tooling
         run: |
@@ -80,11 +84,6 @@ jobs:
             corasdiagram-doc.pdf
             dist/site/
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/site
-
       - name: Publish GitHub release assets
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -93,14 +92,28 @@ jobs:
             dist/corasdiagram-*.zip
             corasdiagram-doc.pdf
 
-  deploy-pages:
-    name: Deploy GitHub Pages
+  publish-ctan:
+    name: Publish to CTAN
     needs: build-release
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: ctan-release
     steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: corasdiagram-release
+          path: release-artifact
+
+      - name: Publish archive to CTAN
+        env:
+          CTAN_UPLOADER_NAME: ${{ secrets.CTAN_UPLOADER_NAME }}
+          CTAN_UPLOADER_EMAIL: ${{ secrets.CTAN_UPLOADER_EMAIL }}
+          CTAN_NOTE: Automated update from GitHub Actions for ${{ github.ref_name }}.
+        run: |
+          archive="$(find release-artifact -type f -name 'corasdiagram-*.zip' -print -quit)"
+          test -n "$archive"
+          python3 tools/upload_ctan.py --archive "$archive"

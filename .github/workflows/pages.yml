@@ -1,0 +1,68 @@
+# Documentation-site workflow.
+# Pages is built and deployed only from main branch pushes or manual dispatch,
+# never from version tags.
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+jobs:
+  build-site:
+    name: Build documentation site
+    runs-on: ubuntu-latest
+    env:
+      TEXINPUTS: 'tex/latex//:'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install TeX and site tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            latexmk \
+            poppler-utils \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended \
+            texlive-luatex \
+            texlive-pictures
+
+      - name: Build docs and examples
+        run: |
+          latexmk -pdf -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
+
+      - name: Build Pages site
+        run: |
+          python3 tools/build_site.py \
+            --docs-pdf docs/corasdiagram-doc.pdf \
+            --demo-pdf examples/corasdiagram-demo.pdf \
+            --minimal-pdf examples/corasdiagram-minimal.pdf
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+  deploy-pages:
+    name: Deploy GitHub Pages
+    needs: build-site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

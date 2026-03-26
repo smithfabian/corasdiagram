@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-"""Assemble a CTAN-friendly release bundle for corasdiagram."""
+"""Assemble the CTAN-friendly release bundle for corasdiagram.
+
+Inputs come from the canonical repository sources: VERSION, the package tree,
+the built manual PDF, examples, and repo-root metadata files. Contributors run
+this locally to smoke-test the release contents before pushing a version tag.
+"""
 
 from __future__ import annotations
 
 import argparse
-import re
 import shutil
 import zipfile
 from pathlib import Path
+
+from versioning import read_repo_version
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,20 +35,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_version(package_file: Path) -> str:
-    match = re.search(
-        r"\\ProvidesPackage\{corasdiagram\}\[[^\]]* v([^\s]+) ",
-        package_file.read_text(encoding="utf-8"),
-    )
-    if not match:
-        raise RuntimeError(f"Could not determine version from {package_file}")
-    return match.group(1)
+def ignore_release_noise(_directory: str, names: list[str]) -> set[str]:
+    ignored: set[str] = set()
+    for name in names:
+        if name.endswith(".bak") or name.endswith("~") or name == "__pycache__":
+            ignored.add(name)
+    return ignored
 
 
 def copy_tree(source: Path, dest: Path) -> None:
     if dest.exists():
         shutil.rmtree(dest)
-    shutil.copytree(source, dest)
+    shutil.copytree(source, dest, ignore=ignore_release_noise)
 
 
 def copy_example_sources(source_dir: Path, dest_dir: Path) -> None:
@@ -76,11 +80,10 @@ def resolve_artifact(repo_root: Path, path: Path) -> Path:
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
-    package_file = repo_root / "tex" / "latex" / "corasdiagram" / "corasdiagram.sty"
-    version = read_version(package_file)
+    version = read_repo_version(repo_root)
 
     output_dir = args.output_dir.expanduser().resolve()
-    bundle_root = output_dir / "ctan" / f"corasdiagram-{version}"
+    bundle_root = output_dir / "ctan" / "corasdiagram"
     doc_root = bundle_root / "doc" / "latex" / "corasdiagram"
     tex_root = bundle_root / "tex" / "latex" / "corasdiagram"
 
@@ -98,7 +101,7 @@ def main() -> int:
         repo_root / "docs" / "corasdiagram-doc.tex",
         doc_root / "corasdiagram-doc.tex",
     )
-    for filename in ("README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md", "ROADMAP.md"):
+    for filename in ("README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md", "ROADMAP.md", "VERSION"):
         shutil.copy2(repo_root / filename, bundle_root / filename)
 
     doc_pdf = args.doc_pdf

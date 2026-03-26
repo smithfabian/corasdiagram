@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Compile the semantic failure fixtures and assert that they fail as expected."""
+"""Run the semantic failure fixtures and assert that they fail as expected.
+
+The invalid-*.tex files under tests/corasdiagram/ document package-level
+semantic constraints. Contributors should run this script when changing node
+families, edge semantics, or validation behavior.
+"""
 
 from __future__ import annotations
 

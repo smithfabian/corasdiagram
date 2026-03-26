@@ -18,8 +18,39 @@ For narrow layouts such as a side-by-side `minipage` in Overleaf, the high-level
 analysis table accepts `icon scale=<factor>` to shrink the header icon groups,
 for example `icon scale=0.6`.
 
-Version `0.1.0` is the first open-source release target. The supported TeX
-engines are `pdflatex` and `lualatex`.
+The supported TeX engines are `pdflatex` and `lualatex`.
+
+## How the Project Works
+
+This repository keeps the package source, documentation, regression tests, and
+release tooling in one place.
+
+Canonical sources of truth:
+
+- [`VERSION`](VERSION) is the canonical repository release number.
+- [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
+  is the TeX runtime mirror of that version and must match `VERSION`.
+- [`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src) holds
+  the canonical icon sources.
+- [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons) holds the
+  generated runtime icon assets used by the package.
+- [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots) holds the
+  committed visual regression baselines.
+- [`ctan/metadata.json`](ctan/metadata.json) holds the committed CTAN metadata
+  used by the release tooling.
+
+Workflow map:
+
+- normal development happens on branches and pull requests
+- merges to `main` trigger CI and deploy the documentation site through the
+  dedicated `Pages` workflow
+- pushed version tags matching `vX.Y.Z` trigger the `Release` workflow
+- the release workflow verifies that the tag matches `VERSION`, builds the
+  release archive, publishes the GitHub release assets, and waits at the
+  `ctan-release` environment before any CTAN upload can continue
+
+For the full contributor runbook, change checklists, and release procedure, see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Repository Layout
 
@@ -27,7 +58,9 @@ The package source lives in [`tex/latex/corasdiagram/`](tex/latex/corasdiagram),
 examples live in [`examples/`](examples), the manual source lives in
 [`docs/`](docs), semantic regression tests live in
 [`tests/corasdiagram/`](tests/corasdiagram), and committed visual baselines
-live in [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots).
+live in [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots). CTAN
+metadata lives in [`ctan/`](ctan), and the helper scripts used by CI, Pages,
+releases, and local development live in [`tools/`](tools).
 
 ## Installation
 
@@ -181,7 +214,7 @@ the package sources and example `.tex` files.
 
 ## Public API
 
-The supported `0.1.0` surface is the current semantic package API:
+The current supported semantic package API is:
 
 - package options: `iconset`, `icons-path`
 - common node keys such as `perspective=before|before-after|after`
@@ -233,33 +266,26 @@ The source for the package manual is
 Compile it locally with:
 
 ```bash
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
+(cd docs && TEXINPUTS=../tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
 ```
 
-The release workflow publishes the manual PDF and rendered example screenshots
-as CI artifacts and as a GitHub Pages site.
+The workflows publish the manual PDF and rendered example screenshots as CI
+artifacts, and the dedicated `Pages` workflow publishes the documentation site
+to GitHub Pages.
 
 ## Release and Deployment
 
-The repository has separate CI and release workflows:
+The repository uses separate workflows for CI, Pages, and tagged releases:
 
-- CI runs on pull requests, on pushes to `main`/`master`, and on manual
-  dispatch.
-- Release runs on manual dispatch and on version tags matching `v*`.
+- `CI` validates changes on pull requests and branch pushes
+- `Pages` builds and deploys the documentation site from `main`
+- `Release` runs only for pushed `v*` tags and handles versioned release assets
+  plus the gated CTAN publication step
 
-Important Pages deployment rule:
-
-- The `github-pages` environment currently allows deployments only from the
-  `main` branch.
-- A tag push such as `v0.1.0` will still build the release artifacts and
-  publish GitHub release assets, but the Pages deployment step will be rejected
-  unless the environment protection rules are changed.
-
-Current contributor guidance:
-
-- Use a tag push to publish a versioned release.
-- Use a manual `Release` workflow run from `main` when you want to deploy the
-  GitHub Pages site.
+The `ctan-release` environment is the approval boundary for automated CTAN
+updates. The first CTAN submission is still expected to be done manually. For
+the exact release, approval, and versioning procedure, see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Regression Tests
 

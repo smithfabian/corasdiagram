@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Compile visual fixtures and compare them to committed snapshot baselines."""
+"""Run visual regression checks against committed snapshot baselines.
+
+This script compiles the dedicated visual fixtures, rasterizes them, and
+compares the output to tests/corasdiagram/snapshots/. Contributors should run
+it for notation, layout, icon, or rendering changes, and update baselines only
+when the rendered difference is intentional.
+"""
 
 from __future__ import annotations
 

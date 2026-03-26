@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Convert the repository CORAS SVG icons into PDF assets for the LaTeX package."""
+"""Build generated runtime icon assets from the canonical SVG sources.
+
+The repository treats tex/latex/corasdiagram/icons-src/ as the editable icon
+source tree and tex/latex/corasdiagram/icons/ as generated runtime assets used
+by the LaTeX package. Run this script after intentional icon source changes.
+"""
 
 from __future__ import annotations
 

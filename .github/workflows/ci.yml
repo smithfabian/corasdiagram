@@ -1,3 +1,6 @@
+# Continuous integration for branch and pull-request work.
+# This workflow validates builds, semantic failures, visual snapshots, and
+# packaging smoke tests, but it does not publish any artifacts externally.
 name: CI
 
 on:
