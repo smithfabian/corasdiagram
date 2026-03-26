@@ -1,5 +1,59 @@
 # Contributing to `corasdiagram`
 
+## Project Workflow
+
+This repository keeps the LaTeX package, documentation, examples, regression
+tests, generated package assets, and release tooling together.
+
+Normal lifecycle of a change:
+
+1. Create a focused branch and make the package, docs, examples, and tests
+   changes together.
+2. Run the local checks that match the kind of change you made.
+3. Open a pull request with a short motivation and the verification you ran.
+4. Merge to `main` when the change is ready.
+5. Let the `Pages` workflow publish the documentation site from `main` when the
+   merged change affects the published docs/examples.
+6. For a versioned release, update [`VERSION`](VERSION) and
+   [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
+   together, update [`CHANGELOG.md`](CHANGELOG.md), push a matching tag
+   `v<version>`, and approve the `ctan-release` environment when you want the
+   CTAN upload to continue.
+
+Workflow boundaries:
+
+- `CI` validates pull requests and pushes to `main`/`master`.
+- `Pages` deploys the static documentation site from `main`.
+- `Release` runs only for pushed tags matching `v*`.
+- The first CTAN submission is expected to be done manually. Later CTAN updates
+  can run through the tagged release workflow.
+
+## Canonical Sources and Generated Files
+
+Repository-managed sources of truth:
+
+- [`VERSION`](VERSION): canonical repository release number
+- [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex):
+  TeX runtime mirror of `VERSION`
+- [`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src):
+  canonical icon sources
+- [`ctan/metadata.json`](ctan/metadata.json): committed CTAN package metadata
+- [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots): committed
+  visual regression baselines
+
+Generated or disposable outputs:
+
+- [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons): generated
+  runtime icon assets built from `icons-src/`
+- `dist/`: release bundles and static site output
+- local TeX build products such as `.aux`, `.log`, generated PDFs, and
+  temporary rasterized images
+- local scratch output under `build/`
+
+Do not edit generated runtime icons by hand. Rebuild them from
+[`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src) when
+the source icons change.
+
 ## Prerequisites
 
 Local development expects:
@@ -8,10 +62,13 @@ Local development expects:
 - `pdflatex`
 - `lualatex`
 - `latexmk`
-- `pdftoppm` for screenshot generation
-- `cairosvg` only if you need to rebuild icon PDFs from the source SVG files
+- `pdftoppm` for rasterized screenshot generation
+- `cairosvg` only when rebuilding generated icon PDFs from the source SVG files
+- `actionlint` when editing GitHub Actions workflows
 
 ## Local Checks
+
+### Build the package docs and examples
 
 Build the minimal example:
 
@@ -28,7 +85,7 @@ TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples
 Build the manual:
 
 ```bash
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
+(cd docs && TEXINPUTS=../tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
 ```
 
 Build with LuaLaTeX:
@@ -38,7 +95,9 @@ TEXINPUTS=tex/latex//: TEXMFVAR=/tmp/corasdiagram-texmf TEXMFCACHE=/tmp/corasdia
   lualatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
 ```
 
-Run the semantic failure checks:
+### Run semantic and visual regressions
+
+Run the semantic failure fixtures:
 
 ```bash
 python3 tools/check_negative_tests.py --engine pdflatex
@@ -57,6 +116,14 @@ change:
 python3 tools/check_visual_regressions.py --update
 ```
 
+### Rebuild assets and use editing tools
+
+Rebuild generated runtime icons from the canonical SVG sources:
+
+```bash
+python3 tools/build_coras_icons.py
+```
+
 Run the local browser-based anchor editor:
 
 ```bash
@@ -67,6 +134,14 @@ Smoke-test the parser/writer logic for the anchor editor:
 
 ```bash
 python3 -m unittest tests/test_coras_anchor_editor.py
+```
+
+### Check packaging and release helpers
+
+Verify the versioning story:
+
+```bash
+python3 tools/check_release_tag.py
 ```
 
 Build a release bundle after compiling the manual:
@@ -84,53 +159,113 @@ python3 tools/build_site.py \
   --minimal-pdf examples/corasdiagram-minimal.pdf
 ```
 
-## CI, Release, and Pages
+If you edit workflow files, lint them:
 
-The repository uses two GitHub Actions workflows:
+```bash
+actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflows/release.yml
+```
 
-- `CI`: runs on pull requests, pushes to `main`/`master`, and manual dispatch
-- `Release`: runs on manual dispatch and on pushed tags matching `v*`
+## Change Checklist by Change Type
 
-Pages deployment is intentionally more restricted than release artifact
-publication:
+### Public API or notation change
 
-- the `github-pages` environment currently allows deployments only from the
-  `main` branch
-- a pushed version tag still builds the release bundle and GitHub release
-  assets, but the Pages deploy job will be rejected unless the environment
-  rules are changed
+- update the package source, examples, and the manual together
+- update [`README.md`](README.md) if the user-facing setup, supported API, or
+  workflow summary changed
+- update [`CHANGELOG.md`](CHANGELOG.md) for public-facing behavior changes
+- run the relevant TeX builds plus semantic and visual checks
+- add or update negative semantic fixtures if the change affects validation
 
-For contributors, that means:
+### Visual or layout change
 
-- push a `v*` tag when you want to publish a versioned release
-- run the `Release` workflow manually from `main` when you want to deploy the
-  GitHub Pages site
-- do not expect a tag push alone to update Pages under the current repository
-  protection rules
+- run `python3 tools/check_visual_regressions.py`
+- update committed baselines in the same change with `--update`
+- keep snapshot changes scoped to the intentional visual difference
+- recheck demo/manual/example output after updating baselines
+
+### Icon or source asset change
+
+- edit only files in `icons-src/`
+- rebuild the generated runtime icons with `tools/build_coras_icons.py`
+- verify both color and `iconset=bw` outputs still compile cleanly
+- update snapshots, examples, and docs if the rendered symbols changed
+
+### Docs-only change
+
+- update the relevant repo docs and/or the package manual
+- build the manual if `docs/corasdiagram-doc.tex` changed
+- keep repo-facing contributor/runbook material in `README.md` and
+  `CONTRIBUTING.md`, not in the package manual
+
+### Release or version change
+
+- update [`VERSION`](VERSION)
+- update
+  [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
+  to the same value
+- update [`CHANGELOG.md`](CHANGELOG.md)
+- run `python3 tools/check_release_tag.py`
+- create and push the matching tag `v<version>`
+- approve the `ctan-release` environment when you want the CTAN upload job to
+  proceed
+
+## Versioning and Releases
+
+The repository uses one canonical versioning story:
+
+- `VERSION` is the canonical repository release number
+- `corasdiagram-version.tex` is the TeX runtime mirror and must match
+- release tags must be `v<version>`
+- the `Release` workflow verifies that the pushed tag matches `VERSION` before
+  building or publishing anything
+
+Release behavior:
+
+- a pushed `v*` tag builds the release archive and GitHub release assets
+- the same tag starts the gated CTAN publication job
+- the `ctan-release` environment contains `CTAN_UPLOADER_NAME` and
+  `CTAN_UPLOADER_EMAIL`
+- the `ctan-release` environment requires review by `smithfabian`, so the CTAN
+  upload job cannot read those values or continue without approval
+
+Pages behavior:
+
+- Pages deployment is handled by the dedicated `Pages` workflow
+- pushes to `main` can update the documentation site
+- tagged releases do not deploy Pages directly
+
+## When to Update Docs, Examples, and Tests
+
+Update the docs/examples/tests in the same change when:
+
+- public behavior changes: update the manual, examples, and relevant README
+  sections
+- semantic validation changes: add or update negative tests
+- visual rendering changes: refresh committed visual baselines
+- icon changes: update source icons, generated runtime icons, and any examples
+  or snapshots that show them
+- release workflow or contribution workflow changes: update both
+  [`README.md`](README.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## Coding and Documentation Style
 
-- Prefer the current semantic CORAS macros in docs and examples.
+- Prefer the semantic CORAS macros in docs and examples.
 - Keep low-level primitives available for compatibility unless a deprecation is
   explicitly planned and documented.
 - Default to ASCII in source files unless there is a clear reason not to.
-- Update examples and the manual when public behavior changes.
-- Add or update semantic regression tests when notation validation changes.
-- Update visual snapshot baselines in the same change when rendered notation or
-  layout intentionally changes.
 - Keep CI-friendly commands shell-friendly and reproducible from the repository
   root.
+- Do not rely on undocumented local steps for releases, snapshots, or icon
+  generation; if a workflow matters, document it here or in the relevant script
+  header/docstring.
 
 ## Pull Requests
 
-The expected workflow is:
+Pull requests should:
 
-1. Fork the repository.
-2. Create a focused branch for the change.
-3. Update source, docs, examples, and tests together.
-4. Run the local checks that apply to the change.
-5. Open a pull request with a concise description of the motivation and the
-   verification you ran.
-
-Pull requests that change the public API should also update
-[`CHANGELOG.md`](CHANGELOG.md).
+1. stay focused on one change or one closely related set of changes
+2. explain the motivation briefly
+3. list the verification that was actually run
+4. update docs/examples/tests together when public behavior changed
+5. update [`CHANGELOG.md`](CHANGELOG.md) when the public API or release-visible
+   behavior changed

@@ -1,5 +1,13 @@
+% corasdiagram package runtime.
+% - The shipped package version is mirrored from corasdiagram-version.tex.
+% - Canonical icon sources live in icons-src/ and generated runtime assets live
+%   in icons/.
+% - Contributor workflow, release procedure, and local verification commands
+%   are documented in CONTRIBUTING.md at the repository root.
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{corasdiagram}[2026/03/08 v0.1.0 CORAS diagram package]
+\def\corasdiagramversion{0.0.0}
+\InputIfFileExists{corasdiagram-version.tex}{}{}
+\ProvidesPackage{corasdiagram}[2026/03/08 v\corasdiagramversion CORAS diagram package]
 
 \RequirePackage{graphicx}
 \RequirePackage{array}

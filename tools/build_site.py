@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-"""Build a small static documentation site with rendered screenshots."""
+"""Build the static documentation site published by the Pages workflow.
+
+The site is generated from prebuilt manual/example PDFs plus VERSION. This is a
+packaging helper, not a source of truth: the package, docs, and examples stay
+in the repository, while dist/site/ is disposable output.
+"""
 
 from __future__ import annotations
 
 import argparse
-import re
 import shutil
 import subprocess
 from pathlib import Path
+
+from versioning import read_repo_version
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,16 +33,6 @@ def parse_args() -> argparse.Namespace:
         help="Output directory for the generated site.",
     )
     return parser.parse_args()
-
-
-def read_version(package_file: Path) -> str:
-    match = re.search(
-        r"\\ProvidesPackage\{corasdiagram\}\[[^\]]* v([^\s]+) ",
-        package_file.read_text(encoding="utf-8"),
-    )
-    if not match:
-        raise RuntimeError(f"Could not determine version from {package_file}")
-    return match.group(1)
 
 
 def resolve_artifact(repo_root: Path, path: Path) -> Path:
@@ -73,7 +69,7 @@ def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     args = parse_args()
     output_dir = args.output_dir.expanduser().resolve()
-    version = read_version(repo_root / "tex" / "latex" / "corasdiagram" / "corasdiagram.sty")
+    version = read_repo_version(repo_root)
 
     if output_dir.exists():
         shutil.rmtree(output_dir)

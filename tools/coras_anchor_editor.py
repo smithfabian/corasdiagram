@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Local browser-based anchor editor for corasdiagram symbol anchors."""
+"""Local browser-based anchor editor for corasdiagram symbol anchors.
+
+The editor writes directly to the canonical symbol anchor tables in
+tex/latex/corasdiagram/corasdiagram.sty. It is a tuning tool for editable
+anchor maps, not a replacement for the visual regression fixtures or normal
+package verification.
+"""
 
 from __future__ import annotations
 

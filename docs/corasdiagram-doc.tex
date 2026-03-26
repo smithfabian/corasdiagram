@@ -6,11 +6,11 @@
 \usepackage{array}
 \usepackage{xcolor}
 \usepackage{verbatim}
+\usepackage{fvextra}
 \usepackage{corasdiagram}
 
 \title{\texttt{corasdiagram} Manual}
-\author{Fabian Robert Smith}
-\date{Version 0.1.0}
+\date{Version \corasdiagramversion}
 \newcommand{\keydefault}[1]{\underline{\texttt{#1}}}
 
 \begin{document}
@@ -601,5 +601,25 @@ The project includes helper scripts for:
 \end{itemize}
 
 See \texttt{CONTRIBUTING.md} for the current repository-root commands.
+
+\section{License}
+\IfFileExists{LICENSE}{%
+  \verbatiminput{LICENSE}%
+}{%
+  \verbatiminput{../LICENSE}%
+}
+
+\section{Notice}
+\IfFileExists{NOTICE}{%
+  \VerbatimInput[
+    breaklines=true,
+    breakanywhere=true
+  ]{NOTICE}%
+}{%
+  \VerbatimInput[
+    breaklines=true,
+    breakanywhere=true
+  ]{../NOTICE}%
+}
 
 \end{document}

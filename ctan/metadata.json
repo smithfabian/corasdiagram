@@ -1,0 +1,13 @@
+{
+  "pkg": "corasdiagram",
+  "author": [
+    "Fabian Smith"
+  ],
+  "summary": "LaTeX package for authoring CORAS diagrams and high-level analysis tables",
+  "description": "corasdiagram is a LaTeX package for authoring CORAS diagrams with semantic environments, reusable notation macros, package-managed icons, and high-level analysis tables.",
+  "ctanPath": "/graphics/pgf/contrib/corasdiagram",
+  "license": [
+    "mit"
+  ],
+  "update": true
+}
