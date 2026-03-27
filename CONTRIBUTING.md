@@ -157,6 +157,7 @@ python3 tools/build_site.py \
   --docs-pdf docs/corasdiagram-doc.pdf \
   --demo-pdf examples/corasdiagram-demo.pdf \
   --minimal-pdf examples/corasdiagram-minimal.pdf \
+  --website-examples-pdf examples/corasdiagram-website-examples.pdf \
   --analysis-table-pdf examples/corasdiagram-high-level-analysis-table.pdf
 ```
 

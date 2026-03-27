@@ -82,6 +82,12 @@ def parse_args() -> argparse.Namespace:
         "--minimal-pdf", type=Path, required=True, help="Minimal example PDF."
     )
     parser.add_argument(
+        "--website-examples-pdf",
+        type=Path,
+        required=True,
+        help="Website-oriented examples PDF (diagram + table pages).",
+    )
+    parser.add_argument(
         "--analysis-table-pdf",
         type=Path,
         required=True,
@@ -189,6 +195,88 @@ def render_example_cards() -> str:
     )
 
 
+def render_diagram_examples() -> str:
+    examples = [
+        ("Asset Diagram", "website-example-1.png", "website-snippet-asset", dedent(r"""
+\begin{corasassetdiagram}
+  \corasstakeholder[name=stakeholder,scope=asset-scope,title={Stakeholder}]
+  \corasasset[name=asset,scope=asset-scope,title={Customer Data}]
+  \corasindirectasset[name=brand,scope=asset-scope,title={Brand Reputation}]
+  \corasscope[name=scope,scope=asset-scope,kind=asset-scope,stakeholder=stakeholder,stakeholder corner=left]
+  \corasrelates[from=asset,to=brand]
+\end{corasassetdiagram}
+""").strip()),
+        ("Threat Diagram", "website-example-2.png", "website-snippet-threat", dedent(r"""
+\begin{corasthreatdiagram}
+  \corasthreataccidental[name=human,title={Employee mistake}]
+  \corasvulnerability[name=vuln,title={Weak access policy}]
+  \corasscenario[name=sc,title={Misconfigured endpoint},meta={2/year}]
+  \corasunwantedincident[name=inc,title={Data exposure}]
+  \corasasset[name=asset,title={Customer data}]
+  \corascauses[from=human,to=vuln]
+  \corascauses[from=vuln,to=sc]
+  \corascauses[from=sc,to=inc]
+  \corasrelates[from=inc,to=asset]
+\end{corasthreatdiagram}
+""").strip()),
+        ("Risk Diagram", "website-example-3.png", "website-snippet-risk", dedent(r"""
+\begin{corasriskdiagram}
+  \corasthreatdeliberate[name=attacker,title={External attacker}]
+  \corasrisk[name=risk,title={Data breach},level={High}]
+  \corasasset[name=asset,title={Customer data}]
+  \corascauses[from=attacker,to=risk]
+  \corasrelates[from=risk,to=asset]
+\end{corasriskdiagram}
+""").strip()),
+        ("Treatment Diagram", "website-example-4.png", "website-snippet-treatment", dedent(r"""
+\begin{corastreatmentdiagram}
+  \corasthreatdeliberate[name=attacker,title={Attacker}]
+  \corasvulnerability[name=vuln,title={Weak MFA policy}]
+  \corasscenario[name=sc,title={Compromised account},meta={1/year}]
+  \corasunwantedincident[name=inc,title={Unauthorized access}]
+  \corasasset[name=asset,title={Payment service}]
+  \corastreatment[name=ctrl,title={Enforce phishing-resistant MFA}]
+  \corastreats[from=ctrl,to=sc]
+\end{corastreatmentdiagram}
+""").strip()),
+        ("Treatment Overview Diagram", "website-example-5.png", "website-snippet-overview", dedent(r"""
+\begin{corastreatmentoverviewdiagram}
+  \corasrisk[name=r1,title={Credential theft},level={High}]
+  \corasrisk[name=r2,title={Session hijack},level={Medium}]
+  \corasasset[name=a1,title={User accounts}]
+  \corastreatment[name=t1,title={Hardware keys}]
+  \corasjunction[name=j1]
+  \corastreats[from=t1,to=j1]
+  \corastreats[from=j1,to=r1]
+  \corastreats[from=j1,to=r2]
+\end{corastreatmentoverviewdiagram}
+""").strip()),
+        ("High-Level Analysis Table", "website-example-6.png", "website-snippet-table", dedent(r"""
+\begin{corashighlevelanalysistable}[caption={High-level analysis excerpt}]
+  \corashighlevelanalysisrow
+    {Hacker}
+    {Compromises confidentiality of customer records}
+    {Weak access controls on remote interfaces}
+\end{corashighlevelanalysistable}
+""").strip()),
+    ]
+    blocks: list[str] = []
+    for title, image_name, block_id, snippet in examples:
+        blocks.append(
+            dedent(
+                f"""
+                <article class="example-row">
+                  <div class="example-row__visual preview-frame">
+                    <img src="{image_name}" alt="{html.escape(title)} example preview">
+                  </div>
+                  {render_code_block(block_id, title, snippet)}
+                </article>
+                """
+            ).strip()
+        )
+    return "\n".join(blocks)
+
+
 def render_next_steps() -> str:
     links = [
         ("Download the manual PDF", "corasdiagram-doc.pdf"),
@@ -236,6 +324,12 @@ def verify_site_output(output_dir: Path) -> None:
         "demo-2.png",
         "demo-3.png",
         "analysis-table-1.png",
+        "website-example-1.png",
+        "website-example-2.png",
+        "website-example-3.png",
+        "website-example-4.png",
+        "website-example-5.png",
+        "website-example-6.png",
     ]
     missing = [name for name in required_files if not (output_dir / name).exists()]
     if missing:
@@ -258,6 +352,9 @@ def main() -> int:
     demo_pdf = resolve_artifact(repo_root, args.demo_pdf.expanduser())
     minimal_pdf = resolve_artifact(repo_root, args.minimal_pdf.expanduser())
     analysis_table_pdf = resolve_artifact(repo_root, args.analysis_table_pdf.expanduser())
+    website_examples_pdf = resolve_artifact(
+        repo_root, args.website_examples_pdf.expanduser()
+    )
 
     shutil.copy2(docs_pdf, output_dir / "corasdiagram-doc.pdf")
     copy_static_assets(site_source_dir, output_dir)
@@ -265,6 +362,7 @@ def main() -> int:
     rasterize(demo_pdf, output_dir / "demo", first=1, last=3)
     rasterize(minimal_pdf, output_dir / "minimal", first=1, last=1)
     rasterize(analysis_table_pdf, output_dir / "analysis-table", first=1, last=1)
+    rasterize(website_examples_pdf, output_dir / "website-example", first=1, last=6)
 
     template_text = (site_source_dir / "index.html").read_text(encoding="utf-8")
     index_html = output_dir / "index.html"
@@ -291,6 +389,7 @@ def main() -> int:
                     HOW_IT_WORKS_SNIPPET,
                 ),
                 "EXAMPLE_CARDS": render_example_cards(),
+                "DIAGRAM_EXAMPLES": render_diagram_examples(),
                 "NEXT_STEPS_LINKS": render_next_steps(),
             },
         ),

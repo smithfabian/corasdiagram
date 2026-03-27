@@ -44,6 +44,7 @@ jobs:
           latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
           latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
           latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-high-level-analysis-table.tex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-website-examples.tex
 
       - name: Build Pages site
         run: |
@@ -51,6 +52,7 @@ jobs:
             --docs-pdf docs/corasdiagram-doc.pdf \
             --demo-pdf examples/corasdiagram-demo.pdf \
             --minimal-pdf examples/corasdiagram-minimal.pdf \
+            --website-examples-pdf examples/corasdiagram-website-examples.pdf \
             --analysis-table-pdf examples/corasdiagram-high-level-analysis-table.pdf
 
       - name: Upload Pages artifact
