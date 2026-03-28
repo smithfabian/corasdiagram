@@ -49,6 +49,10 @@ Generated or disposable outputs:
   temporary rasterized images
 - local scratch output under `build/`
 
+The CTAN release bundle is the exception: it intentionally includes the
+compiled PDFs for the canonical examples under `doc/examples/`, alongside the
+example `.tex` sources.
+
 Do not edit generated runtime icons by hand. Rebuild them from
 [`assets/icons-src/`](assets/icons-src) when the source icons change.
 
@@ -142,7 +146,17 @@ Verify the versioning story:
 python3 tools/check_release_tag.py
 ```
 
-Build a release bundle after compiling the manual:
+Build the manual and the canonical example PDFs before assembling the release
+bundle:
+
+```bash
+TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
+TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
+TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-high-level-analysis-table.tex
+TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-website-examples.tex
+```
+
+Then build the CTAN release bundle:
 
 ```bash
 python3 tools/build_release.py --doc-pdf docs/corasdiagram-doc.pdf

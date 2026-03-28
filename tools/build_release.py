@@ -2,14 +2,16 @@
 """Assemble the CTAN-friendly release bundle for corasdiagram.
 
 Inputs come from the canonical repository sources: VERSION, the package tree,
-the built manual PDF, examples, and repo-root metadata files. Contributors run
-this locally to smoke-test the release contents before pushing a version tag.
+the built manual PDF, compiled example PDFs, and repo-root metadata files.
+Contributors run this locally to smoke-test the release contents before
+pushing a version tag.
 """
 
 from __future__ import annotations
 
 import argparse
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -88,15 +90,84 @@ def copy_tree(source: Path, dest: Path) -> None:
     shutil.copytree(source, dest, ignore=ignore_release_noise)
 
 
-def copy_example_sources(source_dir: Path, dest_dir: Path) -> None:
+def tracked_example_stems(repo_root: Path) -> list[str]:
+    examples_dir = repo_root / "examples"
+    stems: set[str] = set()
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--", "examples"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        result = None
+    else:
+        for line in result.stdout.splitlines():
+            path = Path(line.strip())
+            if path.parent == Path("examples") and path.suffix == ".tex":
+                stems.add(path.stem)
+        if stems:
+            return sorted(stems)
+
+    if not examples_dir.is_dir():
+        raise RuntimeError(
+            f"Could not determine canonical examples: git is unavailable or "
+            f"{repo_root} is not a git checkout, and there is no examples/ directory."
+        )
+
+    for tex_path in examples_dir.glob("*.tex"):
+        if tex_path.is_file():
+            stems.add(tex_path.stem)
+
+    if not stems:
+        raise RuntimeError(
+            f"Could not determine canonical examples: no .tex files found in {examples_dir}."
+        )
+
+    return sorted(stems)
+
+
+def copy_example_artifacts(
+    repo_root: Path, source_dir: Path, dest_dir: Path, stems: list[str]
+) -> None:
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
-    for path in sorted(source_dir.glob("*.tex")):
-        shutil.copy2(path, dest_dir / path.name)
+    for stem in stems:
+        tex_path = source_dir / f"{stem}.tex"
+        if not tex_path.exists():
+            raise RuntimeError(f"Canonical example source is missing: {tex_path}")
+        try:
+            pdf_path = resolve_example_pdf(repo_root, stem)
+        except RuntimeError as exc:
+            raise RuntimeError(
+                f"Missing compiled example PDF for {stem}. "
+                f"Expected either examples/{stem}.pdf or {stem}.pdf at the repository root. "
+                "Build the canonical examples (see CONTRIBUTING.md) before running "
+                "tools/build_release.py."
+            ) from exc
+        shutil.copy2(tex_path, dest_dir / tex_path.name)
+        shutil.copy2(pdf_path, dest_dir / pdf_path.name)
 
 
-def resolve_artifact(repo_root: Path, path: Path) -> Path:
+def resolve_example_pdf(repo_root: Path, stem: str) -> Path:
+    """Resolve a canonical compiled example PDF from the repository tree only."""
+
+    candidates = (
+        repo_root / "examples" / f"{stem}.pdf",
+        repo_root / f"{stem}.pdf",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    raise RuntimeError(f"Example PDF not found: {stem}.pdf")
+
+
+def resolve_artifact(repo_root: Path, path: Path, *, label: str = "Artifact") -> Path:
     candidates = []
     if path.is_absolute():
         candidates.append(path)
@@ -106,17 +177,24 @@ def resolve_artifact(repo_root: Path, path: Path) -> Path:
         candidates.append((repo_root / path.name).resolve())
 
     seen: set[Path] = set()
+    non_files: list[Path] = []
     for candidate in candidates:
         if candidate in seen:
             continue
         seen.add(candidate)
-        if candidate.exists():
+        if candidate.is_file():
             return candidate
+        if candidate.exists():
+            non_files.append(candidate)
 
-    raise RuntimeError(f"Documentation PDF not found: {path}")
+    if non_files:
+        formatted = ", ".join(str(path) for path in non_files)
+        raise RuntimeError(f"{label} is not a file: {formatted}")
+
+    raise RuntimeError(f"{label} not found: {path}")
 
 
-def verify_bundle_layout(bundle_root: Path) -> None:
+def verify_bundle_layout(bundle_root: Path, example_stems: list[str]) -> None:
     missing = [
         relative_path
         for relative_path in REQUIRED_BUNDLE_PATHS
@@ -139,9 +217,10 @@ def verify_bundle_layout(bundle_root: Path) -> None:
         )
 
     verify_runtime_icon_directory(bundle_root / "tex" / "icons")
+    verify_example_directory(bundle_root / "doc" / "examples", example_stems)
 
 
-def verify_archive_layout(archive_path: Path) -> None:
+def verify_archive_layout(archive_path: Path, example_stems: list[str]) -> None:
     with zipfile.ZipFile(archive_path) as archive:
         archive_names = set(archive.namelist())
 
@@ -178,6 +257,7 @@ def verify_archive_layout(archive_path: Path) -> None:
         )
 
     verify_runtime_icon_archive_names(archive_names)
+    verify_example_archive_names(archive_names, example_stems)
 
 
 def verify_runtime_icon_directory(icon_dir: Path) -> None:
@@ -214,10 +294,39 @@ def verify_runtime_icon_archive_names(archive_names: set[str]) -> None:
         )
 
 
+def verify_example_directory(example_dir: Path, example_stems: list[str]) -> None:
+    missing = []
+    for stem in example_stems:
+        for suffix in (".tex", ".pdf"):
+            path = example_dir / f"{stem}{suffix}"
+            if not path.exists():
+                missing.append(str(path))
+    if missing:
+        raise RuntimeError(
+            "release bundle is missing canonical example artifacts: "
+            + ", ".join(sorted(missing))
+        )
+
+
+def verify_example_archive_names(archive_names: set[str], example_stems: list[str]) -> None:
+    missing = []
+    for stem in example_stems:
+        for suffix in (".tex", ".pdf"):
+            name = f"corasdiagram/doc/examples/{stem}{suffix}"
+            if name not in archive_names:
+                missing.append(name)
+    if missing:
+        raise RuntimeError(
+            "release archive is missing canonical example artifacts: "
+            + ", ".join(sorted(missing))
+        )
+
+
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
     version = read_repo_version(repo_root)
+    example_stems = tracked_example_stems(repo_root)
 
     output_dir = args.output_dir.expanduser().resolve()
     bundle_root = output_dir / "ctan" / "corasdiagram"
@@ -233,7 +342,9 @@ def main() -> int:
 
     copy_tree(repo_root / "tex" / "latex" / "corasdiagram", tex_root)
     copy_tree(repo_root / "assets" / "icons-src", bundle_root / "assets" / "icons-src")
-    copy_example_sources(repo_root / "examples", doc_root / "examples")
+    copy_example_artifacts(
+        repo_root, repo_root / "examples", doc_root / "examples", example_stems
+    )
 
     shutil.copy2(
         repo_root / "docs" / "corasdiagram-doc.tex",
@@ -257,7 +368,7 @@ def main() -> int:
     doc_pdf = resolve_artifact(repo_root, doc_pdf.expanduser())
 
     shutil.copy2(doc_pdf, doc_root / "corasdiagram-doc.pdf")
-    verify_bundle_layout(bundle_root)
+    verify_bundle_layout(bundle_root, example_stems)
 
     archive_path = output_dir / f"corasdiagram-{version}.zip"
     with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -265,7 +376,7 @@ def main() -> int:
             if path.is_file():
                 relative_path = path.relative_to(bundle_root.parent)
                 archive.write(path, relative_path.as_posix())
-    verify_archive_layout(archive_path)
+    verify_archive_layout(archive_path, example_stems)
 
     print(f"wrote {bundle_root}")
     print(f"wrote {archive_path}")
