@@ -20,6 +20,13 @@ for example `icon scale=0.6`.
 
 The supported TeX engines are `pdflatex` and `lualatex`.
 
+## Author and Contact
+
+- Author and maintainer: Fabian Robert Smith
+- Contact email: <fabian.smith@me.com>
+- Repository and issue tracker:
+  [github.com/smithfabian/corasdiagram](https://github.com/smithfabian/corasdiagram)
+
 ## How the Project Works
 
 This repository keeps the package source, documentation, regression tests, and
