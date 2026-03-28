@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +16,8 @@ BUILD_RELEASE_PATH = REPO_ROOT / "tools" / "build_release.py"
 
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
-    assert spec is not None and spec.loader is not None
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Could not load module {name!r} from {path}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -47,9 +49,24 @@ class BuildReleaseTests(unittest.TestCase):
         else:
             sys.modules["build_release"] = cls._previous_build_release
 
-    def test_tracked_example_stems_matches_canonical_examples(self) -> None:
+    def test_tracked_example_stems_prefers_git_tracked_examples(self) -> None:
+        completed = mock.Mock()
+        completed.stdout = "\n".join(
+            [
+                "examples/corasdiagram-demo.tex",
+                "examples/corasdiagram-high-level-analysis-table.tex",
+                "examples/corasdiagram-minimal.tex",
+                "examples/corasdiagram-website-examples.tex",
+                "examples/ignored.pdf",
+            ]
+        )
+        with mock.patch.object(
+            self.build_release.subprocess, "run", return_value=completed
+        ):
+            stems = self.build_release.tracked_example_stems(REPO_ROOT)
+
         self.assertEqual(
-            self.build_release.tracked_example_stems(REPO_ROOT),
+            stems,
             [
                 "corasdiagram-demo",
                 "corasdiagram-high-level-analysis-table",
@@ -57,6 +74,34 @@ class BuildReleaseTests(unittest.TestCase):
                 "corasdiagram-website-examples",
             ],
         )
+
+    def test_tracked_example_stems_falls_back_without_git(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            examples_dir = repo_root / "examples"
+            examples_dir.mkdir()
+            (examples_dir / "example-a.tex").write_text("% a", encoding="utf-8")
+            (examples_dir / "example-b.tex").write_text("% b", encoding="utf-8")
+
+            with mock.patch.object(
+                self.build_release.subprocess,
+                "run",
+                side_effect=FileNotFoundError("git not found"),
+            ):
+                stems = self.build_release.tracked_example_stems(repo_root)
+
+        self.assertEqual(stems, ["example-a", "example-b"])
+
+    def test_tracked_example_stems_raises_when_no_git_and_no_examples(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            with mock.patch.object(
+                self.build_release.subprocess,
+                "run",
+                side_effect=FileNotFoundError("git not found"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Could not determine canonical examples"):
+                    self.build_release.tracked_example_stems(repo_root)
 
     def test_copy_example_artifacts_requires_matching_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -66,7 +111,10 @@ class BuildReleaseTests(unittest.TestCase):
             source_dir.mkdir()
             (source_dir / "example.tex").write_text("% source", encoding="utf-8")
 
-            with self.assertRaisesRegex(RuntimeError, "Missing compiled example PDF"):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                r"Expected either examples/example\.pdf or example\.pdf at the repository root",
+            ):
                 self.build_release.copy_example_artifacts(
                     repo_root, source_dir, dest_dir, ["example"]
                 )

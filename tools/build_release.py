@@ -91,18 +91,42 @@ def copy_tree(source: Path, dest: Path) -> None:
 
 
 def tracked_example_stems(repo_root: Path) -> list[str]:
-    result = subprocess.run(
-        ["git", "ls-files", "--", "examples"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    stems = []
-    for line in result.stdout.splitlines():
-        path = Path(line.strip())
-        if path.parent == Path("examples") and path.suffix == ".tex":
-            stems.append(path.stem)
+    examples_dir = repo_root / "examples"
+    stems: set[str] = set()
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--", "examples"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        result = None
+    else:
+        for line in result.stdout.splitlines():
+            path = Path(line.strip())
+            if path.parent == Path("examples") and path.suffix == ".tex":
+                stems.add(path.stem)
+        if stems:
+            return sorted(stems)
+
+    if not examples_dir.is_dir():
+        raise RuntimeError(
+            f"Could not determine canonical examples: git is unavailable or "
+            f"{repo_root} is not a git checkout, and there is no examples/ directory."
+        )
+
+    for tex_path in examples_dir.glob("*.tex"):
+        if tex_path.is_file():
+            stems.add(tex_path.stem)
+
+    if not stems:
+        raise RuntimeError(
+            f"Could not determine canonical examples: no .tex files found in {examples_dir}."
+        )
+
     return sorted(stems)
 
 
@@ -117,17 +141,21 @@ def copy_example_artifacts(
         if not tex_path.exists():
             raise RuntimeError(f"Canonical example source is missing: {tex_path}")
         try:
-            pdf_path = resolve_artifact(repo_root, Path("examples") / f"{stem}.pdf")
+            pdf_path = resolve_artifact(
+                repo_root, Path("examples") / f"{stem}.pdf", label="Example PDF"
+            )
         except RuntimeError as exc:
             raise RuntimeError(
-                f"Missing compiled example PDF for {stem}: examples/{stem}.pdf. "
-                "Build the canonical examples before running tools/build_release.py."
+                f"Missing compiled example PDF for {stem}. "
+                f"Expected either examples/{stem}.pdf or {stem}.pdf at the repository root. "
+                "Build the canonical examples (see CONTRIBUTING.md) before running "
+                "tools/build_release.py."
             ) from exc
         shutil.copy2(tex_path, dest_dir / tex_path.name)
         shutil.copy2(pdf_path, dest_dir / pdf_path.name)
 
 
-def resolve_artifact(repo_root: Path, path: Path) -> Path:
+def resolve_artifact(repo_root: Path, path: Path, *, label: str = "Artifact") -> Path:
     candidates = []
     if path.is_absolute():
         candidates.append(path)
@@ -144,7 +172,7 @@ def resolve_artifact(repo_root: Path, path: Path) -> Path:
         if candidate.exists():
             return candidate
 
-    raise RuntimeError(f"Documentation PDF not found: {path}")
+    raise RuntimeError(f"{label} not found: {path}")
 
 
 def verify_bundle_layout(bundle_root: Path, example_stems: list[str]) -> None:
