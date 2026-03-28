@@ -26,6 +26,7 @@ The supported TeX engines are `pdflatex` and `lualatex`.
 - Contact email: <fabian.smith@me.com>
 - Repository and issue tracker:
   [github.com/smithfabian/corasdiagram](https://github.com/smithfabian/corasdiagram)
+  ([issues](https://github.com/smithfabian/corasdiagram/issues))
 
 ## How the Project Works
 
