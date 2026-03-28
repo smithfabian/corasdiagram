@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Validate and upload a corasdiagram release archive to CTAN."""
+"""Validate and upload a corasdiagram release archive to CTAN.
+
+This helper reads the committed CTAN metadata, combines VERSION with the
+matching dated CHANGELOG.md entry for the CTAN `version` field, validates that
+metadata URLs are not reused across roles, and submits only the URL fields the
+current CTAN upload API actually supports.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +17,7 @@ import uuid
 from pathlib import Path
 from urllib import error, request
 
-from versioning import read_repo_version
+from versioning import read_changelog_release_date, read_repo_version
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -98,6 +104,38 @@ def load_metadata(path: Path) -> dict[str, object]:
     return data
 
 
+def compose_ctan_version(version: str, release_date: str) -> str:
+    return f"{version} {release_date}"
+
+
+def normalize_url_for_uniqueness(value: str) -> str:
+    return value.strip().rstrip("/")
+
+
+def validate_unique_metadata_urls(metadata: dict[str, object]) -> None:
+    url_fields = (
+        "home",
+        "repository",
+        "development",
+        "bugtracker",
+        "support",
+        "announce",
+    )
+    seen: dict[str, str] = {}
+    for field in url_fields:
+        value = metadata.get(field)
+        if not isinstance(value, str) or not value.strip():
+            continue
+        normalized = normalize_url_for_uniqueness(value)
+        previous = seen.get(normalized)
+        if previous is not None:
+            raise RuntimeError(
+                f"CTAN metadata URL {value.strip()!r} is reused in both "
+                f"{previous!r} and {field!r}. Give each role a distinct URL or omit it."
+            )
+        seen[normalized] = field
+
+
 def build_fields(
     metadata: dict[str, object],
     *,
@@ -113,6 +151,8 @@ def build_fields(
         value = metadata.get(key)
         if not isinstance(value, str) or not value.strip():
             raise RuntimeError(f"CTAN metadata field {key!r} must be a non-empty string.")
+
+    validate_unique_metadata_urls(metadata)
 
     if not uploader.strip():
         raise RuntimeError(
@@ -267,7 +307,9 @@ def main() -> int:
     archive_path = ensure_path(args.archive)
 
     metadata = load_metadata(metadata_path)
-    version = read_repo_version(REPO_ROOT)
+    repo_version = read_repo_version(REPO_ROOT)
+    release_date = read_changelog_release_date(repo_version, REPO_ROOT)
+    version = compose_ctan_version(repo_version, release_date)
     fields = build_fields(
         metadata,
         version=version,

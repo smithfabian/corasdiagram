@@ -220,6 +220,8 @@ The repository uses one canonical versioning story:
 - release tags must be `v<version>`
 - the `Release` workflow verifies that the pushed tag matches `VERSION` before
   building or publishing anything
+- CTAN upload versioning is derived as `<VERSION> <release-date>`, where the
+  release date comes from the matching dated entry in [`CHANGELOG.md`](CHANGELOG.md)
 
 Release behavior:
 
@@ -229,6 +231,13 @@ Release behavior:
   `CTAN_UPLOADER_EMAIL`
 - the `ctan-release` environment requires review by `smithfabian`, so the CTAN
   upload job cannot read those values or continue without approval
+- [`ctan/metadata.json`](ctan/metadata.json) keeps the committed CTAN package
+  metadata, including the selected topics (`diagram`, `pgf-tikz`) and the
+  announcement URL used for manual/reference purposes
+- the current API-based uploader submits only CTAN fields that the CTAN upload
+  API supports, so the committed `announce` URL is not sent automatically
+- non-empty CTAN URL-role fields must be unique across `home`, `repository`,
+  `development`, `bugtracker`, `support`, and `announce`
 
 Pages behavior:
 
