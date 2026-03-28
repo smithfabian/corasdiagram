@@ -123,8 +123,17 @@ def validate_unique_metadata_urls(metadata: dict[str, object]) -> None:
     )
     seen: dict[str, str] = {}
     for field in url_fields:
-        value = metadata.get(field)
-        if not isinstance(value, str) or not value.strip():
+        if field not in metadata:
+            continue
+        value = metadata[field]
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            raise TypeError(
+                f"CTAN metadata field {field!r} must be a string URL, "
+                f"got {type(value).__name__}."
+            )
+        if not value.strip():
             continue
         normalized = normalize_url_for_uniqueness(value)
         previous = seen.get(normalized)

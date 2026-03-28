@@ -24,8 +24,7 @@ TEX_VERSION_PATTERN = re.compile(
     r"\\def\\corasdiagramversion\{([^}]+)\}"
 )
 CHANGELOG_DATE_PATTERN = re.compile(
-    r"^## \[(?P<version>[^\]]+)\] - (?P<date>\d{4}-\d{2}-\d{2})$",
-    re.MULTILINE,
+    r"^## \[(?P<version>[^\]]+)\] - (?P<date>\d{4}-\d{2}-\d{2})$"
 )
 
 
@@ -65,7 +64,10 @@ def read_tex_version(root: Path | None = None) -> str:
 
 def read_changelog_release_date(version: str, root: Path | None = None) -> str:
     text = changelog_file(root).read_text(encoding="utf-8")
-    for match in CHANGELOG_DATE_PATTERN.finditer(text):
+    for line in text.splitlines():
+        match = CHANGELOG_DATE_PATTERN.match(line.strip())
+        if match is None:
+            continue
         if match.group("version").strip() == version:
             return match.group("date")
     raise RuntimeError(
