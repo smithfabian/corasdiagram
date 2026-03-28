@@ -141,9 +141,7 @@ def copy_example_artifacts(
         if not tex_path.exists():
             raise RuntimeError(f"Canonical example source is missing: {tex_path}")
         try:
-            pdf_path = resolve_artifact(
-                repo_root, Path("examples") / f"{stem}.pdf", label="Example PDF"
-            )
+            pdf_path = resolve_example_pdf(repo_root, stem)
         except RuntimeError as exc:
             raise RuntimeError(
                 f"Missing compiled example PDF for {stem}. "
@@ -153,6 +151,20 @@ def copy_example_artifacts(
             ) from exc
         shutil.copy2(tex_path, dest_dir / tex_path.name)
         shutil.copy2(pdf_path, dest_dir / pdf_path.name)
+
+
+def resolve_example_pdf(repo_root: Path, stem: str) -> Path:
+    """Resolve a canonical compiled example PDF from the repository tree only."""
+
+    candidates = (
+        repo_root / "examples" / f"{stem}.pdf",
+        repo_root / f"{stem}.pdf",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    raise RuntimeError(f"Example PDF not found: {stem}.pdf")
 
 
 def resolve_artifact(repo_root: Path, path: Path, *, label: str = "Artifact") -> Path:
@@ -165,12 +177,19 @@ def resolve_artifact(repo_root: Path, path: Path, *, label: str = "Artifact") ->
         candidates.append((repo_root / path.name).resolve())
 
     seen: set[Path] = set()
+    non_files: list[Path] = []
     for candidate in candidates:
         if candidate in seen:
             continue
         seen.add(candidate)
-        if candidate.exists():
+        if candidate.is_file():
             return candidate
+        if candidate.exists():
+            non_files.append(candidate)
+
+    if non_files:
+        formatted = ", ".join(str(path) for path in non_files)
+        raise RuntimeError(f"{label} is not a file: {formatted}")
 
     raise RuntimeError(f"{label} not found: {path}")
 

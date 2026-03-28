@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
@@ -152,6 +153,37 @@ class BuildReleaseTests(unittest.TestCase):
 
             self.assertTrue((dest_dir / "example.tex").exists())
             self.assertTrue((dest_dir / "example.pdf").exists())
+
+    def test_resolve_example_pdf_ignores_cwd_and_prefers_repo_examples_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir) / "repo"
+            repo_examples = repo_root / "examples"
+            cwd_root = Path(temp_dir) / "cwd"
+            cwd_examples = cwd_root / "examples"
+            repo_examples.mkdir(parents=True)
+            cwd_examples.mkdir(parents=True)
+            (repo_examples / "example.pdf").write_bytes(b"%PDF-repo\n")
+            (cwd_examples / "example.pdf").write_bytes(b"%PDF-cwd\n")
+
+            previous_cwd = Path.cwd()
+            os.chdir(cwd_root)
+            try:
+                resolved = self.build_release.resolve_example_pdf(repo_root, "example")
+            finally:
+                os.chdir(previous_cwd)
+
+            self.assertEqual(resolved, repo_examples / "example.pdf")
+
+    def test_resolve_artifact_ignores_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            artifact_dir = repo_root / "docs" / "manual.pdf"
+            artifact_dir.mkdir(parents=True)
+
+            with self.assertRaisesRegex(RuntimeError, "Artifact is not a file"):
+                self.build_release.resolve_artifact(
+                    repo_root, Path("docs") / "manual.pdf"
+                )
 
     def test_verify_example_archive_names_requires_tex_and_pdf_pairs(self) -> None:
         archive_names = {
