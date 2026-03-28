@@ -27,7 +27,7 @@
         "%DOC%"
       ],
       "env": {
-        "TEXINPUTS": "${workspaceFolder}/tex/latex//:"
+        "TEXINPUTS": "%WORKSPACE_FOLDER%/tex/latex//:"
       }
     }
   ]
