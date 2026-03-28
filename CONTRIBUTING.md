@@ -252,7 +252,7 @@ actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflow
 The repository uses one canonical versioning story:
 
 - `VERSION` is the canonical repository release number
-- `corasdiagram-version.tex` is the TeX runtime mirror and must match
+- `corasdiagram-version.tex` is the TeX runtime mirror and must match `VERSION`
 - the `\ProvidesPackage` date in `corasdiagram.sty` must match the current
   dated `CHANGELOG.md` release entry
 - release tags must be `v<version>`

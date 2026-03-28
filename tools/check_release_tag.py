@@ -50,7 +50,8 @@ def main() -> int:
         raise RuntimeError(
             "corasdiagram.sty's \\ProvidesPackage date "
             f"({package_header_date}) does not match the current CHANGELOG.md "
-            f"release date ({changelog_date})."
+            f"release date ({changelog_date}); expected TeX-formatted date "
+            f"{expected_package_date!r}."
         )
 
     print(f"VERSION: {version}")
