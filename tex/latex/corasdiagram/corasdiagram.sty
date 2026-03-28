@@ -22,6 +22,7 @@
 \makeatletter
 
 \def\corasdiagram@iconsdirname{icons}
+\def\corasdiagram@iconfileprefix{corasdiagram-}
 \edef\corasdiagram@iconspath{\@currpath\corasdiagram@iconsdirname}
 \def\corasdiagram@iconsuffix{}
 
@@ -563,7 +564,7 @@
 }
 
 \newcommand{\corasdiagram@iconfile}[1]{%
-  \corasdiagram@iconspath/#1\corasdiagram@iconsuffix.pdf%
+  \corasdiagram@iconspath/\corasdiagram@iconfileprefix#1\corasdiagram@iconsuffix.pdf%
 }
 
 \newcommand{\corasdiagram@resolveiconperspectivesuffix}[1]{%

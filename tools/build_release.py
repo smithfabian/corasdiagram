@@ -13,6 +13,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
+from runtime_icons import RUNTIME_ICON_PREFIX
 from versioning import read_repo_version
 
 REQUIRED_BUNDLE_PATHS = (
@@ -137,6 +138,8 @@ def verify_bundle_layout(bundle_root: Path) -> None:
             + ", ".join(sorted(forbidden))
         )
 
+    verify_runtime_icon_directory(bundle_root / "tex" / "icons")
+
 
 def verify_archive_layout(archive_path: Path) -> None:
     with zipfile.ZipFile(archive_path) as archive:
@@ -172,6 +175,42 @@ def verify_archive_layout(archive_path: Path) -> None:
         raise RuntimeError(
             "release archive still contains forbidden nested paths: "
             + ", ".join(sorted(forbidden_prefixes))
+        )
+
+    verify_runtime_icon_archive_names(archive_names)
+
+
+def verify_runtime_icon_directory(icon_dir: Path) -> None:
+    runtime_icons = sorted(icon_dir.glob("*.pdf"))
+    if not runtime_icons:
+        raise RuntimeError("release bundle is missing runtime icon PDFs in tex/icons.")
+
+    invalid = [path.name for path in runtime_icons if not path.name.startswith(RUNTIME_ICON_PREFIX)]
+    if invalid:
+        raise RuntimeError(
+            "release bundle contains unprefixed runtime icon PDFs: "
+            + ", ".join(sorted(invalid))
+        )
+
+
+def verify_runtime_icon_archive_names(archive_names: set[str]) -> None:
+    runtime_icons = sorted(
+        name
+        for name in archive_names
+        if name.startswith("corasdiagram/tex/icons/") and name.endswith(".pdf")
+    )
+    if not runtime_icons:
+        raise RuntimeError("release archive is missing runtime icon PDFs in corasdiagram/tex/icons/.")
+
+    invalid = [
+        name
+        for name in runtime_icons
+        if not Path(name).name.startswith(RUNTIME_ICON_PREFIX)
+    ]
+    if invalid:
+        raise RuntimeError(
+            "release archive contains unprefixed runtime icon PDFs: "
+            + ", ".join(sorted(invalid))
         )
 
 

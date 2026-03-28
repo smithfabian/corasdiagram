@@ -13,6 +13,8 @@ import re
 import sys
 from pathlib import Path
 
+from runtime_icons import managed_runtime_pdf_names, runtime_pdf_path
+
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
@@ -83,6 +85,27 @@ def derive_bw_svg_text(svg_text: str) -> str:
     return HEX_COLOR_RE.sub(replace, svg_text)
 
 
+def clear_managed_runtime_pdfs(dest: Path, source_stems: set[str]) -> None:
+    """Delete only managed runtime PDFs from an existing output directory.
+
+    This removes both the current prefixed filenames and the historical
+    unprefixed names for known source stems, while leaving unrelated files in
+    a user-supplied destination alone.
+    """
+
+    if not dest.exists():
+        return
+    if not dest.is_dir():
+        raise ValueError(f"Destination path is not a directory: {dest}")
+
+    managed_names = managed_runtime_pdf_names(source_stems)
+    for child in dest.iterdir():
+        if not child.is_file() or child.suffix.lower() != ".pdf":
+            continue
+        if child.name in managed_names:
+            child.unlink()
+
+
 def main() -> int:
     args = parse_args()
     source = args.source.expanduser().resolve()
@@ -102,12 +125,15 @@ def main() -> int:
         print(f"Source directory not found: {source}", file=sys.stderr)
         return 1
 
-    dest.mkdir(parents=True, exist_ok=True)
-    converted = 0
-
     base_svgs = sorted(
         svg_path for svg_path in source.glob("*.svg") if not svg_path.stem.endswith("_bw")
     )
+    source_stems = {svg_path.stem for svg_path in base_svgs}
+    source_stems.update(f"{svg_path.stem}_bw" for svg_path in base_svgs)
+
+    clear_managed_runtime_pdfs(dest, source_stems)
+    dest.mkdir(parents=True, exist_ok=True)
+    converted = 0
 
     for svg_path in base_svgs:
         svg_text = sanitize_svg_text(svg_path.read_text(encoding="utf-8"))
@@ -115,12 +141,12 @@ def main() -> int:
         bw_svg_path = source / f"{svg_path.stem}_bw.svg"
         bw_svg_path.write_text(bw_svg_text, encoding="utf-8")
 
-        pdf_path = dest / f"{svg_path.stem}.pdf"
+        pdf_path = runtime_pdf_path(dest, svg_path.stem)
         cairosvg.svg2pdf(bytestring=svg_text.encode("utf-8"), write_to=str(pdf_path))
         converted += 1
         print(f"wrote {pdf_path}")
 
-        bw_pdf_path = dest / f"{svg_path.stem}_bw.pdf"
+        bw_pdf_path = runtime_pdf_path(dest, f"{svg_path.stem}_bw")
         cairosvg.svg2pdf(bytestring=bw_svg_text.encode("utf-8"), write_to=str(bw_pdf_path))
         converted += 1
         print(f"wrote {bw_pdf_path}")
