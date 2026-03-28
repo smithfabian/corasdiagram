@@ -16,13 +16,13 @@ from pathlib import Path
 from versioning import read_repo_version
 
 REQUIRED_BUNDLE_PATHS = (
+    "assets/icons-src",
     "doc/corasdiagram-doc.pdf",
     "doc/corasdiagram-doc.tex",
     "doc/examples",
     "tex/corasdiagram-version.tex",
     "tex/corasdiagram.sty",
     "tex/icons",
-    "tex/icons-src",
 )
 
 FORBIDDEN_BUNDLE_PREFIXES = (
@@ -38,9 +38,9 @@ REQUIRED_ARCHIVE_FILES = (
 )
 
 REQUIRED_ARCHIVE_PREFIXES = (
+    "corasdiagram/assets/icons-src/",
     "corasdiagram/doc/examples/",
     "corasdiagram/tex/icons/",
-    "corasdiagram/tex/icons-src/",
 )
 
 FORBIDDEN_ARCHIVE_PREFIXES = (
@@ -71,7 +71,12 @@ def parse_args() -> argparse.Namespace:
 def ignore_release_noise(_directory: str, names: list[str]) -> set[str]:
     ignored: set[str] = set()
     for name in names:
-        if name.endswith(".bak") or name.endswith("~") or name == "__pycache__":
+        if (
+            name.endswith(".bak")
+            or name.endswith("~")
+            or name == "__pycache__"
+            or name == ".DS_Store"
+        ):
             ignored.add(name)
     return ignored
 
@@ -188,6 +193,7 @@ def main() -> int:
     tex_root.parent.mkdir(parents=True, exist_ok=True)
 
     copy_tree(repo_root / "tex" / "latex" / "corasdiagram", tex_root)
+    copy_tree(repo_root / "assets" / "icons-src", bundle_root / "assets" / "icons-src")
     copy_example_sources(repo_root / "examples", doc_root / "examples")
 
     shutil.copy2(

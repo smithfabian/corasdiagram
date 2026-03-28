@@ -30,8 +30,7 @@ Canonical sources of truth:
 - [`VERSION`](VERSION) is the canonical repository release number.
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
   is the TeX runtime mirror of that version and must match `VERSION`.
-- [`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src) holds
-  the canonical icon sources.
+- [`assets/icons-src/`](assets/icons-src) holds the canonical icon sources.
 - [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons) holds the
   generated runtime icon assets used by the package.
 - [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots) holds the

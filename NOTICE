@@ -4,7 +4,7 @@ CORAS-The-Explorer:
 https://github.com/stverdal/CORAS-The-Explorer
 
 The vendored package sources in
-tex/latex/corasdiagram/icons-src/
+assets/icons-src/
 are normalized copies of SVG assets from:
 
 src/js/components/molecules/Editor/svg/

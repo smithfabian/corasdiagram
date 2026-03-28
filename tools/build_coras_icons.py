@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build generated runtime icon assets from the canonical SVG sources.
 
-The repository treats tex/latex/corasdiagram/icons-src/ as the editable icon
-source tree and tex/latex/corasdiagram/icons/ as generated runtime assets used
-by the LaTeX package. Run this script after intentional icon source changes.
+The repository treats assets/icons-src/ as the editable icon source tree and
+tex/latex/corasdiagram/icons/ as generated runtime assets used by the LaTeX
+package. Run this script after intentional icon source changes.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
-    default_source = repo_root / "tex" / "latex" / "corasdiagram" / "icons-src"
+    default_source = repo_root / "assets" / "icons-src"
     default_dest = repo_root / "tex" / "latex" / "corasdiagram" / "icons"
 
     parser = argparse.ArgumentParser(
