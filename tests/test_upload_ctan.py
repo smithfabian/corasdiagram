@@ -164,6 +164,12 @@ class UploadCtanTests(unittest.TestCase):
             "(empty response body)",
         )
 
+    def test_format_messages_reports_empty_message_list(self) -> None:
+        self.assertEqual(
+            self.upload_ctan.format_messages([]),
+            "(no messages returned)",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
