@@ -16,9 +16,12 @@ Normal lifecycle of a change:
    merged change affects the published docs/examples.
 6. For a versioned release, update [`VERSION`](VERSION) and
    [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
-   together, update [`CHANGELOG.md`](CHANGELOG.md), push a matching tag
-   `v<version>`, and approve the `ctan-release` environment when you want the
-   CTAN upload to continue.
+   together, update [`CHANGELOG.md`](CHANGELOG.md), keep the
+   `\ProvidesPackage` date in
+   [`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty)
+   aligned with that release date, push a matching tag `v<version>`, and
+   approve the `ctan-release` environment when you want the CTAN upload to
+   continue.
 
 Workflow boundaries:
 
@@ -35,6 +38,9 @@ Repository-managed sources of truth:
 - [`VERSION`](VERSION): canonical repository release number
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex):
   TeX runtime mirror of `VERSION`
+- [`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty):
+  carries the LaTeX package header date that must match the current release
+  date in [`CHANGELOG.md`](CHANGELOG.md)
 - [`assets/icons-src/`](assets/icons-src): canonical icon sources
 - [`NOTICE`](NOTICE): provenance and upstream MIT notice for the vendored icon
   sources
@@ -233,6 +239,9 @@ actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflow
   [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
   to the same value
 - update [`CHANGELOG.md`](CHANGELOG.md)
+- update the `\ProvidesPackage` date in
+  [`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty)
+  to match the release date
 - run `python3 tools/check_release_tag.py`
 - create and push the matching tag `v<version>`
 - approve the `ctan-release` environment when you want the CTAN upload job to
@@ -244,9 +253,11 @@ The repository uses one canonical versioning story:
 
 - `VERSION` is the canonical repository release number
 - `corasdiagram-version.tex` is the TeX runtime mirror and must match
+- the `\ProvidesPackage` date in `corasdiagram.sty` must match the current
+  dated `CHANGELOG.md` release entry
 - release tags must be `v<version>`
-- the `Release` workflow verifies that the pushed tag matches `VERSION` before
-  building or publishing anything
+- the `Release` workflow verifies the version/tag story and package header date
+  before building or publishing anything
 - CTAN upload versioning is derived as `<VERSION> <release-date>`, where the
   release date comes from the matching dated entry in [`CHANGELOG.md`](CHANGELOG.md)
 

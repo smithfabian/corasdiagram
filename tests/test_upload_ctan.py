@@ -13,7 +13,8 @@ UPLOAD_CTAN_PATH = REPO_ROOT / "tools" / "upload_ctan.py"
 
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
-    assert spec is not None and spec.loader is not None
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Could not load module {name!r} from {path}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -141,6 +142,17 @@ class UploadCtanTests(unittest.TestCase):
         version = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
         release_date = self.versioning.read_changelog_release_date(version, REPO_ROOT)
         self.assertRegex(release_date, r"^\d{4}-\d{2}-\d{2}$")
+
+    def test_read_package_header_date_for_current_package(self) -> None:
+        package_date = self.versioning.read_package_header_date(REPO_ROOT)
+        self.assertRegex(package_date, r"^\d{4}/\d{2}/\d{2}$")
+
+    def test_iso_date_to_tex_date_converts_changelog_format(self) -> None:
+        self.assertEqual(
+            self.versioning.iso_date_to_tex_date("2026-03-28"),
+            "2026/03/28",
+        )
+
     def test_read_changelog_release_date_allows_trailing_whitespace(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_root = Path(temp_dir)

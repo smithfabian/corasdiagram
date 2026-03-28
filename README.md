@@ -38,6 +38,9 @@ Canonical sources of truth:
 - [`VERSION`](VERSION) is the canonical repository release number.
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
   is the TeX runtime mirror of that version and must match `VERSION`.
+- the `\ProvidesPackage` date in
+  [`tex/latex/corasdiagram/corasdiagram.sty`](tex/latex/corasdiagram/corasdiagram.sty)
+  must match the current release date in [`CHANGELOG.md`](CHANGELOG.md)
 - [`assets/icons-src/`](assets/icons-src) holds the canonical icon sources.
 - [`NOTICE`](NOTICE) records provenance and the upstream MIT notice for the
   vendored icon sources.
@@ -54,8 +57,9 @@ Workflow map:
 - merges to `main` trigger CI and deploy the documentation site through the
   dedicated `Pages` workflow
 - pushed version tags matching `vX.Y.Z` trigger the `Release` workflow
-- the release workflow verifies that the tag matches `VERSION`, builds the
-  release archive, publishes the GitHub release assets, and waits at the
+- the release workflow verifies that the tag matches `VERSION` and that the
+  package header date matches the current `CHANGELOG.md` release date, builds
+  the release archive, publishes the GitHub release assets, and waits at the
   `ctan-release` environment before any CTAN upload can continue
 
 For the full contributor runbook, change checklists, and release procedure, see
