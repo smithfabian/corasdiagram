@@ -22,7 +22,7 @@ The supported TeX engines are `pdflatex` and `lualatex`.
 
 ## Author and Contact
 
-- Author and maintainer: Fabian Smith
+- Author and maintainer: Fabian Robert Smith
 - Contact email: <fabian.smith@me.com>
 - Repository and issue tracker:
   [github.com/smithfabian/corasdiagram](https://github.com/smithfabian/corasdiagram)
@@ -39,6 +39,8 @@ Canonical sources of truth:
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex)
   is the TeX runtime mirror of that version and must match `VERSION`.
 - [`assets/icons-src/`](assets/icons-src) holds the canonical icon sources.
+- [`NOTICE`](NOTICE) records provenance and the upstream MIT notice for the
+  vendored icon sources.
 - [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons) holds the
   generated runtime icon assets used by the package.
 - [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots) holds the
@@ -83,10 +85,11 @@ to `~/texmf/tex/latex/corasdiagram/` and refresh the TeX filename database if
 your distribution requires it.
 
 The release workflow also assembles a CTAN-friendly distribution bundle with
-runtime files flattened under `tex/` and documentation under `doc/`. If you are
-installing from that bundle manually, copy the contents of `tex/` into
-`~/texmf/tex/latex/corasdiagram/`. Once the package is published to CTAN or
-TeX Live, installation can happen through the normal package manager for the
+runtime files flattened under `tex/`, documentation under `doc/`, and the
+top-level metadata files such as [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+If you are installing from that bundle manually, copy the contents of `tex/`
+into `~/texmf/tex/latex/corasdiagram/`. Once the package is published to CTAN
+or TeX Live, installation can happen through the normal package manager for the
 TeX distribution.
 
 ## Using In Your Own Project
@@ -344,3 +347,5 @@ or feature ideas. The public issue labels include `good first issue`,
 ## License
 
 This project is licensed under the MIT license. See [`LICENSE`](LICENSE).
+The vendored CORAS icon sources also carry upstream MIT attribution and
+provenance in [`NOTICE`](NOTICE).

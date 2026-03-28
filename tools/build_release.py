@@ -19,6 +19,7 @@ from runtime_icons import RUNTIME_ICON_PREFIX
 from versioning import read_repo_version
 
 REQUIRED_BUNDLE_PATHS = (
+    "NOTICE",
     "assets/icons-src",
     "doc/corasdiagram-doc.pdf",
     "doc/corasdiagram-doc.tex",
@@ -34,6 +35,7 @@ FORBIDDEN_BUNDLE_PREFIXES = (
 )
 
 REQUIRED_ARCHIVE_FILES = (
+    "corasdiagram/NOTICE",
     "corasdiagram/doc/corasdiagram-doc.pdf",
     "corasdiagram/doc/corasdiagram-doc.tex",
     "corasdiagram/tex/corasdiagram-version.tex",
@@ -350,7 +352,15 @@ def main() -> int:
         repo_root / "docs" / "corasdiagram-doc.tex",
         doc_root / "corasdiagram-doc.tex",
     )
-    for filename in ("README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md", "ROADMAP.md", "VERSION"):
+    for filename in (
+        "README.md",
+        "LICENSE",
+        "NOTICE",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "ROADMAP.md",
+        "VERSION",
+    ):
         shutil.copy2(repo_root / filename, bundle_root / filename)
 
     doc_pdf = args.doc_pdf
