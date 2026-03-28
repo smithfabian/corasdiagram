@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import sys
 from pathlib import Path
+
+RUNTIME_ICON_PREFIX = "corasdiagram-"
 
 
 def parse_args() -> argparse.Namespace:
@@ -83,6 +86,10 @@ def derive_bw_svg_text(svg_text: str) -> str:
     return HEX_COLOR_RE.sub(replace, svg_text)
 
 
+def runtime_pdf_path(dest: Path, stem: str) -> Path:
+    return dest / f"{RUNTIME_ICON_PREFIX}{stem}.pdf"
+
+
 def main() -> int:
     args = parse_args()
     source = args.source.expanduser().resolve()
@@ -102,6 +109,8 @@ def main() -> int:
         print(f"Source directory not found: {source}", file=sys.stderr)
         return 1
 
+    if dest.exists():
+        shutil.rmtree(dest)
     dest.mkdir(parents=True, exist_ok=True)
     converted = 0
 
@@ -115,12 +124,12 @@ def main() -> int:
         bw_svg_path = source / f"{svg_path.stem}_bw.svg"
         bw_svg_path.write_text(bw_svg_text, encoding="utf-8")
 
-        pdf_path = dest / f"{svg_path.stem}.pdf"
+        pdf_path = runtime_pdf_path(dest, svg_path.stem)
         cairosvg.svg2pdf(bytestring=svg_text.encode("utf-8"), write_to=str(pdf_path))
         converted += 1
         print(f"wrote {pdf_path}")
 
-        bw_pdf_path = dest / f"{svg_path.stem}_bw.pdf"
+        bw_pdf_path = runtime_pdf_path(dest, f"{svg_path.stem}_bw")
         cairosvg.svg2pdf(bytestring=bw_svg_text.encode("utf-8"), write_to=str(bw_pdf_path))
         converted += 1
         print(f"wrote {bw_pdf_path}")

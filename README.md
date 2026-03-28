@@ -99,9 +99,9 @@ The simplest Overleaf layout is:
 main.tex
 corasdiagram.sty
 icons/
-  asset.pdf
-  stakeholder.pdf
-  risk.pdf
+  corasdiagram-asset.pdf
+  corasdiagram-stakeholder.pdf
+  corasdiagram-risk.pdf
   ...
 ```
 
@@ -122,8 +122,8 @@ main.tex
 corasdiagram/
   corasdiagram.sty
   icons/
-    asset.pdf
-    stakeholder.pdf
+    corasdiagram-asset.pdf
+    corasdiagram-stakeholder.pdf
     ...
 ```
 
