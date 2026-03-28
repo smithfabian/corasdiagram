@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import shutil
 import sys
 from pathlib import Path
 
@@ -90,6 +89,27 @@ def runtime_pdf_path(dest: Path, stem: str) -> Path:
     return dest / f"{RUNTIME_ICON_PREFIX}{stem}.pdf"
 
 
+def clear_managed_runtime_pdfs(dest: Path, source_stems: set[str]) -> None:
+    """Delete only managed runtime PDFs from an existing output directory.
+
+    This removes both the current prefixed filenames and the historical
+    unprefixed names for known source stems, while leaving unrelated files in
+    a user-supplied destination alone.
+    """
+
+    if not dest.exists():
+        return
+    if not dest.is_dir():
+        raise ValueError(f"Destination path is not a directory: {dest}")
+
+    managed_legacy_names = {f"{stem}.pdf" for stem in source_stems}
+    for child in dest.iterdir():
+        if not child.is_file() or child.suffix.lower() != ".pdf":
+            continue
+        if child.name.startswith(RUNTIME_ICON_PREFIX) or child.name in managed_legacy_names:
+            child.unlink()
+
+
 def main() -> int:
     args = parse_args()
     source = args.source.expanduser().resolve()
@@ -109,14 +129,15 @@ def main() -> int:
         print(f"Source directory not found: {source}", file=sys.stderr)
         return 1
 
-    if dest.exists():
-        shutil.rmtree(dest)
-    dest.mkdir(parents=True, exist_ok=True)
-    converted = 0
-
     base_svgs = sorted(
         svg_path for svg_path in source.glob("*.svg") if not svg_path.stem.endswith("_bw")
     )
+    source_stems = {svg_path.stem for svg_path in base_svgs}
+    source_stems.update(f"{svg_path.stem}_bw" for svg_path in base_svgs)
+
+    clear_managed_runtime_pdfs(dest, source_stems)
+    dest.mkdir(parents=True, exist_ok=True)
+    converted = 0
 
     for svg_path in base_svgs:
         svg_text = sanitize_svg_text(svg_path.read_text(encoding="utf-8"))
