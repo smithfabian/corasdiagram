@@ -6,8 +6,8 @@
 - Tune per-icon anchor geometry so edge contact points match the symbol
   silhouettes more tightly.
 - Expand the manual with more worked examples and troubleshooting guidance.
-- Publish the first CTAN submission once the repository metadata and release
-  pipeline settle.
+- Complete the corrected first CTAN submission and verify the follow-up release
+  workflow for later automated CTAN updates.
 
 ## Good First Issues
 

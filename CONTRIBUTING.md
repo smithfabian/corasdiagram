@@ -36,6 +36,8 @@ Repository-managed sources of truth:
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex):
   TeX runtime mirror of `VERSION`
 - [`assets/icons-src/`](assets/icons-src): canonical icon sources
+- [`NOTICE`](NOTICE): provenance and upstream MIT notice for the vendored icon
+  sources
 - [`ctan/metadata.json`](ctan/metadata.json): committed CTAN package metadata
 - [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots): committed
   visual regression baselines
@@ -51,7 +53,8 @@ Generated or disposable outputs:
 
 The CTAN release bundle is the exception: it intentionally includes the
 compiled PDFs for the canonical examples under `doc/examples/`, alongside the
-example `.tex` sources.
+example `.tex` sources, plus the top-level [`LICENSE`](LICENSE) and
+[`NOTICE`](NOTICE) files.
 
 Do not edit generated runtime icons by hand. Rebuild them from
 [`assets/icons-src/`](assets/icons-src) when the source icons change.
@@ -160,6 +163,18 @@ Then build the CTAN release bundle:
 
 ```bash
 python3 tools/build_release.py --doc-pdf docs/corasdiagram-doc.pdf
+```
+
+Optionally validate the rebuilt archive against the CTAN API before uploading
+it manually:
+
+```bash
+python3 tools/upload_ctan.py \
+  --archive "dist/corasdiagram-$(cat VERSION).zip" \
+  --uploader "Fabian Robert Smith" \
+  --email "fabian.smith@me.com" \
+  --update false \
+  --validate-only
 ```
 
 Generate the static documentation site after compiling the examples and manual:
