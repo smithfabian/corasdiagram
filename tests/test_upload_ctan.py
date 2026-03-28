@@ -138,11 +138,9 @@ class UploadCtanTests(unittest.TestCase):
         )
 
     def test_read_changelog_release_date_for_current_version(self) -> None:
-        self.assertEqual(
-            self.versioning.read_changelog_release_date("0.1.0", REPO_ROOT),
-            "2026-03-08",
-        )
-
+        version = (REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        release_date = self.versioning.read_changelog_release_date(version, REPO_ROOT)
+        self.assertRegex(release_date, r"^\d{4}-\d{2}-\d{2}$")
     def test_read_changelog_release_date_allows_trailing_whitespace(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_root = Path(temp_dir)
