@@ -278,8 +278,13 @@ def run_ctan_request(
 
 
 def format_messages(payload: object) -> str:
+    if isinstance(payload, str):
+        text = payload.strip()
+        return text if text else "(empty response body)"
     if not isinstance(payload, list):
         return str(payload)
+    if not payload:
+        return "(no messages returned)"
 
     lines: list[str] = []
     for item in payload:
@@ -330,7 +335,7 @@ def main() -> int:
     )
 
     http_code, validate_payload = run_ctan_request(VALIDATE_URL, fields, archive_path)
-    print("CTAN validate response:")
+    print(f"CTAN validate response (HTTP {http_code}):")
     print(format_messages(validate_payload))
     if http_code != 200 or payload_has_errors(validate_payload):
         raise RuntimeError(f"CTAN validation failed with HTTP {http_code}.")
@@ -339,7 +344,7 @@ def main() -> int:
         return 0
 
     http_code, upload_payload = run_ctan_request(UPLOAD_URL, fields, archive_path)
-    print("\nCTAN upload response:")
+    print(f"\nCTAN upload response (HTTP {http_code}):")
     print(format_messages(upload_payload))
     if http_code != 200 or payload_has_errors(upload_payload) or not upload_succeeded(upload_payload):
         raise RuntimeError(f"CTAN upload failed with HTTP {http_code}.")
