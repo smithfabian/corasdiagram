@@ -218,7 +218,8 @@ def main() -> int:
     with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(bundle_root.rglob("*")):
             if path.is_file():
-                archive.write(path, path.relative_to(bundle_root.parent))
+                relative_path = path.relative_to(bundle_root.parent)
+                archive.write(path, relative_path.as_posix())
     verify_archive_layout(archive_path)
 
     print(f"wrote {bundle_root}")
