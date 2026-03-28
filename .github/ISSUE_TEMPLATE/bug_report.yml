@@ -42,7 +42,7 @@ body:
     id: engine
     attributes:
       label: TeX engine
-      description: `pdflatex`, `lualatex`, or another engine/version.
+      description: "`pdflatex`, `lualatex`, or another engine/version."
       placeholder: pdflatex (TeX Live 2026)
   - type: textarea
     id: expected
