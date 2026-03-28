@@ -35,8 +35,7 @@ Repository-managed sources of truth:
 - [`VERSION`](VERSION): canonical repository release number
 - [`tex/latex/corasdiagram/corasdiagram-version.tex`](tex/latex/corasdiagram/corasdiagram-version.tex):
   TeX runtime mirror of `VERSION`
-- [`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src):
-  canonical icon sources
+- [`assets/icons-src/`](assets/icons-src): canonical icon sources
 - [`ctan/metadata.json`](ctan/metadata.json): committed CTAN package metadata
 - [`tests/corasdiagram/snapshots/`](tests/corasdiagram/snapshots): committed
   visual regression baselines
@@ -44,15 +43,14 @@ Repository-managed sources of truth:
 Generated or disposable outputs:
 
 - [`tex/latex/corasdiagram/icons/`](tex/latex/corasdiagram/icons): generated
-  runtime icon assets built from `icons-src/`
+  runtime icon assets built from `assets/icons-src/`
 - `dist/`: release bundles and static site output
 - local TeX build products such as `.aux`, `.log`, generated PDFs, and
   temporary rasterized images
 - local scratch output under `build/`
 
 Do not edit generated runtime icons by hand. Rebuild them from
-[`tex/latex/corasdiagram/icons-src/`](tex/latex/corasdiagram/icons-src) when
-the source icons change.
+[`assets/icons-src/`](assets/icons-src) when the source icons change.
 
 ## Prerequisites
 
@@ -187,7 +185,7 @@ actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflow
 
 ### Icon or source asset change
 
-- edit only files in `icons-src/`
+- edit only files in `assets/icons-src/`
 - rebuild the generated runtime icons with `tools/build_coras_icons.py`
 - verify both color and `iconset=bw` outputs still compile cleanly
 - update snapshots, examples, and docs if the rendered symbols changed

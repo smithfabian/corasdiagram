@@ -30,7 +30,7 @@ import xml.etree.ElementTree as ET
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_PATH = REPO_ROOT / "tex" / "latex" / "corasdiagram" / "corasdiagram.sty"
-ICONS_SRC_DIR = REPO_ROOT / "tex" / "latex" / "corasdiagram" / "icons-src"
+ICONS_SRC_DIR = REPO_ROOT / "assets" / "icons-src"
 STATIC_DIR = REPO_ROOT / "tools" / "coras_anchor_editor_web"
 GENERATED_DIR = REPO_ROOT / "build" / "coras-anchor-editor"
 PREVIEW_FIXTURE = REPO_ROOT / "tests" / "corasdiagram" / "icon-anchor-regression.tex"
