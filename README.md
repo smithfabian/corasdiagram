@@ -70,14 +70,17 @@ For local development inside this repository, compile with:
 TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
 ```
 
-For a user-level TEXMF installation, copy
+For a user-level TEXMF installation from a repository checkout, copy
 [`tex/latex/corasdiagram/`](tex/latex/corasdiagram)
 to `~/texmf/tex/latex/corasdiagram/` and refresh the TeX filename database if
 your distribution requires it.
 
-The release workflow also assembles a CTAN-friendly distribution bundle. Once
-the package is published to CTAN or TeX Live, installation can happen through
-the normal package manager for the TeX distribution.
+The release workflow also assembles a CTAN-friendly distribution bundle with
+runtime files flattened under `tex/` and documentation under `doc/`. If you are
+installing from that bundle manually, copy the contents of `tex/` into
+`~/texmf/tex/latex/corasdiagram/`. Once the package is published to CTAN or
+TeX Live, installation can happen through the normal package manager for the
+TeX distribution.
 
 ## Using In Your Own Project
 

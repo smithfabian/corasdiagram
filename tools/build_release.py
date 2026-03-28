@@ -15,6 +15,39 @@ from pathlib import Path
 
 from versioning import read_repo_version
 
+REQUIRED_BUNDLE_PATHS = (
+    "doc/corasdiagram-doc.pdf",
+    "doc/corasdiagram-doc.tex",
+    "doc/examples",
+    "tex/corasdiagram-version.tex",
+    "tex/corasdiagram.sty",
+    "tex/icons",
+    "tex/icons-src",
+)
+
+FORBIDDEN_BUNDLE_PREFIXES = (
+    "doc/latex",
+    "tex/latex",
+)
+
+REQUIRED_ARCHIVE_FILES = (
+    "corasdiagram/doc/corasdiagram-doc.pdf",
+    "corasdiagram/doc/corasdiagram-doc.tex",
+    "corasdiagram/tex/corasdiagram-version.tex",
+    "corasdiagram/tex/corasdiagram.sty",
+)
+
+REQUIRED_ARCHIVE_PREFIXES = (
+    "corasdiagram/doc/examples/",
+    "corasdiagram/tex/icons/",
+    "corasdiagram/tex/icons-src/",
+)
+
+FORBIDDEN_ARCHIVE_PREFIXES = (
+    "corasdiagram/doc/latex/",
+    "corasdiagram/tex/latex/",
+)
+
 
 def parse_args() -> argparse.Namespace:
     repo_root = Path(__file__).resolve().parents[1]
@@ -77,6 +110,66 @@ def resolve_artifact(repo_root: Path, path: Path) -> Path:
     raise RuntimeError(f"Documentation PDF not found: {path}")
 
 
+def verify_bundle_layout(bundle_root: Path) -> None:
+    missing = [
+        relative_path
+        for relative_path in REQUIRED_BUNDLE_PATHS
+        if not (bundle_root / relative_path).exists()
+    ]
+    if missing:
+        raise RuntimeError(
+            f"release bundle missing expected paths: {', '.join(sorted(missing))}"
+        )
+
+    forbidden = [
+        relative_path
+        for relative_path in FORBIDDEN_BUNDLE_PREFIXES
+        if (bundle_root / relative_path).exists()
+    ]
+    if forbidden:
+        raise RuntimeError(
+            "release bundle still contains forbidden nested paths: "
+            + ", ".join(sorted(forbidden))
+        )
+
+
+def verify_archive_layout(archive_path: Path) -> None:
+    with zipfile.ZipFile(archive_path) as archive:
+        archive_names = set(archive.namelist())
+
+    missing_files = [
+        relative_path
+        for relative_path in REQUIRED_ARCHIVE_FILES
+        if relative_path not in archive_names
+    ]
+    if missing_files:
+        raise RuntimeError(
+            f"release archive missing expected files: {', '.join(sorted(missing_files))}"
+        )
+
+    missing_prefixes = [
+        prefix
+        for prefix in REQUIRED_ARCHIVE_PREFIXES
+        if not any(name.startswith(prefix) for name in archive_names)
+    ]
+    if missing_prefixes:
+        raise RuntimeError(
+            "release archive missing expected file groups: "
+            + ", ".join(sorted(missing_prefixes))
+        )
+
+    forbidden_prefixes = [
+        prefix
+        for prefix in FORBIDDEN_ARCHIVE_PREFIXES
+        if any(name.startswith(prefix) for name in archive_names)
+    ]
+    if forbidden_prefixes:
+        raise RuntimeError(
+            "release archive still contains forbidden nested paths: "
+            + ", ".join(sorted(forbidden_prefixes))
+        )
+
+
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
@@ -84,8 +177,8 @@ def main() -> int:
 
     output_dir = args.output_dir.expanduser().resolve()
     bundle_root = output_dir / "ctan" / "corasdiagram"
-    doc_root = bundle_root / "doc" / "latex" / "corasdiagram"
-    tex_root = bundle_root / "tex" / "latex" / "corasdiagram"
+    doc_root = bundle_root / "doc"
+    tex_root = bundle_root / "tex"
 
     output_dir.mkdir(parents=True, exist_ok=True)
     if bundle_root.exists():
@@ -119,12 +212,15 @@ def main() -> int:
     doc_pdf = resolve_artifact(repo_root, doc_pdf.expanduser())
 
     shutil.copy2(doc_pdf, doc_root / "corasdiagram-doc.pdf")
+    verify_bundle_layout(bundle_root)
 
     archive_path = output_dir / f"corasdiagram-{version}.zip"
     with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(bundle_root.rglob("*")):
             if path.is_file():
-                archive.write(path, path.relative_to(bundle_root.parent))
+                relative_path = path.relative_to(bundle_root.parent)
+                archive.write(path, relative_path.as_posix())
+    verify_archive_layout(archive_path)
 
     print(f"wrote {bundle_root}")
     print(f"wrote {archive_path}")
