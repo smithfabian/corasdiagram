@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 
-RUNTIME_ICON_PREFIX = "corasdiagram-"
+from runtime_icons import managed_runtime_pdf_names, runtime_pdf_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -85,10 +85,6 @@ def derive_bw_svg_text(svg_text: str) -> str:
     return HEX_COLOR_RE.sub(replace, svg_text)
 
 
-def runtime_pdf_path(dest: Path, stem: str) -> Path:
-    return dest / f"{RUNTIME_ICON_PREFIX}{stem}.pdf"
-
-
 def clear_managed_runtime_pdfs(dest: Path, source_stems: set[str]) -> None:
     """Delete only managed runtime PDFs from an existing output directory.
 
@@ -102,11 +98,11 @@ def clear_managed_runtime_pdfs(dest: Path, source_stems: set[str]) -> None:
     if not dest.is_dir():
         raise ValueError(f"Destination path is not a directory: {dest}")
 
-    managed_legacy_names = {f"{stem}.pdf" for stem in source_stems}
+    managed_names = managed_runtime_pdf_names(source_stems)
     for child in dest.iterdir():
         if not child.is_file() or child.suffix.lower() != ".pdf":
             continue
-        if child.name.startswith(RUNTIME_ICON_PREFIX) or child.name in managed_legacy_names:
+        if child.name in managed_names:
             child.unlink()
 
 

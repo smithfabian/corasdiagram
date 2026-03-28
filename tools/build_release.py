@@ -13,9 +13,8 @@ import shutil
 import zipfile
 from pathlib import Path
 
+from runtime_icons import RUNTIME_ICON_PREFIX
 from versioning import read_repo_version
-
-RUNTIME_ICON_PREFIX = "corasdiagram-"
 
 REQUIRED_BUNDLE_PATHS = (
     "assets/icons-src",
