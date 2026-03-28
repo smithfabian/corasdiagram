@@ -27,7 +27,7 @@
         "%DOC%"
       ],
       "env": {
-        "TEXINPUTS": "/Users/fabiansmith/Repositories/CORAS/tex/latex//:"
+        "TEXINPUTS": "${workspaceFolder}/tex/latex//:"
       }
     }
   ]

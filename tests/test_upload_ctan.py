@@ -51,7 +51,7 @@ class UploadCtanTests(unittest.TestCase):
             "summary": "summary",
             "description": "description",
             "ctanPath": "/graphics/pgf/contrib/corasdiagram",
-            "author": ["Fabian Smith"],
+            "author": ["Example Author"],
             "license": ["mit"],
             "topic": ["diagram", "pgf-tikz"],
             "repository": "https://github.com/smithfabian/corasdiagram",
@@ -63,8 +63,8 @@ class UploadCtanTests(unittest.TestCase):
         fields = self.upload_ctan.build_fields(
             metadata,
             version="0.1.0 2026-03-08",
-            uploader="Fabian Smith",
-            email="fabian@example.com",
+            uploader="Example Uploader",
+            email="uploader@example.com",
             announcement="",
             note="",
             update_override=None,
@@ -116,7 +116,7 @@ class UploadCtanTests(unittest.TestCase):
             "summary": "summary",
             "description": "description",
             "ctanPath": "/graphics/pgf/contrib/corasdiagram",
-            "author": ["Fabian Smith"],
+            "author": ["Example Author"],
             "license": ["mit"],
             "announce": "https://github.com/smithfabian/corasdiagram/releases",
             "update": True,
@@ -125,8 +125,8 @@ class UploadCtanTests(unittest.TestCase):
         fields = self.upload_ctan.build_fields(
             metadata,
             version="0.1.0 2026-03-08",
-            uploader="Fabian Smith",
-            email="fabian@example.com",
+            uploader="Example Uploader",
+            email="uploader@example.com",
             announcement="",
             note="",
             update_override=None,
@@ -157,6 +157,12 @@ class UploadCtanTests(unittest.TestCase):
     def test_missing_changelog_release_date_is_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "dated CHANGELOG.md entry"):
             self.versioning.read_changelog_release_date("9.9.9", REPO_ROOT)
+
+    def test_format_messages_reports_empty_response_body(self) -> None:
+        self.assertEqual(
+            self.upload_ctan.format_messages(""),
+            "(empty response body)",
+        )
 
 
 if __name__ == "__main__":
