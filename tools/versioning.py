@@ -6,6 +6,7 @@ docs and the release workflow:
 
 - VERSION is the repo-wide source of truth
 - tex/latex/corasdiagram/corasdiagram-version.tex is the TeX runtime mirror
+- CHANGELOG.md carries the dated release entries used for CTAN uploads
 - release tags must be v<version>
 
 Contributors typically use this module indirectly through check_release_tag.py,
@@ -21,6 +22,9 @@ from pathlib import Path
 VERSION_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+)*(?:[-+][A-Za-z0-9.-]+)?$")
 TEX_VERSION_PATTERN = re.compile(
     r"\\def\\corasdiagramversion\{([^}]+)\}"
+)
+CHANGELOG_DATE_PATTERN = re.compile(
+    r"^## \[(?P<version>[^\]]+)\] - (?P<date>\d{4}-\d{2}-\d{2})$"
 )
 
 
@@ -38,6 +42,11 @@ def tex_version_file(root: Path | None = None) -> Path:
     return base / "tex" / "latex" / "corasdiagram" / "corasdiagram-version.tex"
 
 
+def changelog_file(root: Path | None = None) -> Path:
+    base = repo_root() if root is None else root
+    return base / "CHANGELOG.md"
+
+
 def read_repo_version(root: Path | None = None) -> str:
     text = version_file(root).read_text(encoding="utf-8").strip()
     if not VERSION_PATTERN.fullmatch(text):
@@ -51,6 +60,19 @@ def read_tex_version(root: Path | None = None) -> str:
     if not match:
         raise RuntimeError("Could not find \\corasdiagramversion in corasdiagram-version.tex")
     return match.group(1).strip()
+
+
+def read_changelog_release_date(version: str, root: Path | None = None) -> str:
+    text = changelog_file(root).read_text(encoding="utf-8")
+    for line in text.splitlines():
+        match = CHANGELOG_DATE_PATTERN.match(line.strip())
+        if match is None:
+            continue
+        if match.group("version").strip() == version:
+            return match.group("date")
+    raise RuntimeError(
+        f"Could not find a dated CHANGELOG.md entry for release version {version!r}."
+    )
 
 
 def expected_tag(version: str) -> str:
