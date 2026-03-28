@@ -6,6 +6,14 @@ All notable changes to `corasdiagram` will be documented in this file.
 
 - No unreleased changes yet.
 
+## [0.1.2] - 2026-03-28
+
+- Aligned the LaTeX package header date with the shipped 0.1.2 release
+  metadata.
+- Made the release guard validate the package `\ProvidesPackage` date against
+  the matching `CHANGELOG.md` release date so future tagged releases cannot
+  ship inconsistent TeX metadata.
+
 ## [0.1.1] - 2026-03-28
 
 - Imported the upstream CORAS icon set, added `\\corasindirectasset`, and

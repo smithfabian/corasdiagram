@@ -1,5 +1,7 @@
 % corasdiagram package runtime.
 % - The shipped package version is mirrored from corasdiagram-version.tex.
+% - The \ProvidesPackage date must match the current CHANGELOG.md release date;
+%   tools/check_release_tag.py enforces that before tagged releases.
 % - Canonical icon sources live in assets/icons-src/ and generated runtime
 %   assets live in icons/.
 % - Contributor workflow, release procedure, and local verification commands
@@ -7,7 +9,7 @@
 \NeedsTeXFormat{LaTeX2e}
 \def\corasdiagramversion{0.0.0}
 \InputIfFileExists{corasdiagram-version.tex}{}{}
-\ProvidesPackage{corasdiagram}[2026/03/08 v\corasdiagramversion CORAS diagram package]
+\ProvidesPackage{corasdiagram}[2026/03/28 v\corasdiagramversion CORAS diagram package]
 
 \RequirePackage{graphicx}
 \RequirePackage{array}
