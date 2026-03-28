@@ -22,7 +22,7 @@ The supported TeX engines are `pdflatex` and `lualatex`.
 
 ## Author and Contact
 
-- Author and maintainer: Fabian Robert Smith
+- Author and maintainer: Fabian Smith
 - Contact email: <fabian.smith@me.com>
 - Repository and issue tracker:
   [github.com/smithfabian/corasdiagram](https://github.com/smithfabian/corasdiagram)
