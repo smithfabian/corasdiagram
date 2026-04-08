@@ -83,7 +83,18 @@
   },
   layout/.code={\def\corasdiagram@layoutmode{#1}},
   min edge gap/.code={\def\corasdiagram@layoutmingap{#1}},
-  coras/asset diagram/.style={},
+  asset columns/.code={%
+    \pgfmathtruncatemacro{\corasdiagram@assetcolumnsint}{#1}%
+    \pgfmathparse{ifthenelse(abs((#1)-\corasdiagram@assetcolumnsint)<0.0001 && \corasdiagram@assetcolumnsint>=2,1,0)}%
+    \ifnum\pgfmathresult=1\relax
+      \xdef\corasdiagram@assetcolumns{\corasdiagram@assetcolumnsint}%
+    \else
+      \PackageError{corasdiagram}{Invalid asset columns value `#1'}{Use an integer value greater than or equal to 2.}%
+    \fi
+  },
+  coras/asset diagram/.style={
+    asset columns=2
+  },
   coras/threat diagram/.style={},
   coras/risk diagram/.style={},
   coras/treatment diagram/.style={},
@@ -508,6 +519,9 @@
 \newcount\corasdiagram@autonode
 \newcount\corasdiagram@diagramseq
 \newcount\corasdiagram@edgecoordseq
+\newcount\corasdiagram@pendingedgecount
+\newcount\corasdiagram@compressedchaincount
+\newcount\corasdiagram@currentedgeindex
 \newcount\corasdiagram@placedcount
 \newcount\corasdiagram@placedindex
 \newdimen\corasdiagram@tmpdimen
@@ -650,6 +664,34 @@
 \newcommand{\corasdiagram@getnodeprop}[3]{%
   \expandafter\ifcsname corasdiagram@node@#1@#2\endcsname
     \edef#3{\csname corasdiagram@node@#1@#2\endcsname}%
+  \else
+    \let#3\@empty
+  \fi
+}
+
+\newcommand{\corasdiagram@setedgeprop}[3]{%
+  \expandafter\edef\csname corasdiagram@edge@\corasdiagram@currentdiagramid @#2@#1\endcsname{%
+    \unexpanded\expandafter{#3}%
+  }%
+}
+
+\newcommand{\corasdiagram@getedgeprop}[3]{%
+  \expandafter\ifcsname corasdiagram@edge@\corasdiagram@currentdiagramid @#2@#1\endcsname
+    \expandafter\let\expandafter#3\csname corasdiagram@edge@\corasdiagram@currentdiagramid @#2@#1\endcsname
+  \else
+    \let#3\@empty
+  \fi
+}
+
+\newcommand{\corasdiagram@setchainprop}[3]{%
+  \expandafter\edef\csname corasdiagram@chain@\corasdiagram@currentdiagramid @#2@#1\endcsname{%
+    \unexpanded\expandafter{#3}%
+  }%
+}
+
+\newcommand{\corasdiagram@getchainprop}[3]{%
+  \expandafter\ifcsname corasdiagram@chain@\corasdiagram@currentdiagramid @#2@#1\endcsname
+    \expandafter\let\expandafter#3\csname corasdiagram@chain@\corasdiagram@currentdiagramid @#2@#1\endcsname
   \else
     \let#3\@empty
   \fi
@@ -934,9 +976,22 @@
   \def\corasdiagram@currentfamily{#1}%
   \def\corasdiagram@layoutmode{auto}%
   \global\corasdiagram@placedcount=0\relax
+  \global\corasdiagram@pendingedgecount=0\relax
+  \global\corasdiagram@compressedchaincount=0\relax
   \@for\corasdiagram@role:=\corasdiagram@knownroles\do{%
     \expandafter\def\csname corasdiagram@lane@#1@\corasdiagram@role\endcsname{0}%
   }%
+}
+
+\newcommand{\corasdiagram@enddiagram}{%
+  \def\corasdiagram@threatfamily{threat}%
+  \def\corasdiagram@treatmentfamily{treatment}%
+  \ifx\corasdiagram@currentfamily\corasdiagram@threatfamily
+    \corasdiagram@finalizevulnerabilitychains
+  \else\ifx\corasdiagram@currentfamily\corasdiagram@treatmentfamily
+    \corasdiagram@finalizevulnerabilitychains
+  \fi\fi
+  \let\corasdiagram@currentfamily\@empty
 }
 
 \newcommand{\corasdiagram@nextlaneindex}[2]{%
@@ -1424,14 +1479,22 @@
   \pgfmathsetmacro{\corasdiagram@y}{3.1 - 3.4*\corasdiagram@lanegroup}%
 }
 \expandafter\def\csname corasdiagram@autoplace@asset@asset\endcsname{%
-  \pgfmathtruncatemacro{\corasdiagram@lanegroup}{int((\corasdiagram@laneindex - 1)/2)}%
-  \pgfmathtruncatemacro{\corasdiagram@isright}{mod(\corasdiagram@laneindex,2)}%
-  \ifnum\corasdiagram@isright=1\relax
-    \def\corasdiagram@x{3.8}%
-    \pgfmathsetmacro{\corasdiagram@y}{1.4 - 2.6*\corasdiagram@lanegroup}%
+  \ifnum\corasdiagram@assetcolumns=2\relax
+    \pgfmathtruncatemacro{\corasdiagram@lanegroup}{int((\corasdiagram@laneindex - 1)/2)}%
+    \pgfmathtruncatemacro{\corasdiagram@isright}{mod(\corasdiagram@laneindex,2)}%
+    \ifnum\corasdiagram@isright=1\relax
+      \def\corasdiagram@x{3.8}%
+      \pgfmathsetmacro{\corasdiagram@y}{1.4 - 2.6*\corasdiagram@lanegroup}%
+    \else
+      \def\corasdiagram@x{7.2}%
+      \pgfmathsetmacro{\corasdiagram@y}{2.8 - 2.6*\corasdiagram@lanegroup}%
+    \fi
   \else
-    \def\corasdiagram@x{7.2}%
-    \pgfmathsetmacro{\corasdiagram@y}{2.8 - 2.6*\corasdiagram@lanegroup}%
+    \pgfmathtruncatemacro{\corasdiagram@assetslotindex}{\corasdiagram@laneindex - 1}%
+    \pgfmathtruncatemacro{\corasdiagram@assetcolumnindex}{mod(\corasdiagram@assetslotindex,\corasdiagram@assetcolumns)}%
+    \pgfmathtruncatemacro{\corasdiagram@assetrowindex}{int(\corasdiagram@assetslotindex/\corasdiagram@assetcolumns)}%
+    \pgfmathsetmacro{\corasdiagram@x}{3.8 + 3.4*(\corasdiagram@assetcolumnindex)/(\corasdiagram@assetcolumns - 1)}%
+    \pgfmathsetmacro{\corasdiagram@y}{2.1 - 2.6*\corasdiagram@assetrowindex}%
   \fi
 }
 
@@ -1765,6 +1828,68 @@
   \fi
 }
 
+\newcommand{\corasdiagram@storevulnerabilitydisplayprops}{%
+  \corasdiagram@setnodeprop{displayat}{\corasnode@name}{\corasnode@at}%
+  \corasdiagram@setnodeprop{displaytitle}{\corasnode@name}{\corasnode@title}%
+  \corasdiagram@setnodeprop{displaymeta}{\corasnode@name}{\corasnode@meta}%
+  \corasdiagram@setnodeprop{displaylevel}{\corasnode@name}{\corasnode@level}%
+  \corasdiagram@setnodeprop{displaytextwidth}{\corasnode@name}{\corasnode@textwidth}%
+  \corasdiagram@setnodeprop{displayiconwidth}{\corasnode@name}{\corasnode@iconwidth}%
+  \corasdiagram@setnodeprop{displaylabelgap}{\corasnode@name}{\corasnode@labelgap}%
+  \corasdiagram@setnodeprop{displayperspective}{\corasnode@name}{\corasnode@perspective}%
+  \corasdiagram@setnodeprop{displayiconstem}{\corasnode@name}{\corasdiagram@resolvediconstem}%
+}
+
+\newcommand{\corasdiagram@renderinvisiblevulnerabilityplaceholder}{%
+  \def\corasdiagram@iconanchoroptions{\corasnode@anchorstyle,coras/invisible anchor}%
+  \ifx\corasnode@anchorwidth\@empty
+  \else
+    \edef\corasdiagram@iconanchoroptions{\corasdiagram@iconanchoroptions,minimum width=\corasnode@anchorwidth}%
+  \fi
+  \ifx\corasnode@anchorheight\@empty
+  \else
+    \edef\corasdiagram@iconanchoroptions{\corasdiagram@iconanchoroptions,minimum height=\corasnode@anchorheight}%
+  \fi
+  \corasdiagram@placenode{\corasdiagram@iconanchoroptions}{\corasnode@name-anchor}{}%
+  \node[coras/base node,opacity=0] (\corasnode@name-graphic) at \corasnode@at {%
+    \corasdiagram@includeicon{\corasnode@iconwidth}{\corasdiagram@resolvediconstem}%
+  };
+  \def\corasdiagram@labelnodeoptions{coras/base node,anchor=north,opacity=0,text opacity=0}%
+  \ifx\corasnode@textwidth\@empty
+    \def\corasdiagram@labelcontent{\corasdiagram@composeautocontent}%
+  \else
+    \edef\corasdiagram@labelnodeoptions{\corasdiagram@labelnodeoptions,text width=\corasnode@textwidth}%
+    \def\corasdiagram@labelcontent{\corasdiagram@composecontent{\corasnode@textwidth}}%
+  \fi
+  \corasdiagram@placeauxnode{\corasdiagram@labelnodeoptions}{\corasnode@name-label}{%
+    \corasdiagram@labelcontent
+  }{at={([yshift=\corasnode@labelgap]\corasnode@name-graphic.south)}}%
+  \corasdiagram@fitpublicnode{\corasnode@name}{(\corasnode@name-graphic) (\corasnode@name-label)}%
+  \corasdiagram@storepublicnodesize{\corasnode@name}%
+  \corasdiagram@setnodeprop{bordernode}{\corasnode@name}{\corasnode@name-anchor}%
+  \corasdiagram@setnodeprop{anchorsymbol}{\corasnode@name}{\corasnode@anchorsymbol}%
+  \corasdiagram@storevulnerabilitydisplayprops
+}
+
+\newcommand{\corasdiagram@drawvulnerabilitydisplayat}[2]{%
+  \corasdiagram@getnodeprop{displaytitle}{#1}{\corasnode@title}%
+  \corasdiagram@getnodeprop{displaymeta}{#1}{\corasnode@meta}%
+  \corasdiagram@getnodeprop{displaylevel}{#1}{\corasnode@level}%
+  \corasdiagram@getnodeprop{displaytextwidth}{#1}{\corasnode@textwidth}%
+  \corasdiagram@getnodeprop{displayiconwidth}{#1}{\corasnode@iconwidth}%
+  \corasdiagram@getnodeprop{displaylabelgap}{#1}{\corasnode@labelgap}%
+  \corasdiagram@getnodeprop{displayperspective}{#1}{\corasnode@perspective}%
+  \corasdiagram@getnodeprop{displayiconstem}{#1}{\corasdiagram@resolvediconstem}%
+  \edef\corasnode@name{#1-display}%
+  \edef\corasnode@at{#2}%
+  \def\corasnode@anchorstyle{coras/vulnerability anchor}%
+  \def\corasnode@anchorwidth{0pt}%
+  \def\corasnode@anchorheight{0pt}%
+  \def\corasnode@anchorsymbol{vulnerability}%
+  \let\corasnode@tikz\@empty
+  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
+}
+
 \newcommand{\corasdiagram@render@asset}{%
   \corasdiagram@setdefault\corasnode@textwidth{26mm}%
   \corasdiagram@setdefault\corasnode@iconwidth{10mm}%
@@ -1852,7 +1977,15 @@
   \corasdiagram@setdefault\corasnode@perspective{before}%
   \def\corasnode@anchorsymbol{vulnerability}%
   \corasdiagram@resolveiconstem{vulnerability}{\corasnode@perspective}{\corasdiagram@resolvediconstem}%
-  \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
+  \def\corasdiagram@threatfamily{threat}%
+  \def\corasdiagram@treatmentfamily{treatment}%
+  \ifx\corasdiagram@currentfamily\corasdiagram@threatfamily
+    \corasdiagram@renderinvisiblevulnerabilityplaceholder
+  \else\ifx\corasdiagram@currentfamily\corasdiagram@treatmentfamily
+    \corasdiagram@renderinvisiblevulnerabilityplaceholder
+  \else
+    \corasdiagram@rendericonlabelnode{\corasdiagram@resolvediconstem}%
+  \fi\fi
 }
 
 \newcommand{\corasdiagram@render@scenario}{%
@@ -2328,6 +2461,450 @@
   \fi
 }
 
+\newcommand{\corasdiagram@preparecurrentedge}{%
+  \corasdiagram@resolveendpoint{\corasedge@from}%
+  \edef\corasedge@from{\corasdiagram@resolvedendpoint}%
+  \corasdiagram@resolveendpoint{\corasedge@to}%
+  \edef\corasedge@to{\corasdiagram@resolvedendpoint}%
+  \ifx\corasedge@path\@empty
+    \corasdiagram@defaultpathforroute
+  \else
+    \edef\corasdiagram@edgepath{\corasedge@path}%
+  \fi
+  \corasdiagram@applyexactborderanchors
+  \edef\corasdiagram@edgeoptions{coras/\corasedge@type,\corasedge@tikz}%
+  \edef\corasdiagram@edgelabeloptions{pos=\corasedge@pos,\corasedge@labeloptions}%
+}
+
+\newcommand{\corasdiagram@drawpreparededge}{%
+  \def\corasdiagram@treatmentsemantic{treatment}%
+  \ifx\corasedge@semantic\corasdiagram@treatmentsemantic
+    \ifx\corasedge@path\@empty
+      \corasdiagram@drawcurvededge
+    \else
+      \ifx\corasedge@label\@empty
+        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+      \else
+        \edef\corasdiagram@edgelabelfragment{%
+          node[\corasdiagram@edgelabeloptions]{%
+            \unexpanded\expandafter{\corasedge@label}%
+          }%
+        }%
+        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
+          \corasdiagram@edgelabelfragment;
+      \fi
+    \fi
+  \else
+    \ifx\corasedge@label\@empty
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
+    \else
+      \edef\corasdiagram@edgelabelfragment{%
+        node[\corasdiagram@edgelabeloptions]{%
+          \unexpanded\expandafter{\corasedge@label}%
+        }%
+      }%
+      \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
+        (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
+        \corasdiagram@edgelabelfragment;
+    \fi
+  \fi
+}
+
+\newcommand{\corasdiagram@markvulnerabilityexternalusage}{%
+  \def\corasdiagram@threatfamily{threat}%
+  \def\corasdiagram@treatmentfamily{treatment}%
+  \def\corasdiagram@vulnerabilityrole{vulnerability}%
+  \ifx\corasdiagram@currentfamily\corasdiagram@threatfamily
+    \ifx\corasedge@fromrole\corasdiagram@vulnerabilityrole
+      \corasdiagram@endpointbasename{\corasdiagram@edgebase}{\corasedge@rawfrom}%
+      \corasdiagram@setnodeprop{externaledge}{\corasdiagram@edgebase}{1}%
+    \fi
+    \ifx\corasedge@torole\corasdiagram@vulnerabilityrole
+      \corasdiagram@endpointbasename{\corasdiagram@edgebase}{\corasedge@rawto}%
+      \corasdiagram@setnodeprop{externaledge}{\corasdiagram@edgebase}{1}%
+    \fi
+  \else\ifx\corasdiagram@currentfamily\corasdiagram@treatmentfamily
+    \ifx\corasedge@fromrole\corasdiagram@vulnerabilityrole
+      \corasdiagram@endpointbasename{\corasdiagram@edgebase}{\corasedge@rawfrom}%
+      \corasdiagram@setnodeprop{externaledge}{\corasdiagram@edgebase}{1}%
+    \fi
+    \ifx\corasedge@torole\corasdiagram@vulnerabilityrole
+      \corasdiagram@endpointbasename{\corasdiagram@edgebase}{\corasedge@rawto}%
+      \corasdiagram@setnodeprop{externaledge}{\corasdiagram@edgebase}{1}%
+    \fi
+  \fi\fi
+}
+
+\newcommand{\corasdiagram@currentedgeisdefereligible}{%
+  \def\corasdiagram@deferedge{0}%
+  \def\corasdiagram@causalsemantic{causal}%
+  \def\corasdiagram@threatfamily{threat}%
+  \def\corasdiagram@treatmentfamily{treatment}%
+  \ifx\corasedge@semantic\corasdiagram@causalsemantic
+    \ifx\corasdiagram@currentfamily\corasdiagram@threatfamily
+      \ifx\corasedge@fromrole\@empty
+      \else\ifx\corasedge@torole\@empty
+      \else
+        \def\corasdiagram@deferedge{1}%
+      \fi\fi
+    \else\ifx\corasdiagram@currentfamily\corasdiagram@treatmentfamily
+      \ifx\corasedge@fromrole\@empty
+      \else\ifx\corasedge@torole\@empty
+      \else
+        \def\corasdiagram@deferedge{1}%
+      \fi\fi
+    \fi\fi
+  \fi
+}
+
+\newcommand{\corasdiagram@currentedgeiscompressible}{%
+  \def\corasdiagram@edgecompressible{1}%
+  \def\corasdiagram@causalsemantic{causal}%
+  \def\corasdiagram@routeauto{auto}%
+  \def\corasdiagram@causaltype{causal}%
+  \ifx\corasedge@semantic\corasdiagram@causalsemantic
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@type\corasdiagram@causaltype
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@path\@empty
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@tikz\@empty
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@label\@empty
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@route\corasdiagram@routeauto
+  \else
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@fromrole\@empty
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+  \ifx\corasedge@torole\@empty
+    \def\corasdiagram@edgecompressible{0}%
+  \fi
+}
+
+\newcommand{\corasdiagram@storecurrentedge}{%
+  \global\advance\corasdiagram@pendingedgecount by 1\relax
+  \edef\corasdiagram@storededgeid{\the\corasdiagram@pendingedgecount}%
+  \corasdiagram@endpointbasename{\corasdiagram@storedfrombase}{\corasedge@rawfrom}%
+  \corasdiagram@endpointbasename{\corasdiagram@storedtobase}{\corasedge@rawto}%
+  \corasdiagram@currentedgeiscompressible
+  \corasdiagram@setedgeprop{rawfrom}{\corasdiagram@storededgeid}{\corasedge@rawfrom}%
+  \corasdiagram@setedgeprop{rawto}{\corasdiagram@storededgeid}{\corasedge@rawto}%
+  \corasdiagram@setedgeprop{frombase}{\corasdiagram@storededgeid}{\corasdiagram@storedfrombase}%
+  \corasdiagram@setedgeprop{tobase}{\corasdiagram@storededgeid}{\corasdiagram@storedtobase}%
+  \corasdiagram@setedgeprop{fromrole}{\corasdiagram@storededgeid}{\corasedge@fromrole}%
+  \corasdiagram@setedgeprop{torole}{\corasdiagram@storededgeid}{\corasedge@torole}%
+  \corasdiagram@setedgeprop{type}{\corasdiagram@storededgeid}{\corasedge@type}%
+  \corasdiagram@setedgeprop{semantic}{\corasdiagram@storededgeid}{\corasedge@semantic}%
+  \corasdiagram@setedgeprop{label}{\corasdiagram@storededgeid}{\corasedge@label}%
+  \corasdiagram@setedgeprop{pos}{\corasdiagram@storededgeid}{\corasedge@pos}%
+  \corasdiagram@setedgeprop{path}{\corasdiagram@storededgeid}{\corasedge@path}%
+  \corasdiagram@setedgeprop{route}{\corasdiagram@storededgeid}{\corasedge@route}%
+  \corasdiagram@setedgeprop{tikz}{\corasdiagram@storededgeid}{\corasedge@tikz}%
+  \corasdiagram@setedgeprop{labeloptions}{\corasdiagram@storededgeid}{\corasedge@labeloptions}%
+  \corasdiagram@setedgeprop{compressible}{\corasdiagram@storededgeid}{\corasdiagram@edgecompressible}%
+  \corasdiagram@setedgeprop{consumed}{\corasdiagram@storededgeid}{0}%
+}
+
+\newcommand{\corasdiagram@loadstorededge}[1]{%
+  \corasdiagram@getedgeprop{rawfrom}{#1}{\corasedge@from}%
+  \corasdiagram@getedgeprop{rawto}{#1}{\corasedge@to}%
+  \edef\corasedge@rawfrom{\corasedge@from}%
+  \edef\corasedge@rawto{\corasedge@to}%
+  \corasdiagram@getedgeprop{type}{#1}{\corasedge@type}%
+  \corasdiagram@getedgeprop{semantic}{#1}{\corasedge@semantic}%
+  \corasdiagram@getedgeprop{label}{#1}{\corasedge@label}%
+  \corasdiagram@getedgeprop{pos}{#1}{\corasedge@pos}%
+  \corasdiagram@getedgeprop{path}{#1}{\corasedge@path}%
+  \corasdiagram@getedgeprop{route}{#1}{\corasedge@route}%
+  \corasdiagram@getedgeprop{tikz}{#1}{\corasedge@tikz}%
+  \corasdiagram@getedgeprop{labeloptions}{#1}{\corasedge@labeloptions}%
+  \corasdiagram@getedgeprop{fromrole}{#1}{\corasedge@fromrole}%
+  \corasdiagram@getedgeprop{torole}{#1}{\corasedge@torole}%
+}
+
+\newcommand{\corasdiagram@drawstorededge}[1]{%
+  \corasdiagram@loadstorededge{#1}%
+  \corasdiagram@preparecurrentedge
+  \corasdiagram@drawpreparededge
+}
+
+\newcommand{\corasdiagram@initializevulnerabilitychainstate}{%
+  \corasdiagram@placedindex=1\relax
+  \loop
+    \ifnum\corasdiagram@placedindex<\numexpr\corasdiagram@placedcount+1\relax
+      \corasdiagram@getplacednode{\corasdiagram@currentplacednode}{\the\corasdiagram@placedindex}%
+      \ifx\corasdiagram@currentplacednode\@empty
+      \else
+        \corasdiagram@getnodeprop{type}{\corasdiagram@currentplacednode}{\corasdiagram@currentplacedtype}%
+        \def\corasdiagram@typevulnerability{vulnerability}%
+        \ifx\corasdiagram@currentplacedtype\corasdiagram@typevulnerability
+          \corasdiagram@setnodeprop{incomingcount}{\corasdiagram@currentplacednode}{0}%
+          \corasdiagram@setnodeprop{outgoingcount}{\corasdiagram@currentplacednode}{0}%
+          \corasdiagram@setnodeprop{incomingedge}{\corasdiagram@currentplacednode}{}%
+          \corasdiagram@setnodeprop{outgoingedge}{\corasdiagram@currentplacednode}{}%
+          \corasdiagram@setnodeprop{compressed}{\corasdiagram@currentplacednode}{0}%
+          \corasdiagram@getnodeprop{externaledge}{\corasdiagram@currentplacednode}{\corasdiagram@externaledgeflag}%
+          \ifx\corasdiagram@externaledgeflag\@empty
+            \corasdiagram@setnodeprop{externaledge}{\corasdiagram@currentplacednode}{0}%
+          \fi
+        \fi
+      \fi
+      \advance\corasdiagram@placedindex by 1\relax
+  \repeat
+}
+
+\newcommand{\corasdiagram@bumpvulnerabilityedgecount}[3]{%
+  \corasdiagram@getnodeprop{#2count}{#1}{\corasdiagram@countvalue}%
+  \ifx\corasdiagram@countvalue\@empty
+    \def\corasdiagram@countvalue{0}%
+  \fi
+  \pgfmathtruncatemacro{\corasdiagram@nextcount}{\corasdiagram@countvalue + 1}%
+  \corasdiagram@setnodeprop{#2count}{#1}{\corasdiagram@nextcount}%
+  \ifnum\corasdiagram@nextcount=1\relax
+    \corasdiagram@setnodeprop{#2edge}{#1}{#3}%
+  \fi
+}
+
+\newcommand{\corasdiagram@populatevulnerabilityedgecounts}{%
+  \corasdiagram@placedindex=1\relax
+  \corasdiagram@currentedgeindex=1\relax
+  \loop
+    \ifnum\corasdiagram@currentedgeindex<\numexpr\corasdiagram@pendingedgecount+1\relax
+      \corasdiagram@getedgeprop{fromrole}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgefromrole}%
+      \corasdiagram@getedgeprop{torole}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgetorole}%
+      \def\corasdiagram@typevulnerability{vulnerability}%
+      \ifx\corasdiagram@edgefromrole\corasdiagram@typevulnerability
+        \corasdiagram@getedgeprop{frombase}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgefrombase}%
+        \corasdiagram@bumpvulnerabilityedgecount{\corasdiagram@edgefrombase}{outgoing}{\the\corasdiagram@currentedgeindex}%
+      \fi
+      \ifx\corasdiagram@edgetorole\corasdiagram@typevulnerability
+        \corasdiagram@getedgeprop{tobase}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgetobase}%
+        \corasdiagram@bumpvulnerabilityedgecount{\corasdiagram@edgetobase}{incoming}{\the\corasdiagram@currentedgeindex}%
+      \fi
+      \advance\corasdiagram@currentedgeindex by 1\relax
+  \repeat
+}
+
+\newcommand{\corasdiagram@appendtolist}[2]{%
+  \ifx#1\@empty
+    \edef#1{#2}%
+  \else
+    \edef#1{#1,#2}%
+  \fi
+}
+
+\newcommand{\corasdiagram@markcompressedchain}[1]{%
+  \global\advance\corasdiagram@compressedchaincount by 1\relax
+  \edef\corasdiagram@currentchainid{\the\corasdiagram@compressedchaincount}%
+  \corasdiagram@setchainprop{source}{\corasdiagram@currentchainid}{\corasdiagram@chainsource}%
+  \corasdiagram@setchainprop{target}{\corasdiagram@currentchainid}{\corasdiagram@chaintarget}%
+  \corasdiagram@setchainprop{vulnerabilities}{\corasdiagram@currentchainid}{\corasdiagram@chainvulnerabilities}%
+  \@for\corasdiagram@chainedge:=\corasdiagram@chainedges\do{%
+    \corasdiagram@setedgeprop{consumed}{\corasdiagram@chainedge}{1}%
+  }%
+  \@for\corasdiagram@chainvulnerability:=\corasdiagram@chainvulnerabilities\do{%
+    \corasdiagram@setnodeprop{compressed}{\corasdiagram@chainvulnerability}{1}%
+  }%
+}
+
+\newcommand{\corasdiagram@trycompressfromedge}[1]{%
+  \def\corasdiagram@chainfailed{0}%
+  \corasdiagram@getedgeprop{frombase}{#1}{\corasdiagram@chainsource}%
+  \let\corasdiagram@chainvulnerabilities\@empty
+  \let\corasdiagram@chainedges\@empty
+  \edef\corasdiagram@incomingedgeid{#1}%
+  \loop
+    \corasdiagram@getedgeprop{tobase}{\corasdiagram@incomingedgeid}{\corasdiagram@currentvulnerability}%
+    \corasdiagram@appendtolist{\corasdiagram@chainedges}{\corasdiagram@incomingedgeid}%
+    \corasdiagram@getnodeprop{externaledge}{\corasdiagram@currentvulnerability}{\corasdiagram@externaledgeflag}%
+    \corasdiagram@getnodeprop{incomingcount}{\corasdiagram@currentvulnerability}{\corasdiagram@incomingcount}%
+    \corasdiagram@getnodeprop{outgoingcount}{\corasdiagram@currentvulnerability}{\corasdiagram@outgoingcount}%
+    \ifx\corasdiagram@externaledgeflag\@empty
+      \def\corasdiagram@externaledgeflag{0}%
+    \fi
+    \ifx\corasdiagram@incomingcount\@empty
+      \def\corasdiagram@incomingcount{0}%
+    \fi
+    \ifx\corasdiagram@outgoingcount\@empty
+      \def\corasdiagram@outgoingcount{0}%
+    \fi
+    \ifnum\corasdiagram@externaledgeflag=1\relax
+      \def\corasdiagram@chainfailed{1}%
+    \fi
+    \ifnum\corasdiagram@incomingcount=1\relax
+    \else
+      \def\corasdiagram@chainfailed{1}%
+    \fi
+    \ifnum\corasdiagram@outgoingcount=1\relax
+    \else
+      \def\corasdiagram@chainfailed{1}%
+    \fi
+    \ifnum\corasdiagram@chainfailed=1\relax
+      \let\corasdiagram@loopcontinue\relax
+    \else
+      \corasdiagram@appendtolist{\corasdiagram@chainvulnerabilities}{\corasdiagram@currentvulnerability}%
+      \corasdiagram@getnodeprop{outgoingedge}{\corasdiagram@currentvulnerability}{\corasdiagram@nextedgeid}%
+      \corasdiagram@getedgeprop{compressible}{\corasdiagram@nextedgeid}{\corasdiagram@nextcompressible}%
+      \ifx\corasdiagram@nextcompressible\@empty
+        \def\corasdiagram@nextcompressible{0}%
+      \fi
+      \ifnum\corasdiagram@nextcompressible=1\relax
+      \else
+        \def\corasdiagram@chainfailed{1}%
+      \fi
+      \ifnum\corasdiagram@chainfailed=1\relax
+        \let\corasdiagram@loopcontinue\relax
+      \else
+        \corasdiagram@getedgeprop{torole}{\corasdiagram@nextedgeid}{\corasdiagram@nexttorole}%
+        \def\corasdiagram@typevulnerability{vulnerability}%
+        \ifx\corasdiagram@nexttorole\corasdiagram@typevulnerability
+          \edef\corasdiagram@incomingedgeid{\corasdiagram@nextedgeid}%
+        \else
+          \corasdiagram@appendtolist{\corasdiagram@chainedges}{\corasdiagram@nextedgeid}%
+          \corasdiagram@getedgeprop{tobase}{\corasdiagram@nextedgeid}{\corasdiagram@chaintarget}%
+          \def\corasdiagram@chainfailed{2}%
+        \fi
+      \fi
+    \fi
+  \ifnum\corasdiagram@chainfailed=0\relax
+  \repeat
+  \ifnum\corasdiagram@chainfailed=2\relax
+    \corasdiagram@markcompressedchain{#1}%
+  \fi
+}
+
+\newcommand{\corasdiagram@detectcompressedchains}{%
+  \corasdiagram@currentedgeindex=1\relax
+  \loop
+    \ifnum\corasdiagram@currentedgeindex<\numexpr\corasdiagram@pendingedgecount+1\relax
+      \corasdiagram@getedgeprop{consumed}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgeconsumed}%
+      \ifx\corasdiagram@edgeconsumed\@empty
+        \def\corasdiagram@edgeconsumed{0}%
+      \fi
+      \ifnum\corasdiagram@edgeconsumed=1\relax
+      \else
+        \corasdiagram@getedgeprop{fromrole}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgefromrole}%
+        \corasdiagram@getedgeprop{torole}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgetorole}%
+        \corasdiagram@getedgeprop{compressible}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgecompressibleflag}%
+        \def\corasdiagram@typevulnerability{vulnerability}%
+        \ifx\corasdiagram@edgecompressibleflag\@empty
+          \def\corasdiagram@edgecompressibleflag{0}%
+        \fi
+        \ifnum\corasdiagram@edgecompressibleflag=1\relax
+          \ifx\corasdiagram@edgetorole\corasdiagram@typevulnerability
+            \ifx\corasdiagram@edgefromrole\corasdiagram@typevulnerability
+            \else
+              \corasdiagram@trycompressfromedge{\the\corasdiagram@currentedgeindex}%
+            \fi
+          \fi
+        \fi
+      \fi
+      \advance\corasdiagram@currentedgeindex by 1\relax
+  \repeat
+}
+
+\newcommand{\corasdiagram@drawcompressedchain}[1]{%
+  \corasdiagram@getchainprop{source}{#1}{\corasdiagram@chainsource}%
+  \corasdiagram@getchainprop{target}{#1}{\corasdiagram@chaintarget}%
+  \corasdiagram@getchainprop{vulnerabilities}{#1}{\corasdiagram@chainvulnerabilities}%
+  \def\corasedge@from{\corasdiagram@chainsource}%
+  \edef\corasedge@rawfrom{\corasedge@from}%
+  \def\corasedge@to{\corasdiagram@chaintarget}%
+  \edef\corasedge@rawto{\corasedge@to}%
+  \def\corasedge@type{causal}%
+  \def\corasedge@semantic{causal}%
+  \let\corasedge@label\@empty
+  \def\corasedge@pos{.5}%
+  \let\corasedge@path\@empty
+  \def\corasedge@route{straight}%
+  \let\corasedge@tikz\@empty
+  \def\corasedge@labeloptions{fill=white,inner sep=1pt}%
+  \corasdiagram@preparecurrentedge
+  \corasdiagram@drawpreparededge
+  \def\corasdiagram@markercount{0}%
+  \@for\corasdiagram@chainvulnerability:=\corasdiagram@chainvulnerabilities\do{%
+    \pgfmathtruncatemacro{\corasdiagram@markercount}{\corasdiagram@markercount + 1}%
+  }%
+  \def\corasdiagram@markerindex{0}%
+  \@for\corasdiagram@chainvulnerability:=\corasdiagram@chainvulnerabilities\do{%
+    \pgfmathtruncatemacro{\corasdiagram@markerindex}{\corasdiagram@markerindex + 1}%
+    \pgfmathsetmacro{\corasdiagram@markerpos}{\corasdiagram@markerindex/(\corasdiagram@markercount + 1)}%
+    \edef\corasdiagram@markercoord{($(\corasedge@from)!\corasdiagram@markerpos!(\corasedge@to)$)}%
+    \corasdiagram@drawvulnerabilitydisplayat{\corasdiagram@chainvulnerability}{\corasdiagram@markercoord}%
+  }%
+}
+
+\newcommand{\corasdiagram@drawfallbackvulnerabilities}{%
+  \corasdiagram@placedindex=1\relax
+  \loop
+    \ifnum\corasdiagram@placedindex<\numexpr\corasdiagram@placedcount+1\relax
+      \corasdiagram@getplacednode{\corasdiagram@currentplacednode}{\the\corasdiagram@placedindex}%
+      \ifx\corasdiagram@currentplacednode\@empty
+      \else
+        \corasdiagram@getnodeprop{type}{\corasdiagram@currentplacednode}{\corasdiagram@currentplacedtype}%
+        \def\corasdiagram@typevulnerability{vulnerability}%
+        \ifx\corasdiagram@currentplacedtype\corasdiagram@typevulnerability
+          \corasdiagram@getnodeprop{compressed}{\corasdiagram@currentplacednode}{\corasdiagram@compressedflag}%
+          \ifx\corasdiagram@compressedflag\@empty
+            \def\corasdiagram@compressedflag{0}%
+          \fi
+          \ifnum\corasdiagram@compressedflag=1\relax
+          \else
+            \corasdiagram@getnodeprop{displayat}{\corasdiagram@currentplacednode}{\corasdiagram@displayat}%
+            \corasdiagram@drawvulnerabilitydisplayat{\corasdiagram@currentplacednode}{\corasdiagram@displayat}%
+          \fi
+        \fi
+      \fi
+      \advance\corasdiagram@placedindex by 1\relax
+  \repeat
+}
+
+\newcommand{\corasdiagram@finalizevulnerabilitychains}{%
+  \ifnum\corasdiagram@pendingedgecount=0\relax
+    \corasdiagram@drawfallbackvulnerabilities
+  \else
+    \corasdiagram@initializevulnerabilitychainstate
+    \corasdiagram@populatevulnerabilityedgecounts
+    \corasdiagram@detectcompressedchains
+    \corasdiagram@currentedgeindex=1\relax
+    \loop
+      \ifnum\corasdiagram@currentedgeindex<\numexpr\corasdiagram@pendingedgecount+1\relax
+        \corasdiagram@getedgeprop{consumed}{\the\corasdiagram@currentedgeindex}{\corasdiagram@edgeconsumed}%
+        \ifx\corasdiagram@edgeconsumed\@empty
+          \def\corasdiagram@edgeconsumed{0}%
+        \fi
+        \ifnum\corasdiagram@edgeconsumed=1\relax
+        \else
+          \corasdiagram@drawstorededge{\the\corasdiagram@currentedgeindex}%
+        \fi
+        \advance\corasdiagram@currentedgeindex by 1\relax
+    \repeat
+    \corasdiagram@currentedgeindex=1\relax
+    \loop
+      \ifnum\corasdiagram@currentedgeindex<\numexpr\corasdiagram@compressedchaincount+1\relax
+        \corasdiagram@drawcompressedchain{\the\corasdiagram@currentedgeindex}%
+        \advance\corasdiagram@currentedgeindex by 1\relax
+    \repeat
+    \corasdiagram@drawfallbackvulnerabilities
+  \fi
+}
+
 \NewDocumentCommand{\corasedge}{O{}}{%
   \pgfkeys{/coras/edge/.cd,%
     from=,%
@@ -2363,51 +2940,17 @@
     \else
       \corasdiagram@validateedge{\corasedge@semantic}{\corasedge@fromrole}{\corasedge@torole}%
     \fi\fi
-    \corasdiagram@resolveendpoint{\corasedge@from}%
-    \edef\corasedge@from{\corasdiagram@resolvedendpoint}%
-    \corasdiagram@resolveendpoint{\corasedge@to}%
-    \edef\corasedge@to{\corasdiagram@resolvedendpoint}%
-    \ifx\corasedge@path\@empty
-      \corasdiagram@defaultpathforroute
+    \corasdiagram@currentedgeisdefereligible
+    \ifnum\corasdiagram@deferedge=1\relax
+      \corasdiagram@storecurrentedge
     \else
-      \edef\corasdiagram@edgepath{\corasedge@path}%
-    \fi
-    \corasdiagram@applyexactborderanchors
-    \edef\corasdiagram@edgeoptions{coras/\corasedge@type,\corasedge@tikz}%
-    \edef\corasdiagram@edgelabeloptions{pos=\corasedge@pos,\corasedge@labeloptions}%
-    \def\corasdiagram@treatmentsemantic{treatment}%
-    \ifx\corasedge@semantic\corasdiagram@treatmentsemantic
-      \ifx\corasedge@path\@empty
-        \corasdiagram@drawcurvededge
+      \def\corasdiagram@causalsemantic{causal}%
+      \ifx\corasedge@semantic\corasdiagram@causalsemantic
       \else
-        \ifx\corasedge@label\@empty
-          \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-            (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
-        \else
-          \edef\corasdiagram@edgelabelfragment{%
-            node[\corasdiagram@edgelabeloptions]{%
-              \unexpanded\expandafter{\corasedge@label}%
-            }%
-          }%
-          \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-            (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
-            \corasdiagram@edgelabelfragment;
-        \fi
+        \corasdiagram@markvulnerabilityexternalusage
       \fi
-    \else
-      \ifx\corasedge@label\@empty
-        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to);
-      \else
-        \edef\corasdiagram@edgelabelfragment{%
-          node[\corasdiagram@edgelabeloptions]{%
-            \unexpanded\expandafter{\corasedge@label}%
-          }%
-        }%
-        \expandafter\draw\expandafter[\corasdiagram@edgeoptions]
-          (\corasedge@from) \corasdiagram@edgepath (\corasedge@to)
-          \corasdiagram@edgelabelfragment;
-      \fi
+      \corasdiagram@preparecurrentedge
+      \corasdiagram@drawpreparededge
     \fi
   \fi\fi
 }
@@ -2949,6 +3492,7 @@
   \corasdiagram@begindiagram{asset}%
   \begin{tikzpicture}[corasdiagram,layout=auto,coras/asset diagram,#1]%
 }{%
+  \corasdiagram@enddiagram
   \end{tikzpicture}%
 }
 
@@ -2956,6 +3500,7 @@
   \corasdiagram@begindiagram{threat}%
   \begin{tikzpicture}[corasdiagram,layout=auto,coras/threat diagram,#1]%
 }{%
+  \corasdiagram@enddiagram
   \end{tikzpicture}%
 }
 
@@ -2963,6 +3508,7 @@
   \corasdiagram@begindiagram{risk}%
   \begin{tikzpicture}[corasdiagram,layout=auto,coras/risk diagram,#1]%
 }{%
+  \corasdiagram@enddiagram
   \end{tikzpicture}%
 }
 
@@ -2970,6 +3516,7 @@
   \corasdiagram@begindiagram{treatment}%
   \begin{tikzpicture}[corasdiagram,layout=auto,coras/treatment diagram,#1]%
 }{%
+  \corasdiagram@enddiagram
   \end{tikzpicture}%
 }
 
@@ -2977,6 +3524,7 @@
   \corasdiagram@begindiagram{treatmentoverview}%
   \begin{tikzpicture}[corasdiagram,layout=auto,coras/treatment overview diagram,#1]%
 }{%
+  \corasdiagram@enddiagram
   \end{tikzpicture}%
 }
 

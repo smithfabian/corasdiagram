@@ -28,8 +28,8 @@ Workflow boundaries:
 - `CI` validates pull requests and pushes to `main`/`master`.
 - `Pages` deploys the static documentation site from `main`.
 - `Release` runs only for pushed tags matching `v*`.
-- The first CTAN submission is expected to be done manually. Later CTAN updates
-  can run through the tagged release workflow.
+- The package is now live on [CTAN](https://ctan.org/pkg/corasdiagram), so
+  later tagged releases can continue through the gated release workflow.
 
 ## Canonical Sources and Generated Files
 
@@ -171,8 +171,8 @@ Then build the CTAN release bundle:
 python3 tools/build_release.py --doc-pdf docs/corasdiagram-doc.pdf
 ```
 
-Optionally validate the rebuilt archive against the CTAN API before uploading
-it manually:
+Optionally validate the rebuilt archive against the CTAN API before approving
+or manually uploading it:
 
 ```bash
 python3 tools/upload_ctan.py \
@@ -269,6 +269,7 @@ Release behavior:
   `CTAN_UPLOADER_EMAIL`
 - the `ctan-release` environment requires review by `smithfabian`, so the CTAN
   upload job cannot read those values or continue without approval
+- the package is now published at [ctan.org/pkg/corasdiagram](https://ctan.org/pkg/corasdiagram)
 - [`ctan/metadata.json`](ctan/metadata.json) keeps the committed CTAN package
   metadata, including the selected topics (`diagram`, `pgf-tikz`) and the
   announcement URL used for manual/reference purposes

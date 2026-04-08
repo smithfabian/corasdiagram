@@ -55,8 +55,10 @@ database if your TeX distribution requires it.
 
 \subsection{Release Bundle}
 
-The release tooling assembles a CTAN-friendly bundle. Once the package is
-published, installation can happen through the normal TeX package manager.
+The release tooling assembles a CTAN-friendly bundle. The package is published
+on \href{https://ctan.org/pkg/corasdiagram}{CTAN} and contained in TeX Live as
+\texttt{corasdiagram}, so installation can happen through the normal TeX
+package manager.
 
 \section{Package Options}
 
@@ -153,7 +155,7 @@ Macro & Meaning \\
 \textbackslash corasthreataccidental & Accidental human threat source. \\
 \textbackslash corasthreatdeliberate & Deliberate human threat source. \\
 \textbackslash corasthreatnonhuman & Non-human threat source. \\
-\textbackslash corasvulnerability & Vulnerability node. \\
+\textbackslash corasvulnerability & Vulnerability marker that can render directly on a causal chain. \\
 \textbackslash corasscenario & Threat scenario node. \\
 \textbackslash corasincident & Unwanted incident node. \\
 \textbackslash corasunwantedincident & Alias for \textbackslash corasincident. \\
@@ -278,7 +280,7 @@ tikz & empty or raw TikZ options & Advanced style override passed to the underly
 \hline
 Macro & Meaning \\
 \hline
-\textbackslash corascauses & Solid causal edge with open line arrowhead. \\
+\textbackslash corascauses & Solid causal edge with open line arrowhead. Simple 1-in/1-out vulnerability chains render as one straight visible arrow with the vulnerability markers placed on top of it. \\
 \textbackslash corasrelates & Solid relation/impact edge with open line arrowhead. \\
 \textbackslash corasconcerns & Dashed concern edge, typically stakeholder to asset. \\
 \textbackslash corasassociates & Dashed non-causal association edge. \\
@@ -308,6 +310,24 @@ The higher-level semantic edge macros choose the underlying edge type and
 semantic relation automatically, so the low-level \texttt{type} and
 \texttt{semantic} keys are normally only needed with
 \texttt{\textbackslash corasedge}.
+
+When a causal chain is written as
+\texttt{\textbackslash corascauses[from=A,to=V]} followed by
+\texttt{\textbackslash corascauses[from=V,to=B]} where \texttt{V} is a
+vulnerability, the package keeps the explicit syntax but renders one straight
+visible arrow from \texttt{A} to \texttt{B} with the vulnerability placed on
+top of that arrow. A single vulnerability is centered on the causal arrow, and
+multiple sequential vulnerabilities are distributed at equal spacing along the
+same arrow interior.
+
+This compression only applies to simple causal chains in threat and treatment
+diagrams where each participating vulnerability has exactly one incoming and
+one outgoing causal edge and the participating edges use the default straight
+causal rendering. Branching structures, custom path overrides, labels, and
+manual edge styling stay explicit. In the compressed case the vulnerability
+marker position is derived from the causal arrow itself, so an explicit
+\texttt{at=} coordinate for the vulnerability is ignored for the visible
+placement.
 
 \subsection{Scopes and Containers}
 
@@ -366,6 +386,7 @@ Key & Values & Description \\
 layout & \keydefault{auto} | \texttt{manual} & Switch between role-aware automatic placement and fully explicit placement. \\
 at & empty or TikZ coordinate & Place a node directly at a coordinate; takes precedence over all other layout keys. \\
 order & empty or positive integer & Controls row ordering inside the role lane used by auto layout. \\
+asset columns & \keydefault{2} or integer $\ge 2$ & Asset-diagram-only auto-layout setting for the number of asset/indirect-asset columns. Values above \keydefault{2} fill left-to-right across a row and then wrap to the next row. \\
 min edge gap & \keydefault{8mm} or dimension & Minimum border-to-border spacing preserved for auto placement and relative helpers; ignored when \texttt{at=<...>} is given. \\
 scope & empty or scope name & Groups asset-diagram nodes into a fit-based container. \\
 right of & empty or node name & Places a node to the right of another node using \texttt{horizontal gap}. \\
@@ -377,6 +398,12 @@ harms & empty or node name & Places a node to the left of the harmed node. \\
 \end{tabular}
 \end{center}
 
+For asset diagrams, \texttt{order} remains the sequential slot index inside the
+asset lane. If \texttt{order} is omitted, declaration order still determines
+placement. The \texttt{asset columns} key affects automatic placement for
+\texttt{asset} and \texttt{indirectasset} nodes only; stakeholders and
+explicitly positioned nodes keep their current behavior.
+
 \section{Complete Examples}
 
 \subsection{Asset Diagram}
@@ -386,7 +413,7 @@ asset. Semantically it is still an asset node, but it renders with the dotted
 indirect-asset symbol.
 
 \begin{center}
-\begin{corasassetdiagram}[x=.8cm,y=.8cm]
+\begin{corasassetdiagram}[x=.8cm,y=.8cm,asset columns=3]
   \corasstakeholder[
     name=doc-stakeholder,
     scope=doc-asset-scope,
@@ -405,6 +432,12 @@ indirect-asset symbol.
     order=2,
     title={Indirect\\Asset}
   ]
+  \corasasset[
+    name=doc-support,
+    scope=doc-asset-scope,
+    order=3,
+    title={Supporting\\Asset}
+  ]
   \corasscope[
     name=doc-asset-box,
     scope=doc-asset-scope,
@@ -413,6 +446,7 @@ indirect-asset symbol.
     stakeholder corner=left
   ]
   \corasrelates[from=doc-asset,to=doc-indirect]
+  \corasrelates[from=doc-support,to=doc-asset]
 \end{corasassetdiagram}
 \end{center}
 

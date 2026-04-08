@@ -92,9 +92,10 @@ The release workflow also assembles a CTAN-friendly distribution bundle with
 runtime files flattened under `tex/`, documentation under `doc/`, and the
 top-level metadata files such as [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 If you are installing from that bundle manually, copy the contents of `tex/`
-into `~/texmf/tex/latex/corasdiagram/`. Once the package is published to CTAN
-or TeX Live, installation can happen through the normal package manager for the
-TeX distribution.
+into `~/texmf/tex/latex/corasdiagram/`. The package is now published on
+[CTAN](https://ctan.org/pkg/corasdiagram) and contained in TeX Live as
+`corasdiagram`, so installation can also happen through the normal package
+manager for the TeX distribution.
 
 ## Using In Your Own Project
 
@@ -191,7 +192,7 @@ explicit `icons-path=...`.
 
 \begin{document}
 
-\begin{corasassetdiagram}[x=1cm,y=1cm]
+\begin{corasassetdiagram}[x=1cm,y=1cm,asset columns=3]
   \corasstakeholder[
     name=stakeholder,
     scope=asset-scope,
@@ -210,6 +211,12 @@ explicit `icons-path=...`.
     order=2,
     title={Indirect\\Asset}
   ]
+  \corasasset[
+    name=supporting,
+    scope=asset-scope,
+    order=3,
+    title={Supporting\\Asset}
+  ]
   \corasscope[
     name=asset-box,
     scope=asset-scope,
@@ -218,10 +225,15 @@ explicit `icons-path=...`.
     stakeholder corner=left
   ]
   \corasrelates[from=asset,to=indirect]
+  \corasrelates[from=supporting,to=asset]
 \end{corasassetdiagram}
 
 \end{document}
 ```
+
+In asset diagrams, `asset columns=<n>` controls how many auto-layout columns
+the `asset` and `indirectasset` lanes use. `order` still counts sequentially
+within that lane, and if `order` is omitted the declaration order is used.
 
 ## Screenshots
 
@@ -253,6 +265,15 @@ The current supported semantic package API is:
 The `perspective` key applies to the public node macros and mounted-icon body
 nodes. `before` uses the base icon, `before-after` uses the outlined variant,
 and `after` uses the shaded variant.
+
+In threat and treatment diagrams, simple 1-in/1-out vulnerability chains are
+rendered as one straight visible causal arrow with the vulnerability markers
+placed on top of it. If you write `\corascauses[from=A,to=vuln]` and
+`\corascauses[from=vuln,to=B]`, one vulnerability is centered on the arrow and
+multiple sequential vulnerabilities are spaced evenly along it. Branching
+vulnerability structures and custom-routed or labelled causal edges stay
+explicit, and compressed vulnerability markers ignore any declared `at=`
+coordinate because their visible position is derived from the surviving arrow.
 
 ```latex
 \corasasset[
@@ -300,8 +321,10 @@ The repository uses separate workflows for CI, Pages, and tagged releases:
   plus the gated CTAN publication step
 
 The `ctan-release` environment is the approval boundary for automated CTAN
-updates. The first CTAN submission is still expected to be done manually. For
-the exact release, approval, and versioning procedure, see
+updates. The package is now live on
+[CTAN](https://ctan.org/pkg/corasdiagram), so tagged releases can continue
+through the automated CTAN publication path once that environment is approved.
+For the exact release, approval, and versioning procedure, see
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Regression Tests

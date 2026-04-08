@@ -60,6 +60,10 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "tests" / "corasdiagram" / "auto-layout-regression.tex",
             pages=(1, 2, 3, 4, 5),
         ),
+        "asset-auto-columns-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "asset-auto-columns-regression.tex",
+            pages=(1, 2),
+        ),
         "endpoint-geometry-regression": Fixture(
             source=repo_root / "tests" / "corasdiagram" / "endpoint-geometry-regression.tex",
             pages=(1,),
@@ -83,6 +87,10 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
         "perspective-regression-bw": Fixture(
             source=repo_root / "tests" / "corasdiagram" / "perspective-regression-bw.tex",
             pages=(1,),
+        ),
+        "vulnerability-path-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "vulnerability-path-regression.tex",
+            pages=(1, 2),
         ),
     }
 
