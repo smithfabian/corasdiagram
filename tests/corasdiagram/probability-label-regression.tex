@@ -1,0 +1,100 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=10mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\section*{Probability Label Regression}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=pt-source,at={(0,0)}]{Threat}
+  \scenario[id=pt-scenario,at={(6.2,0)}]{Scenario}
+  \incident[id=pt-incident,at={(12.2,0)}]{Incident}
+
+  \cause{pt-source -> pt-scenario}[probability={0.5}]
+  \cause{pt-scenario -> pt-incident}[probability={0.9},pos=.72]
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=pto-source,at={(0,0)}]{Threat}
+  \vulnerability[id=pto-v]{Weak\\authentication}
+  \scenario[id=pto-scenario,at={(9.8,0)}]{Scenario}
+
+  \cause{pto-source -> pto-scenario}[via={pto-v},probability={0.7}]
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=ptm-source,at={(0,0)}]{Threat}
+  \vulnerability[id=ptm-v1]{Poor security\\design}
+  \vulnerability[id=ptm-v2]{Unpatched\\system}
+  \vulnerability[id=ptm-v3]{Weak\\monitoring}
+  \scenario[id=ptm-scenario,at={(10.6,0)}]{Scenario}
+
+  \cause{ptm-source -> ptm-scenario}[via={ptm-v1,ptm-v2,ptm-v3},probability={0.85},pos=.35]
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corastreatmentdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=tt-source,at={(0,0)}]{Threat}
+  \scenario[id=tt-scenario,at={(8.0,0)}]{Scenario}
+  \risk[id=tt-risk,at={(14.2,0)},risk id=R1]{Risk}
+  \treatment[id=tt-control,at={(8.0,2.8)}]{Control}
+
+  \cause{tt-source -> tt-scenario}[via={Weak monitoring},probability={0.4}]
+  \cause{tt-scenario -> tt-risk}[probability={0.9}]
+  \treat{tt-control -> tt-scenario}
+\end{corastreatmentdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \corasthreatdeliberate[name=lt-source,at={(0,0)},title={Threat}]
+  \corasscenario[name=lt-scenario,at={(9.0,0)},title={Scenario}]
+  \corasvulnerability[name=lt-vuln,at={(0,-12)},title={Legacy vulnerability}]
+
+  \corascauses[from=lt-source,to=lt-scenario,probability={0.6},has_vulnerability={lt-vuln}]
+\end{corasthreatdiagram}
+
+\vspace{10mm}
+
+\begin{corastreatmentdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \corasthreatdeliberate[name=ltt-source,at={(0,0)},title={Threat}]
+  \corasscenario[name=ltt-scenario,at={(8.0,0)},title={Scenario}]
+  \corasrisk[name=ltt-risk,at={(14.0,0)},title={Risk}]
+  \corasvulnerability[name=ltt-vuln,at={(0,-12)},title={Legacy treatment vulnerability}]
+
+  \corascauses[from=ltt-source,to=ltt-scenario,probability={0.65},has_vulnerability={ltt-vuln}]
+  \corascauses[from=ltt-scenario,to=ltt-risk,probability={0.95}]
+\end{corastreatmentdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=rc-source,at={(0,0)}]{Threat}
+  \scenario[id=rc-scenario,at={(6.0,0)}]{Scenario}
+  \risk[id=rc-risk,at={(12.0,0)},risk id=R2]{Risk}
+  \asset[id=rc-asset,at={(18.0,0)}]{Asset}
+
+  \cause{rc-source -> rc-scenario}[probability={0.3}]
+  \cause{rc-scenario -> rc-risk}[probability={0.6}]
+  \impact{rc-risk -> rc-asset}[consequence={major}]
+\end{corasriskdiagram}
+\end{center}
+
+\end{document}

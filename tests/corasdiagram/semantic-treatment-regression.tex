@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corastreatmentdiagram}[x=.95cm,y=1cm,layout=manual,min edge gap=10mm]
+  \threat(deliberate)[id=hacker,at={(0,0)}]{Hacker}
+  \vulnerability[id=weak_auth,at={(3.2,0)}]{Weak authentication}
+  \threatscenario[
+    id=account,
+    at={(7.8,0)},
+    likelihood=Possible,
+    likelihood basis={3,15:30y}
+  ]{Compromised account}
+  \risk[
+    id=risk,
+    at={(13.6,0)},
+    risk ref=R7,
+    risk level=unacceptable
+  ]{Unauthorised control of payment service}
+  \asset(direct)[id=service,at={(19.6,0)}]{Payment service}
+  \treatmentscenario[id=mfa,at={(7.8,4.4)}]{Enforce phishing-resistant MFA}
+
+  \initiates{hacker -> account}[vulnerability={weak_auth}]
+  \leadsto{account -> risk}[conditional likelihood={0.8}]
+  \impacts{risk -> service}[consequence={high}]
+  \treats{mfa -> weak_auth}[treatment category={Reduce likelihood}]
+\end{corastreatmentdiagram}
+
+\end{document}

@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corastreatmentdiagram}[mode=overview,x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=r1,risk ref=R8,risk level=unacceptable]{Credential theft}
+  \risk[id=r2,risk ref=R9,risk level=acceptable]{Session hijack}
+  \asset(direct)[id=accounts]{User accounts}
+  \treatmentscenario[id=t1]{Hardware keys}
+  \treatmentscenario[id=t2]{Session binding}
+  \junction[id=j1]
+
+  \impacts{{r1,r2} -> accounts}
+  \treats{t1 -> j1}[treatment category={Reduce likelihood}]
+  \treats{t2 -> j1}[treatment category={Reduce consequence}]
+  \treats{j1 -> {r1,r2}}
+\end{corastreatmentdiagram}
+
+\end{document}

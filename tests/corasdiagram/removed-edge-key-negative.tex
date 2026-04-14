@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasthreatdiagram}
+  \threat(nonhuman)[id=virus]{Computer virus}
+  \threatscenario[id=s1]{Infection}
+  \cause{virus -> s1}[via={weak protection}]
+\end{corasthreatdiagram}
+
+\end{document}

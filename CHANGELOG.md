@@ -4,7 +4,29 @@ All notable changes to `corasdiagram` will be documented in this file.
 
 ## [Unreleased]
 
-- No unreleased changes yet.
+- Reorganized the documentation into a clearer split between the repo landing
+  page, the MkDocs user site, the printable manual, and internal maintainer
+  docs.
+- Replaced the old custom website stack with a Material for MkDocs
+  documentation site and removed the website-only example bundle.
+- Added canonical standalone examples for every diagram family plus both
+  high-level table families, including a new high-level risk table example.
+- Reworked the manual so it now shows complete compileable examples and rendered
+  output for all diagram and table families.
+- Kept `ROADMAP.md` internal only by excluding it from the public docs flow and
+  release bundle.
+- Stabilized the semantic-first CORAS DSL as the release target and documented
+  the preferred semantic surface separately from the retained compatibility and
+  advanced structural layers.
+- Added a first-class migration guide with before/after rewrites for asset,
+  threat, risk, and treatment diagrams, including the `\cause` dispatcher
+  rules.
+- Curated the regression boundary for the refactor with canonical,
+  compatibility, and removal/negative fixtures, plus a local release-gate
+  script for release-quality validation.
+- Tightened the failure coverage for removed commands and keys so the negative
+  suite now checks replacement guidance for the stabilized compatibility
+  boundary.
 
 ## [0.1.2] - 2026-03-28
 

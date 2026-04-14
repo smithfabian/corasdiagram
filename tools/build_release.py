@@ -109,7 +109,11 @@ def tracked_example_stems(repo_root: Path) -> list[str]:
     else:
         for line in result.stdout.splitlines():
             path = Path(line.strip())
-            if path.parent == Path("examples") and path.suffix == ".tex":
+            if (
+                path.parent == Path("examples")
+                and path.suffix == ".tex"
+                and (repo_root / path).is_file()
+            ):
                 stems.add(path.stem)
         if stems:
             return sorted(stems)
@@ -153,6 +157,10 @@ def copy_example_artifacts(
             ) from exc
         shutil.copy2(tex_path, dest_dir / tex_path.name)
         shutil.copy2(pdf_path, dest_dir / pdf_path.name)
+
+    fragments_dir = source_dir / "fragments"
+    if fragments_dir.is_dir():
+        copy_tree(fragments_dir, dest_dir / "fragments")
 
 
 def resolve_example_pdf(repo_root: Path, stem: str) -> Path:
@@ -349,7 +357,7 @@ def main() -> int:
     )
 
     shutil.copy2(
-        repo_root / "docs" / "corasdiagram-doc.tex",
+        repo_root / "manual" / "corasdiagram-doc.tex",
         doc_root / "corasdiagram-doc.tex",
     )
     for filename in (
@@ -358,7 +366,6 @@ def main() -> int:
         "NOTICE",
         "CHANGELOG.md",
         "CONTRIBUTING.md",
-        "ROADMAP.md",
         "VERSION",
     ):
         shutil.copy2(repo_root / filename, bundle_root / filename)
@@ -366,7 +373,7 @@ def main() -> int:
     doc_pdf = args.doc_pdf
     if doc_pdf is None:
         for candidate in (
-            repo_root / "docs" / "corasdiagram-doc.pdf",
+            repo_root / "manual" / "corasdiagram-doc.pdf",
             repo_root / "corasdiagram-doc.pdf",
         ):
             if candidate.exists():

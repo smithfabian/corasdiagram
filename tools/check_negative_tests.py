@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Run the semantic failure fixtures and assert that they fail as expected.
+"""Run the curated negative semantic regression fixtures.
 
-The invalid-*.tex files under tests/corasdiagram/ document package-level
-semantic constraints. Contributors should run this script when changing node
-families, edge semantics, or validation behavior.
+The semantic-first refactor intentionally removed part of the historical public
+surface. The authoritative negative suite therefore covers three buckets:
+
+- removed commands, keys, and scope options that must fail with replacement
+  guidance
+- invalid semantic relations on the canonical surface
+- compatibility edge cases such as `\\cause` ambiguity
 """
 
 from __future__ import annotations
@@ -13,7 +17,14 @@ import os
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class NegativeFixture:
+    source: str
+    expected_message: str
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,22 +37,47 @@ def parse_args() -> argparse.Namespace:
         default="pdflatex",
         help="TeX engine to use (default: pdflatex).",
     )
-    parser.add_argument(
-        "--expected-message",
-        default="Package corasdiagram Error",
-        help="Substring that must appear in failing compiler output.",
-    )
     return parser.parse_args()
+
+
+def fixture_inventory() -> tuple[NegativeFixture, ...]:
+    generic = "Package corasdiagram Error"
+    return (
+        NegativeFixture("removed-command-negative.tex", r"\stakeholder has been removed"),
+        NegativeFixture("removed-wrapper-negative.tex", r"\corasasset has been removed"),
+        NegativeFixture("removed-scope-key-negative.tex", "Scope key `stakeholder` has been removed"),
+        NegativeFixture("removed-node-key-negative.tex", "Node key `level` has been removed"),
+        NegativeFixture("removed-node-key-meta-negative.tex", "Node key `meta` has been removed"),
+        NegativeFixture("removed-node-key-value-negative.tex", "Node key `value` has been removed"),
+        NegativeFixture(
+            "removed-node-key-likelihood-label-negative.tex",
+            "Node key `likelihood label` has been removed",
+        ),
+        NegativeFixture("removed-edge-key-negative.tex", "Edge key `via` has been removed"),
+        NegativeFixture(
+            "removed-edge-key-probability-negative.tex",
+            "Edge key `probability` has been removed",
+        ),
+        NegativeFixture("invalid-impacts-negative.tex", generic),
+        NegativeFixture("invalid-initiates-negative.tex", generic),
+        NegativeFixture("invalid-leadsto-negative.tex", generic),
+        NegativeFixture("invalid-treats-negative.tex", generic),
+        NegativeFixture("invalid-cause-ambiguous-negative.tex", r"\cause is ambiguous"),
+        NegativeFixture("invalid-low-level-node-in-asset.tex", generic),
+        NegativeFixture("invalid-typed-duplicate-id.tex", generic),
+        NegativeFixture("invalid-typed-unknown-id.tex", generic),
+        NegativeFixture("invalid-typed-wrong-family-edge.tex", generic),
+    )
 
 
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[1]
     tests_dir = repo_root / "tests" / "corasdiagram"
-    test_files = sorted(tests_dir.glob("invalid-*.tex"))
+    fixtures = fixture_inventory()
 
-    if not test_files:
-        print(f"No test files found in {tests_dir}", file=sys.stderr)
+    if not fixtures:
+        print("No negative fixtures configured", file=sys.stderr)
         return 1
 
     texinputs = f"{repo_root / 'tex' / 'latex'}//:"
@@ -54,7 +90,12 @@ def main() -> int:
         env.setdefault("TEXMFVAR", str(temp_root / "texmf-var"))
         env.setdefault("TEXMFCACHE", env["TEXMFVAR"])
 
-        for test_file in test_files:
+        for fixture in fixtures:
+            test_file = tests_dir / fixture.source
+            if not test_file.exists():
+                failures.append(f"{fixture.source}: fixture file is missing")
+                continue
+
             output_dir = temp_root / test_file.stem
             output_dir.mkdir(parents=True, exist_ok=True)
             command = [
@@ -77,10 +118,10 @@ def main() -> int:
                 failures.append(f"{test_file.name}: expected failure, got success")
                 continue
 
-            if args.expected_message not in combined_output:
+            if fixture.expected_message not in combined_output:
                 failures.append(
                     f"{test_file.name}: missing expected message "
-                    f"`{args.expected_message}`"
+                    f"`{fixture.expected_message}`"
                 )
                 continue
 

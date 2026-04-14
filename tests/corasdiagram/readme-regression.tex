@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasassetdiagram}[x=1cm,y=1cm,asset columns=2]
+  \party[id=company]{Company}
+  \asset(direct)[id=availability]{Availability of server}
+  \asset(indirect)[id=reputation]{Company's reputation}
+
+  \assigns{company -> availability}[asset value=critical]
+  \assigns{company -> reputation}
+  \harms{availability -> reputation}
+\end{corasassetdiagram}
+
+\end{document}

@@ -1,0 +1,10 @@
+\begin{center}
+\begin{corastreatmentdiagram}[mode=overview,x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=r1,risk ref=R4,risk level=unacceptable]{Hacker gets access to server}
+  \asset(direct)[id=confidentiality]{Confidentiality of information}
+  \treatmentscenario[id=t1]{Install monitoring software}
+
+  \impacts{r1 -> confidentiality}
+  \treats{t1 -> r1}[treatment category={Reduce consequence}]
+\end{corastreatmentdiagram}
+\end{center}

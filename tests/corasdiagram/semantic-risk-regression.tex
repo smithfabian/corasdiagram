@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \lane{1}{
+    \threat(deliberate)[id=hacker]{Hacker}
+    \risk[id=r4,risk ref=R4,risk level=unacceptable]{ECDIS system not available}
+  }
+  \lane{2}{
+    \threat(nonhuman)[id=nonhuman]{Non Human Threat}
+    \risk[id=r5,risk ref=R5,risk level=unacceptable]{ECDIS system degraded}
+    \asset(direct)[id=asset,right=r5]{ECDIS integrity and availability}
+  }
+  \lane{3}{
+    \threat(accidental)[id=crew]{Crew member}
+    \risk[id=r6,risk ref=R6,risk level=unacceptable]{ECDIS system displaying false data}
+  }
+
+  \initiates{hacker -> {r4,r5,r6}}
+  \initiates{nonhuman -> {r4,r5,r6}}
+  \initiates{crew -> r6}
+  \impacts{{r4,r5,r6} -> asset}
+\end{corasriskdiagram}
+
+\end{document}

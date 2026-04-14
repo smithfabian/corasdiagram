@@ -1,312 +1,177 @@
-% Compile from the repository root:
-%   TEXINPUTS=tex/latex//: pdflatex examples/corasdiagram-demo.tex
 \documentclass[a4paper]{article}
-
 \usepackage[margin=18mm]{geometry}
 \usepackage{corasdiagram}
-\pagestyle{empty}
 
 \begin{document}
 
-\section*{CORAS Diagram Package Demo}
-\subsection*{1. Asset Diagram}
-\begin{figure}[h]
-  \centering
-  \begin{corasassetdiagram}[x=1cm,y=1cm]
-    \corasstakeholder[
-      name=management,
-      scope=asset-scope,
-      title={Stakeholder}
-    ]
+\section*{Semantic-First CORAS Demo}
 
-    \corasindirectasset[
-      name=reputation,
-      scope=asset-scope,
-      title={Indirect\\Asset}
-    ]
-
-    \corasasset[
-      name=privacy,
-      scope=asset-scope,
-      title={Asset},
-      below of=reputation,
-      vertical gap=18mm
-    ]
-
-    \corasasset[
-      name=availability,
-      scope=asset-scope,
-      title={Supporting\\Asset},
-      right of=privacy,
-      horizontal gap=22mm
-    ]
-
-    \corasscope[
-      name=asset-box,
-      scope=asset-scope,
-      kind=asset-scope,
-      stakeholder=management,
-      stakeholder corner=left
-    ]
-
-    \corasrelates[from=privacy,to=reputation]
-    \corasrelates[from=availability,to=reputation]
-  \end{corasassetdiagram}
-  \caption{Asset diagram}
-\end{figure}
-
-
-
-\subsection*{2. Threat Diagram}
 \begin{center}
-\begin{corasthreatdiagram}[x=1cm,y=1cm]
-  \corasthreataccidental[
-    name=employee,
-    order=1,
-    title={Employee}
-  ]
-  \corasvulnerability[
-    name=oldweb,
-    order=1,
-    title={Old version of\\webserver}
-  ]
-  \corasscenario[
-    name=serverinfected,
-    order=1,
-    title={Servers infected\\by malicious code},
-    meta={1 per year}
-  ]
-  \corasunwantedincident[
-    name=disc,
-    order=1,
-    title={1. Disclosure\\of data},
-    meta={1 per year}
-  ]
-  \corasasset[
-    name=gdi1a,
-    order=1,
-    title={GDI1. Data\\privacy}
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company,scope=asset-scope]{Company}
+  \asset(direct)[id=availability,scope=asset-scope]{Availability of server}
+  \asset(direct)[id=confidentiality,scope=asset-scope,order=2]{Confidentiality of information}
+  \asset(indirect)[id=reputation,scope=asset-scope,order=3]{Company's reputation}
+
+  \corasscope[
+    name=asset-box,
+    scope=asset-scope,
+    kind=asset-scope,
+    party=company,
+    party corner=left
   ]
 
-  \corasthreatnonhuman[
-    name=infra,
-    order=2,
-    title={IT-infrastructure}
-  ]
-  \corasvulnerability[
-    name=poorbackup,
-    order=2,
-    title={Poor backup\\solution}
-  ]
-  \corasscenario[
-    name=dbfail,
-    order=2,
-    title={Database fails to switch\\to backup},
-    meta={1 per year}
-  ]
-  \corasunwantedincident[
-    name=unavail,
-    order=2,
-    title={3. Unavailability\\of application}
-  ]
-  \corasasset[
-    name=cm3a,
-    order=2,
-    title={CM3. Application\\availability}
-  ]
-
-  \corascauses[from=employee,to=oldweb]
-  \corascauses[from=oldweb,to=serverinfected]
-  \corascauses[from=serverinfected,to=disc]
-  \corasrelates[from=disc,to=gdi1a]
-
-  \corascauses[from=infra,to=poorbackup]
-  \corascauses[from=poorbackup,to=dbfail]
-  \corascauses[from=dbfail,to=unavail]
-  \corasrelates[from=unavail,to=cm3a]
-\end{corasthreatdiagram}
+  \assigns{company -> availability}[asset value=critical]
+  \assigns{company -> confidentiality}[asset value=critical]
+  \assigns{company -> reputation}
+  \harms{availability -> reputation}
+  \harms{confidentiality -> reputation}
+\end{corasassetdiagram}
 \end{center}
 
-\subsection*{3. Risk Diagram}
+\newpage
+
+\section*{Threat and Risk}
+
 \begin{center}
-\begin{corasriskdiagram}[x=1cm,y=1cm]
-  \corasthreataccidental[
-    name=employee2,
-    title={Employee},
-    order=1
-  ]
-  \corasthreatnonhuman[
-    name=infra2,
-    title={IT-infrastructure},
-    order=2
-  ]
+\begin{corasthreatdiagram}[x=.92cm,y=.92cm,min edge gap=10mm]
+  \lane{1}{
+    \threat(deliberate)[id=hacker]{Hacker}
+    \threatscenario[
+      id=unauth,
+      likelihood=Possible,
+      likelihood basis={3,15:30y}
+    ]{Unauthorised access to the system}
+    \threatscenario[
+      id=malware,
+      likelihood=Possible,
+      likelihood basis={1.5,7.5:30y}
+    ]{Malware in ECDIS system}
+    \unwantedincident[
+      id=down,
+      risk ref=R4,
+      likelihood=Possible,
+      likelihood basis={1.8,8.4:30y}
+    ]{ECDIS system not available}
+  }
+  \lane{2}{
+    \threat(nonhuman)[id=nonhuman]{Non Human Threat}
+    \threatscenario[
+      id=hardware,
+      likelihood=Unlikely,
+      likelihood basis={1,3:30y}
+    ]{Hardware error}
+    \unwantedincident[
+      id=degraded,
+      risk ref=R5,
+      likelihood=Possible,
+      likelihood basis={2.96,9.71:30y}
+    ]{ECDIS system degraded}
+  }
+  \lane{3}{
+    \threat(accidental)[id=crew]{Crew member}
+    \threatscenario[
+      id=human,
+      likelihood=Likely,
+      likelihood basis={30,150:30y}
+    ]{Human error}
+    \unwantedincident[
+      id=falsedata,
+      risk ref=R6,
+      likelihood=Likely,
+      likelihood basis={27.06,133.5:30y}
+    ]{ECDIS system displaying false data}
+  }
 
-  \corasrisk[
-    name=r11,
-    title={1.1 Disclosure\\of data},
-    meta={1 per year},
-    level=medium,
-    order=1
-  ]
-  \corasrisk[
-    name=r12,
-    title={1.2 Service\\degradation},
-    meta={1 per 6 months},
-    level=low,
-    order=2
-  ]
-  \corasrisk[
-    name=r22,
-    title={2.2 Unavailability\\of application},
-    meta={1 per year},
-    level=major,
-    order=3
-  ]
+  \asset(direct)[id=ecdis,right=degraded,text width=34mm]{ECDIS integrity and availability}
+  \junction[id=join,left=degraded]{}
 
-  \corasasset[
-    name=gdi1b,
-    title={GDI1. Data\\privacy},
-    order=1
-  ]
-  \corasasset[
-    name=cm2b,
-    title={CM2. Service\\quality},
-    order=2
-  ]
-  \corasasset[
-    name=cm3b,
-    title={CM3. Application\\availability},
-    order=3
-  ]
+  \initiates{hacker -> unauth}[vulnerability={Poor security design,Unpatched system}]
+  \leadsto{unauth -> malware}
+  \leadsto{unauth -> down}[conditional likelihood={0.4}]
+  \initiates{nonhuman -> hardware}[vulnerability={Substandard materials used to produce hardware}]
+  \initiates{crew -> human}[vulnerability={Overworked staff or staff lacking knowledge}]
 
-  \corascauses[from=employee2,to=r11]
-  \corascauses[from=employee2,to=r12]
-  \corascauses[from=infra2,to=r22]
-  \corasrelates[from=r11,to=gdi1b]
-  \corasrelates[from=r12,to=cm2b]
-  \corasrelates[from=r22,to=cm2b]
-  \corasrelates[from=r22,to=cm3b,route=hv]
+  \leadsto{{hardware,human} -> join}
+  \leadsto{join -> {degraded,falsedata}}
+  \leadsto{malware -> down}[conditional likelihood={0.8}]
+  \leadsto{{malware,human} -> degraded}[conditional likelihood={0.9}]
+  \leadsto{human -> falsedata}[conditional likelihood={0.8}]
+
+  \impacts{down -> ecdis}[consequence={Catastrophic (5)}]
+  \impacts{degraded -> ecdis}[consequence={Major (4)}]
+  \impacts{falsedata -> ecdis}[consequence={Catastrophic (5)}]
+\end{corasthreatdiagram}
+
+\vspace{10mm}
+
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \lane{1}{
+    \threat(deliberate)[id=rt-hacker]{Hacker}
+    \risk[id=rt-r4,risk ref=R4,risk level=unacceptable]{ECDIS system not available}
+  }
+  \lane{2}{
+    \threat(nonhuman)[id=rt-nonhuman]{Non Human Threat}
+    \risk[id=rt-r5,risk ref=R5,risk level=unacceptable]{ECDIS system degraded}
+    \asset(direct)[id=rt-asset,right=rt-r5]{ECDIS integrity and availability}
+  }
+  \lane{3}{
+    \threat(accidental)[id=rt-crew]{Crew member}
+    \risk[id=rt-r6,risk ref=R6,risk level=unacceptable]{ECDIS system displaying false data}
+  }
+
+  \initiates{rt-hacker -> {rt-r4,rt-r5,rt-r6}}
+  \initiates{rt-nonhuman -> {rt-r4,rt-r5,rt-r6}}
+  \initiates{rt-crew -> rt-r6}
+
+  \impacts{{rt-r4,rt-r5,rt-r6} -> rt-asset}
 \end{corasriskdiagram}
 \end{center}
 
-\subsection*{4. Treatment Diagram}
+\newpage
+
+\section*{Treatment and Overview}
+
 \begin{center}
-\begin{corastreatmentdiagram}[x=1cm,y=1cm]
-  \corasthreataccidental[
-    name=employee3,
-    order=1,
-    title={Employee}
-  ]
-  \corasvulnerability[
-    name=oldweb3,
-    order=1,
-    title={Old version of\\webserver}
-  ]
-  \corasscenario[
-    name=serverinfected3,
-    order=1,
-    title={Servers infected\\by malicious code},
-    meta={1 per year}
-  ]
-  \corasunwantedincident[
-    name=disc3,
-    order=1,
-    title={Disclosure\\of data},
-    meta={1 per year}
-  ]
-  \corasasset[
-    name=gdi1c,
-    order=1,
-    title={GDI1. Data\\privacy}
-  ]
+\begin{corastreatmentdiagram}[x=.9cm,y=1cm,layout=manual,min edge gap=10mm]
+  \threat(deliberate)[id=td-hacker,at={(0,4.5)}]{Hacker}
+  \vulnerability[id=td-weakauth,at={(3.2,4.5)}]{Weak authentication}
+  \threatscenario[
+    id=td-account,
+    at={(7.8,4.5)},
+    likelihood=Possible,
+    likelihood basis={3,15:30y}
+  ]{Compromised account}
+  \risk[
+    id=td-risk,
+    at={(13.8,4.5)},
+    risk ref=R7,
+    risk level=unacceptable
+  ]{Unauthorised control of payment service}
+  \asset(direct)[id=td-service,at={(20.0,4.5)}]{Payment service}
+  \treatmentscenario[id=td-mfa,at={(7.8,8.8)}]{Enforce phishing-resistant MFA}
 
-  \corastreatment[
-    name=tawareness,
-    title={Increase awareness\\of security risks},
-    order=1
-  ]
-  \corastreatment[
-    name=tupgrade,
-    title={Upgrade\\server},
-    order=2
-  ]
-  \corastreatment[
-    name=tlimit,
-    title={Limit remote\\access},
-    order=3
-  ]
-
-  \corascauses[from=employee3,to=oldweb3]
-  \corascauses[from=oldweb3,to=serverinfected3]
-  \corascauses[from=serverinfected3,to=disc3]
-  \corasrelates[from=disc3,to=gdi1c]
-
-  \corasriskref[
-    name=rr11,
-    from=disc3,
-    to=gdi1c,
-    label={Risk 1.1}
-  ]
-
-  \corastreats[from=tawareness,to=employee3]
-  \corastreats[from=tupgrade,to=oldweb3]
-  \corastreats[from=tlimit,to=serverinfected3]
+  \initiates{td-hacker -> td-account}[vulnerability={td-weakauth}]
+  \leadsto{td-account -> td-risk}[conditional likelihood={0.8}]
+  \impacts{td-risk -> td-service}[consequence={high}]
+  \treats{td-mfa -> td-weakauth}[treatment category={Reduce likelihood}]
 \end{corastreatmentdiagram}
-\end{center}
 
-\subsection*{5. Treatment Overview Diagram}
-\begin{center}
-\begin{corastreatmentoverviewdiagram}[x=1cm,y=1cm]
-  \corasrisk[
-    name=or11,
-    title={1.1 Disclosure\\of data},
-    meta={direct asset},
-    level=unacceptable,
-    order=1
-  ]
-  \corasrisk[
-    name=or22,
-    title={2.2 Unavailability\\of application},
-    meta={direct asset},
-    level=acceptable,
-    order=2
-  ]
-  \corasasset[
-    name=gdi1d,
-    order=1,
-    title={GDI1. Data\\privacy}
-  ]
-  \corasasset[
-    name=cm3d,
-    order=2,
-    title={CM3. Application\\availability}
-  ]
+\vspace{12mm}
 
-  \corasjunction[name=joverview]
-  \corastreatment[
-    name=otlimit,
-    title={Limit access\\to network},
-    order=1
-  ]
-  \corastreatment[
-    name=otaware,
-    title={Increase awareness\\of security risks},
-    order=2
-  ]
-  \corastreatment[
-    name=otupgrade,
-    title={Upgrade\\server},
-    order=3
-  ]
+\begin{corastreatmentdiagram}[mode=overview,x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=ov-risk1,risk ref=R8,risk level=unacceptable]{Credential theft}
+  \risk[id=ov-risk2,risk ref=R9,risk level=acceptable]{Session hijack}
+  \asset(direct)[id=ov-asset]{User accounts}
+  \treatmentscenario[id=ov-treatment1]{Hardware keys}
+  \treatmentscenario[id=ov-treatment2]{Session binding}
+  \junction[id=ov-junction]{}
 
-  \corasrelates[from=or11,to=gdi1d]
-  \corasrelates[from=or22,to=cm3d]
-  \corastreats[from=otlimit,to=joverview]
-  \corastreats[from=otaware,to=joverview]
-  \corastreats[from=otupgrade,to=joverview]
-  \corastreats[from=joverview,to=or11]
-  \corastreats[from=joverview,to=or22]
-\end{corastreatmentoverviewdiagram}
+  \impacts{{ov-risk1,ov-risk2} -> ov-asset}
+  \treats{ov-treatment1 -> ov-junction}[treatment category={Reduce likelihood}]
+  \treats{ov-treatment2 -> ov-junction}[treatment category={Reduce consequence}]
+  \treats{ov-junction -> {ov-risk1,ov-risk2}}
+\end{corastreatmentdiagram}
 \end{center}
 
 \end{document}

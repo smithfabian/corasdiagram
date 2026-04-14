@@ -1,0 +1,14 @@
+\begin{center}
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \lane{1}{
+    \threat(deliberate)[id=hacker]{Hacker}
+    \risk[id=r1,risk ref=R2,risk level=unacceptable]{Hacker gets access to server}
+  }
+  \lane{2}{
+    \asset(direct)[id=confidentiality,right=r1]{Confidentiality of information}
+  }
+
+  \initiates{hacker -> r1}
+  \impacts{r1 -> confidentiality}[consequence={high}]
+\end{corasriskdiagram}
+\end{center}

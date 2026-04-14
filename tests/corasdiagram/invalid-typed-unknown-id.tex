@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\begin{corasthreatdiagram}
+  \threat(deliberate)[id=source]{Attacker}
+  \incident[id=incident]{Service outage}
+  \cause{source -> missing}
+  \impact{incident -> source}
+\end{corasthreatdiagram}
+\end{document}

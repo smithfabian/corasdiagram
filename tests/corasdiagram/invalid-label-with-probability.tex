@@ -1,0 +1,14 @@
+\documentclass{article}
+
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{corasriskdiagram}
+  \corasthreatnonhuman[name=system,title={System}]
+  \corasrisk[name=risk,title={Risk}]
+  \corascauses[from=system,to=risk,label={manual},probability={0.9}]
+\end{corasriskdiagram}
+
+\end{document}

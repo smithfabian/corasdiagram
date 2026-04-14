@@ -1,0 +1,280 @@
+\documentclass[a4paper]{article}
+
+\usepackage{lmodern}
+\usepackage[margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{corasdiagram}
+
+\title{\texttt{corasdiagram} Manual}
+\date{Version \corasdiagramversion}
+
+\newcommand{\exampletex}[1]{../examples/#1.tex}
+\newcommand{\examplepdf}[1]{../examples/#1.pdf}
+\newcommand{\examplebox}[1]{%
+  \fbox{\parbox{.9\linewidth}{Build \texttt{examples/#1.tex} first to embed the rendered output here.}}%
+}
+\newcommand{\completeexample}[2]{%
+  \subsection{#2}
+  \paragraph{Compileable source}
+  \verbatiminput{\exampletex{#1}}
+  \paragraph{Rendered output}
+  \begin{center}
+  \IfFileExists{\examplepdf{#1}}{%
+    \includegraphics[width=.96\linewidth]{\examplepdf{#1}}%
+  }{%
+    \examplebox{#1}%
+  }
+  \end{center}
+}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Overview}
+
+\texttt{corasdiagram} is a semantic-first LaTeX package for CORAS diagrams and
+tables. The preferred public API uses semantic nouns and verbs that mirror the
+formal English-prose interpretation of the CORAS language.
+
+The canonical diagram environments are:
+
+\begin{itemize}
+  \item \texttt{corasassetdiagram}
+  \item \texttt{corasthreatdiagram}
+  \item \texttt{corasriskdiagram}
+  \item \texttt{corastreatmentdiagram}
+\end{itemize}
+
+Treatment overview diagrams are expressed with
+\texttt{corastreatmentdiagram[mode=overview]}. The package also ships the
+high-level analysis and high-level risk tables.
+
+This manual is scoped to printable reference use:
+
+\begin{itemize}
+  \item semantic-first commands and keys
+  \item compact compatibility appendix
+  \item advanced structural appendix
+  \item complete compileable examples of every diagram and table family
+\end{itemize}
+
+For the user-facing migration guide, see
+\texttt{docs/semantic-api-migration.md}. Maintainer-oriented release and API
+inventory material lives outside the public documentation set.
+
+\section{Installation}
+
+Compile from the repository root with:
+
+\begin{verbatim}
+TEXINPUTS=tex/latex//: latexmk -pdf -interaction=nonstopmode -halt-on-error \
+  examples/corasdiagram-minimal.tex
+\end{verbatim}
+
+For a user TEXMF installation, copy \texttt{tex/latex/corasdiagram/} into
+\texttt{\$HOME/texmf/tex/latex/corasdiagram/}.
+
+\section{Semantic-First DSL}
+
+\subsection{Asset diagrams}
+
+English sentence forms:
+
+\begin{itemize}
+  \item ``... is a party.''
+  \item ``... is a direct asset.''
+  \item ``... is an indirect asset.''
+  \item ``... assigns value to ....''
+  \item ``... assigns the value ... to ....''
+  \item ``Harm to ... may result in harm to ....''
+\end{itemize}
+
+Canonical commands:
+
+\begin{itemize}
+  \item \texttt{\textbackslash party[...]}
+  \item \texttt{\textbackslash asset(direct)[...]}
+  \item \texttt{\textbackslash asset(indirect)[...]}
+  \item \texttt{\textbackslash assigns\{party -> asset\}[asset value=...]}
+  \item \texttt{\textbackslash harms\{asset -> asset\}}
+\end{itemize}
+
+\subsection{Threat diagrams}
+
+English sentence forms:
+
+\begin{itemize}
+  \item ``... is a deliberate human threat.''
+  \item ``... is an accidental human threat.''
+  \item ``... is a non-human threat.''
+  \item ``... is a vulnerability.''
+  \item ``Threat scenario ... occurs with likelihood ....''
+  \item ``Unwanted incident ... occurs with likelihood ....''
+  \item ``... exploits vulnerability ... to initiate ....''
+  \item ``... leads to ... with conditional likelihood ....''
+  \item ``... impacts ... with consequence ....''
+\end{itemize}
+
+Canonical commands:
+
+\begin{itemize}
+  \item \texttt{\textbackslash threat(deliberate|accidental|nonhuman)[...]}
+  \item \texttt{\textbackslash vulnerability[...]}
+  \item \texttt{\textbackslash threatscenario[...]}
+  \item \texttt{\textbackslash unwantedincident[...]}
+  \item \texttt{\textbackslash initiates\{source -> target\}[vulnerability=...]}
+  \item \texttt{\textbackslash leadsto\{source -> target\}[conditional likelihood=...]}
+  \item \texttt{\textbackslash impacts\{incident -> asset\}[consequence=...]}
+\end{itemize}
+
+\subsection{Risk diagrams}
+
+English sentence forms:
+
+\begin{itemize}
+  \item ``Risk ... occurs with risk level ....''
+  \item ``... initiates ....''
+  \item ``... impacts ....''
+\end{itemize}
+
+Canonical commands:
+
+\begin{itemize}
+  \item \texttt{\textbackslash risk[...]}
+  \item \texttt{\textbackslash initiates\{source -> risk\}}
+  \item \texttt{\textbackslash impacts\{risk -> asset\}}
+\end{itemize}
+
+\subsection{Treatment diagrams}
+
+English sentence forms:
+
+\begin{itemize}
+  \item ``... is a treatment scenario.''
+  \item ``... treats ....''
+  \item ``... decreases the likelihood of ....''
+  \item ``... decreases the consequence of ....''
+\end{itemize}
+
+Canonical commands:
+
+\begin{itemize}
+  \item \texttt{\textbackslash treatmentscenario[...]}
+  \item \texttt{\textbackslash treats\{treatmentscenario -> target\}[treatment category=...]}
+  \item plus \texttt{\textbackslash initiates}, \texttt{\textbackslash leadsto}, and
+    \texttt{\textbackslash impacts} when the treated threat or risk chain is shown
+\end{itemize}
+
+\subsection{Treatment overview mode}
+
+Use \texttt{corastreatmentdiagram[mode=overview]} when treatments are attached
+directly to risks instead of a full threat/risk chain.
+
+\section{Tables}
+
+\subsection{High-level analysis table}
+
+\texttt{corashighlevelanalysistable} is the canonical high-level table
+environment. Use \texttt{\textbackslash corashighlevelanalysisrow} to add rows.
+
+\subsection{High-level risk table}
+
+\texttt{corashighlevelrisktable} and
+\texttt{\textbackslash corashighlevelriskrow} remain available for the risk
+table naming variant. They render the same table structure as the analysis
+table and are kept for compatibility and document readability.
+
+\section{Canonical Keys}
+
+\subsection{Node keys}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}p{0.24\linewidth}p{0.24\linewidth}p{0.38\linewidth}}
+\hline
+Key & Applies to & Meaning \\
+\hline
+id & all typed nodes & Stable public identifier. \\
+risk ref & risk, unwantedincident & External reference tag such as \texttt{R4}. \\
+risk level & risk & Risk level line such as \texttt{unacceptable}. \\
+likelihood & threatscenario, unwantedincident & Plain-text likelihood such as \texttt{possible}. \\
+likelihood basis & threatscenario, unwantedincident & Bracketed quantitative basis such as \texttt{3,15:30y}. \\
+at & all typed nodes & Manual placement coordinate. \\
+right / left / above / below & all typed nodes & Relative placement helpers. \\
+scope & asset and party nodes & Named scope fit group membership. \\
+order & auto-laid-out families & Preferred auto-layout order. \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Edge keys}
+
+\begin{center}
+\begin{tabular}{>{\ttfamily}p{0.24\linewidth}p{0.24\linewidth}p{0.38\linewidth}}
+\hline
+Key & Applies to & Meaning \\
+\hline
+asset value & \textbackslash assigns & Rendered asset-value label. \\
+vulnerability & \textbackslash initiates & One or more grouped vulnerabilities on the edge. \\
+conditional likelihood & \textbackslash leadsto & Conditional likelihood label on the edge. \\
+consequence & \textbackslash impacts & Consequence label on the edge. \\
+treatment category & \textbackslash treats & Treatment-category label on the edge. \\
+pos & edge commands & Label position override. \\
+path / route / tikz / label options & edge commands & Drawing overrides and styling. \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Compatibility Appendix}
+
+Retained compatibility aliases:
+
+\begin{itemize}
+  \item \texttt{corastreatmentoverviewdiagram}
+  \item \texttt{\textbackslash asset[...]} as \texttt{\textbackslash asset(direct)[...]}
+  \item \texttt{\textbackslash indirectasset[...]}
+  \item \texttt{\textbackslash scenario[...]}
+  \item \texttt{\textbackslash incident[...]}
+  \item \texttt{\textbackslash treatment[...]}
+  \item \texttt{\textbackslash cause\{...\}}
+  \item \texttt{\textbackslash impact\{...\}}
+  \item \texttt{\textbackslash relate\{...\}}
+  \item \texttt{\textbackslash concern\{...\}}
+  \item \texttt{\textbackslash treat\{...\}}
+  \item \texttt{\textbackslash associate\{...\}}
+  \item \texttt{risk id}, \texttt{risk-id}, and \texttt{riskid}
+\end{itemize}
+
+Use the semantic-first commands in new documents. The migration guide covers
+one-to-one replacements and the \texttt{\textbackslash cause} dispatcher rule.
+
+\section{Advanced Structural Appendix}
+
+The following commands remain public, but they are structural helpers rather
+than part of the first-line semantic vocabulary:
+
+\begin{itemize}
+  \item \texttt{\textbackslash junction}
+  \item \texttt{\textbackslash corasscope}
+  \item \texttt{\textbackslash corascontainer}
+  \item \texttt{\textbackslash corasriskref}
+  \item \texttt{\textbackslash corasnode}
+  \item \texttt{\textbackslash corasedge}
+  \item \texttt{\textbackslash associate}
+\end{itemize}
+
+\section{Complete Examples}
+
+\completeexample{corasdiagram-asset-diagram}{Asset diagram}
+\completeexample{corasdiagram-threat-diagram}{Threat diagram}
+\completeexample{corasdiagram-risk-diagram}{Risk diagram}
+\completeexample{corasdiagram-treatment-diagram}{Treatment diagram}
+\completeexample{corasdiagram-treatment-overview-diagram}{Treatment overview diagram}
+\completeexample{corasdiagram-high-level-analysis-table}{High-level analysis table}
+\completeexample{corasdiagram-high-level-risk-table}{High-level risk table}
+
+\end{document}

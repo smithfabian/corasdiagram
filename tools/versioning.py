@@ -11,7 +11,7 @@ docs and the release workflow:
 - release tags must be v<version>
 
 Contributors typically use this module indirectly through check_release_tag.py,
-build_release.py, build_site.py, and upload_ctan.py.
+build_release.py, stage_mkdocs_assets.py, and upload_ctan.py.
 """
 
 from __future__ import annotations

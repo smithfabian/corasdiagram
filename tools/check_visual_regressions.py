@@ -53,44 +53,29 @@ def fixture_inventory(repo_root: Path) -> dict[str, Fixture]:
             source=repo_root / "examples" / "corasdiagram-demo.tex",
             pages=(1, 2, 3),
         ),
-        # The high-level analysis table is still compile-tested in CI, but not
-        # snapshot-tested here because longtable text wrapping drifts across TeX
-        # toolchains and causes false-positive byte-level PNG diffs.
-        "auto-layout-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "auto-layout-regression.tex",
-            pages=(1, 2, 3, 4, 5),
-        ),
-        "asset-auto-columns-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "asset-auto-columns-regression.tex",
-            pages=(1, 2),
-        ),
-        "endpoint-geometry-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "endpoint-geometry-regression.tex",
+        "semantic-asset-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "semantic-asset-regression.tex",
             pages=(1,),
         ),
-        "icon-auto-edge-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "icon-auto-edge-regression.tex",
-            pages=(1, 2),
-        ),
-        "icon-anchor-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "icon-anchor-regression.tex",
-            pages=(1, 2, 3, 4),
-        ),
-        "min-edge-gap-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "min-edge-gap-regression.tex",
+        "semantic-threat-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "semantic-threat-regression.tex",
             pages=(1,),
         ),
-        "perspective-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "perspective-regression.tex",
-            pages=(1, 2),
-        ),
-        "perspective-regression-bw": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "perspective-regression-bw.tex",
+        "semantic-risk-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "semantic-risk-regression.tex",
             pages=(1,),
         ),
-        "vulnerability-path-regression": Fixture(
-            source=repo_root / "tests" / "corasdiagram" / "vulnerability-path-regression.tex",
-            pages=(1, 2),
+        "semantic-treatment-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "semantic-treatment-regression.tex",
+            pages=(1,),
+        ),
+        "semantic-treatment-overview-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "semantic-treatment-overview-regression.tex",
+            pages=(1,),
+        ),
+        "compatibility-alias-regression": Fixture(
+            source=repo_root / "tests" / "corasdiagram" / "compatibility-alias-regression.tex",
+            pages=(1, 2, 3),
         ),
     }
 
