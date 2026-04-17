@@ -1,0 +1,40 @@
+site_name: corasdiagram
+site_description: Semantic-first LaTeX package for CORAS diagrams and tables
+site_url: https://smithfabian.github.io/corasdiagram/
+repo_url: https://github.com/smithfabian/corasdiagram
+repo_name: smithfabian/corasdiagram
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Semantic-First DSL:
+      - Asset diagrams: semantic-first-dsl/asset-diagrams.md
+      - Threat diagrams: semantic-first-dsl/threat-diagrams.md
+      - Risk diagrams: semantic-first-dsl/risk-diagrams.md
+      - Treatment diagrams: semantic-first-dsl/treatment-diagrams.md
+      - Treatment overview mode: semantic-first-dsl/treatment-overview-mode.md
+  - Tables:
+      - High-level analysis table: tables/high-level-analysis-table.md
+      - High-level risk table: tables/high-level-risk-table.md
+  - Complete Examples: complete-examples.md
+  - Compatibility Guide: compatibility-guide.md
+  - Migration Guide: semantic-api-migration.md
+  - Advanced Structural API: advanced-structural-api.md
+  - Manual PDF: manual-pdf.md

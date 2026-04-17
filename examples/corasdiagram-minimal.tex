@@ -1,41 +1,26 @@
-% Compile from the repository root:
-%   TEXINPUTS=tex/latex//: pdflatex examples/corasdiagram-minimal.tex
+% Minimal semantic-first CORAS example.
+% Compile from the repository root with:
+%   TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error \
+%     examples/corasdiagram-minimal.tex
 \documentclass{article}
-
+\usepackage[margin=20mm]{geometry}
 \usepackage{corasdiagram}
-\pagestyle{empty}
 
 \begin{document}
 
-\begin{corasassetdiagram}[x=1cm,y=1cm]
-  \corasstakeholder[
-    name=stakeholder,
-    scope=minimal-scope,
-    order=1,
-    title={Stakeholder}
-  ]
-  \corasasset[
-    name=asset,
-    scope=minimal-scope,
-    order=1,
-    title={Asset}
-  ]
-  \corasindirectasset[
-    name=indirect,
-    scope=minimal-scope,
-    order=2,
-    title={Indirect\\Asset}
-  ]
+\begin{center}
+\begin{corasassetdiagram}[x=1cm,y=1cm,asset columns=3]
+  \party[id=company]{Company}
+  \asset(direct)[id=availability]{Availability of server}
+  \asset(direct)[id=confidentiality,order=2]{Confidentiality of information}
+  \asset(indirect)[id=reputation,order=3]{Company's reputation}
 
-  \corasscope[
-    name=minimal-box,
-    scope=minimal-scope,
-    kind=asset-scope,
-    stakeholder=stakeholder,
-    stakeholder corner=left
-  ]
-
-  \corasrelates[from=asset,to=indirect]
+  \assigns{company -> availability}[asset value=critical]
+  \assigns{company -> confidentiality}[asset value=critical]
+  \assigns{company -> reputation}
+  \harms{availability -> reputation}
+  \harms{confidentiality -> reputation}
 \end{corasassetdiagram}
+\end{center}
 
 \end{document}

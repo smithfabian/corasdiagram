@@ -1,0 +1,131 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=18mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Asset Auto Columns Regression}
+
+\subsection*{1. Three asset columns}
+\begin{center}
+\begin{corasassetdiagram}[x=1cm,y=1cm,asset columns=3]
+  \corasstakeholder[
+    name=owner-three,
+    scope=scope-three,
+    title={Service\\owner}
+  ]
+
+  \corasasset[
+    name=accounts,
+    scope=scope-three,
+    title={Customer\\accounts}
+  ]
+  \corasindirectasset[
+    name=trust,
+    scope=scope-three,
+    title={Public\\trust}
+  ]
+  \corasasset[
+    name=portal-three,
+    scope=scope-three,
+    title={Self-service\\portal}
+  ]
+  \corasasset[
+    name=backup-three,
+    scope=scope-three,
+    title={Backup\\service}
+  ]
+  \corasindirectasset[
+    name=brand-three,
+    scope=scope-three,
+    title={Brand\\value}
+  ]
+  \corasasset[
+    name=logs-three,
+    scope=scope-three,
+    title={Audit\\logs}
+  ]
+
+  \corasscope[
+    name=asset-box-three,
+    scope=scope-three,
+    kind=asset-scope,
+    stakeholder=owner-three,
+    stakeholder corner=left
+  ]
+
+  \corasrelates[from=portal-three,to=accounts]
+  \corasrelates[from=backup-three,to=accounts]
+  \corasrelates[from=logs-three,to=accounts]
+  \corasrelates[from=accounts,to=trust]
+  \corasrelates[from=accounts,to=brand-three]
+\end{corasassetdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{2. Four asset columns}
+\begin{center}
+\begin{corasassetdiagram}[x=1cm,y=1cm,asset columns=4]
+  \corasstakeholder[
+    name=owner-four,
+    scope=scope-four,
+    title={Process\\owner}
+  ]
+
+  \corasasset[
+    name=payments,
+    scope=scope-four,
+    title={Payment\\records}
+  ]
+  \corasindirectasset[
+    name=reputation-four,
+    scope=scope-four,
+    title={Service\\reputation}
+  ]
+  \corasasset[
+    name=api-four,
+    scope=scope-four,
+    title={Public\\API}
+  ]
+  \corasasset[
+    name=queue-four,
+    scope=scope-four,
+    title={Message\\queue}
+  ]
+  \corasindirectasset[
+    name=contracts-four,
+    scope=scope-four,
+    title={Partner\\contracts}
+  ]
+  \corasasset[
+    name=metrics-four,
+    scope=scope-four,
+    title={Monitoring\\metrics}
+  ]
+  \corasasset[
+    name=archive-four,
+    scope=scope-four,
+    title={Archive\\storage}
+  ]
+
+  \corasscope[
+    name=asset-box-four,
+    scope=scope-four,
+    kind=asset-scope,
+    stakeholder=owner-four,
+    stakeholder corner=left
+  ]
+
+  \corasrelates[from=api-four,to=payments]
+  \corasrelates[from=queue-four,to=payments]
+  \corasrelates[from=metrics-four,to=payments]
+  \corasrelates[from=archive-four,to=payments]
+  \corasrelates[from=payments,to=reputation-four]
+  \corasrelates[from=payments,to=contracts-four]
+\end{corasassetdiagram}
+\end{center}
+
+\end{document}

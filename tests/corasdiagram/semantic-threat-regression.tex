@@ -1,0 +1,32 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \lane{1}{
+    \threat(nonhuman)[id=virus]{Computer virus}
+    \threatscenario[
+      id=infection,
+      likelihood=Possible,
+      likelihood basis={1,2:1y}
+    ]{Server is infected by computer virus}
+    \unwantedincident[
+      id=down,
+      risk ref=R4,
+      likelihood=Unlikely,
+      likelihood basis={0.5,1:1y}
+    ]{Server goes down}
+  }
+  \lane{2}{
+    \vulnerability[id=old_av]{Virus protection not up to date}
+  }
+  \asset(direct)[id=availability,right=down]{Availability of server}
+
+  \initiates{virus -> infection}[vulnerability={old_av}]
+  \leadsto{infection -> down}[conditional likelihood={0.2}]
+  \impacts{down -> availability}[consequence={high}]
+\end{corasthreatdiagram}
+
+\end{document}

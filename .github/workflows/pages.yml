@@ -14,6 +14,9 @@ permissions:
   id-token: write
   pages: write
 
+env:
+  MKDOCS_MATERIAL_VERSION: '9.7.6'
+
 jobs:
   build-site:
     name: Build documentation site
@@ -31,34 +34,38 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             latexmk \
             lmodern \
-            poppler-utils \
             texlive-fonts-recommended \
             texlive-latex-base \
             texlive-latex-extra \
             texlive-latex-recommended \
             texlive-pictures
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "mkdocs-material==${MKDOCS_MATERIAL_VERSION}"
 
       - name: Build docs and examples
         run: |
-          latexmk -pdf -interaction=nonstopmode -halt-on-error docs/corasdiagram-doc.tex
-          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
-          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
-          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-high-level-analysis-table.tex
-          latexmk -pdf -interaction=nonstopmode -halt-on-error examples/corasdiagram-website-examples.tex
+          (
+            cd examples
+            export TEXINPUTS=../tex/latex//:
+            for tex in *.tex; do
+              latexmk -pdf -interaction=nonstopmode -halt-on-error "$tex"
+            done
+          )
+          (
+            cd manual
+            export TEXINPUTS=../tex/latex//:
+            latexmk -pdf -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex
+          )
 
       - name: Build Pages site
         run: |
-          python3 tools/build_site.py \
-            --docs-pdf docs/corasdiagram-doc.pdf \
-            --demo-pdf examples/corasdiagram-demo.pdf \
-            --minimal-pdf examples/corasdiagram-minimal.pdf \
-            --website-examples-pdf examples/corasdiagram-website-examples.pdf \
-            --analysis-table-pdf examples/corasdiagram-high-level-analysis-table.pdf
+          python3 tools/stage_mkdocs_assets.py --doc-pdf manual/corasdiagram-doc.pdf
+          mkdocs build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: dist/site
+          path: site
 
   deploy-pages:
     name: Deploy GitHub Pages

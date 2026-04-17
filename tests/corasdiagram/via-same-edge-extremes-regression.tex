@@ -1,0 +1,29 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=10mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\section*{Same-Edge Via Marker Extremes}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=1.35cm,y=1.35cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=see-short-source,at={(0,0)}]{Hacker}
+  \scenario[id=see-short-target,at={(4.8,0)}]{Attacker reaches\\control system}
+
+  \cause{see-short-source -> see-short-target}[via={Weak authentication, Unpatched firmware, Poor security design, No input validation, Inadequate network segregation}]
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasthreatdiagram}[x=1.05cm,y=1.05cm,layout=manual,min edge gap=8mm]
+  \threat(deliberate)[id=see-long-source,at={(0,0)}]{State actors}
+  \scenario[id=see-long-target,at={(16.0,0)}]{Manipulated navigation\\commands executed}
+
+  \cause{see-long-source -> see-long-target}[via={Weak authentication and insecure remote access, Insufficient end-to-end integrity validation}]
+\end{corasthreatdiagram}
+\end{center}
+
+\end{document}

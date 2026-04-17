@@ -1,0 +1,28 @@
+\begin{center}
+\begin{corastreatmentdiagram}[x=.95cm,y=.95cm,layout=manual,min edge gap=10mm]
+  \threat(nonhuman)[id=virus,at={(0,0)}]{Computer virus}
+  \vulnerability[id=old_av,at={(3.0,0)}]{Virus protection not up to date}
+  \threatscenario[
+    id=infection,
+    at={(8.0,0)},
+    likelihood=possible,
+    likelihood basis={1,2:1y}
+  ]{Server is infected by computer virus}
+  \risk[
+    id=down,
+    at={(14.2,0)},
+    risk ref=R3,
+    risk level=unacceptable
+  ]{Server goes down}
+  \asset(direct)[id=availability,at={(20.2,0)}]{Availability of server}
+  \treatmentscenario[
+    id=update,
+    at={(8.0,4.6)}
+  ]{Implement new routines for updating virus protection}
+
+  \initiates{virus -> infection}[vulnerability={old_av}]
+  \leadsto{infection -> down}[conditional likelihood={0.2}]
+  \impacts{down -> availability}[consequence={high}]
+  \treats{update -> old_av}[treatment category={Reduce likelihood}]
+\end{corastreatmentdiagram}
+\end{center}

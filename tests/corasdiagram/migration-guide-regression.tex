@@ -1,0 +1,81 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company]{Company}
+  \asset[id=availability]{Availability of server}
+  \indirectasset[id=reputation]{Company's reputation}
+  \concern{company -> availability}[asset value=critical]
+  \relate{availability -> reputation}
+\end{corasassetdiagram}
+
+\newpage
+
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company]{Company}
+  \asset(direct)[id=availability]{Availability of server}
+  \asset(indirect)[id=reputation]{Company's reputation}
+  \assigns{company -> availability}[asset value=critical]
+  \harms{availability -> reputation}
+\end{corasassetdiagram}
+
+\newpage
+
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \threat(nonhuman)[id=virus]{Computer virus}
+  \scenario[id=infection]{Server is infected}
+  \incident[id=down]{Server goes down}
+  \cause{virus -> infection}[vulnerability={Virus protection not up to date}]
+  \cause{infection -> down}[conditional likelihood=0.2]
+\end{corasthreatdiagram}
+
+\newpage
+
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \threat(nonhuman)[id=virus]{Computer virus}
+  \threatscenario[id=infection]{Server is infected}
+  \unwantedincident[id=down]{Server goes down}
+  \initiates{virus -> infection}[vulnerability={Virus protection not up to date}]
+  \leadsto{infection -> down}[conditional likelihood=0.2]
+\end{corasthreatdiagram}
+
+\newpage
+
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \threat(deliberate)[id=hacker]{Hacker}
+  \risk[id=r1,risk id=R1,risk level=unacceptable]{Disclosure of data}
+  \asset(direct)[id=privacy]{Data privacy}
+  \initiates{hacker -> r1}
+  \impact{r1 -> privacy}
+\end{corasriskdiagram}
+
+\newpage
+
+\begin{corasriskdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \threat(deliberate)[id=hacker]{Hacker}
+  \risk[id=r1,risk ref=R1,risk level=unacceptable]{Disclosure of data}
+  \asset(direct)[id=privacy]{Data privacy}
+  \initiates{hacker -> r1}
+  \impacts{r1 -> privacy}
+\end{corasriskdiagram}
+
+\newpage
+
+\begin{corastreatmentoverviewdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=r1,risk id=R1,risk level=unacceptable]{Credential theft}
+  \treatment[id=t1]{Hardware keys}
+  \treat{t1 -> r1}[treatment category={Reduce likelihood}]
+\end{corastreatmentoverviewdiagram}
+
+\newpage
+
+\begin{corastreatmentdiagram}[mode=overview,x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=r1,risk ref=R1,risk level=unacceptable]{Credential theft}
+  \treatmentscenario[id=t1]{Hardware keys}
+  \treats{t1 -> r1}[treatment category={Reduce likelihood}]
+\end{corastreatmentdiagram}
+
+\end{document}

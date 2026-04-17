@@ -1,0 +1,85 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=10mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\section*{Typed DSL Regression}
+
+\begin{center}
+\begin{corasassetdiagram}[x=.92cm,y=.92cm,asset columns=3]
+  \stakeholder[id=td-stakeholder,scope=td-asset-scope]{Stakeholder}
+  \asset[id=td-asset,scope=td-asset-scope]{Core\\asset}
+  \indirectasset[id=td-indirect,scope=td-asset-scope,order=2]{Reputation}
+  \asset[id=td-support,scope=td-asset-scope,order=3]{Supporting\\asset}
+
+  \corasscope[
+    name=td-asset-box,
+    scope=td-asset-scope,
+    kind=asset-scope,
+    stakeholder=td-stakeholder,
+    stakeholder corner=left
+  ]
+
+  \relate{td-asset -> td-indirect}
+  \relate{td-support -> td-asset}
+\end{corasassetdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.88cm,y=.88cm]
+  \lane{1}{
+    \threat(deliberate)[id=td-hacker]{Hacker}
+    \vulnerability[id=td-unpatched]{Unpatched\\system}
+    \vulnerability[id=td-poor-design]{Poor security\\design}
+    \scenario[id=td-malware]{Malware installed\\in ECDIS}
+    \incident[id=td-down]{ECDIS\\unavailable}
+  }
+  \lane{2}{
+    \threat(accidental)[id=td-operator]{Operator}
+    \scenario[id=td-human]{Human\\error}
+    \incident[id=td-degraded]{ECDIS\\degraded}
+  }
+  \lane{3}{
+    \threat(nonhuman)[id=td-sensor]{Sensor\\fault}
+    \scenario[id=td-signal]{Signal\\loss}
+  }
+
+  \asset[id=td-service,right of=td-degraded]{ECDIS integrity\\and availability}
+
+  \cause{td-hacker -> td-malware}[via={td-unpatched,td-poor-design}]
+  \cause{{td-operator,td-sensor} -> td-human}
+  \cause{td-malware -> {td-down,td-degraded}}
+  \cause{td-human -> td-degraded}
+  \impact{{td-down,td-degraded} -> td-service}
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+
+\begin{center}
+\begin{corasriskdiagram}[x=.88cm,y=.88cm]
+  \lane{1}{
+    \threat(nonhuman)[id=td-system]{System\\failure}
+    \vulnerability[id=td-immature]{Immature\\technology}
+    \vulnerability[id=td-poor-ops]{Weak change\\control}
+    \scenario[id=td-web,likelihood={rare}]{Web application\\goes down}
+  }
+  \lane{2}{
+    \vulnerability[id=td-network-vuln]{Unstable network\\connection}
+    \scenario[id=td-network,likelihood={unlikely}]{Loss of network\\connection}
+    \incident[id=td-store-down,likelihood={rare}]{Online store down due\\to system failure}
+    \asset[id=td-store]{Online\\store}
+  }
+
+  \cause{td-system -> td-web}[via={td-immature,td-poor-ops}]
+  \cause{td-system -> td-network}[via={td-network-vuln}]
+  \cause{td-web -> td-store-down}[probability={0.9}]
+  \cause{td-network -> td-store-down}[probability={0.2}]
+  \impact{td-store-down -> td-store}[consequence={major}]
+\end{corasriskdiagram}
+\end{center}
+
+\end{document}

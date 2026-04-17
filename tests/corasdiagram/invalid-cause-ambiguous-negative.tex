@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasthreatdiagram}
+  \vulnerability[id=v1]{Weak authentication}
+  \threatscenario[id=s1]{Remote access}
+  \cause{v1 -> s1}
+\end{corasthreatdiagram}
+
+\end{document}

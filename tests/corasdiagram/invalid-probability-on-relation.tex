@@ -1,0 +1,14 @@
+\documentclass{article}
+
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{corasriskdiagram}
+  \corasrisk[name=risk,title={Risk}]
+  \corasasset[name=asset,title={Asset}]
+  \corasrelates[from=risk,to=asset,probability={0.9}]
+\end{corasriskdiagram}
+
+\end{document}

@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corastreatmentdiagram}[mode=overview]
+  \treatmentscenario[id=t1]{Install monitoring software}
+  \asset(direct)[id=a1]{Confidentiality of information}
+  \treats{t1 -> a1}[treatment category={Reduce consequence}]
+\end{corastreatmentdiagram}
+
+\end{document}

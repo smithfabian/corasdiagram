@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company-a,scope=asset-scope]{Company A}
+  \party[id=company-b]{Company B}
+  \asset(direct)[id=availability,scope=asset-scope]{Availability of server}
+  \asset(direct)[id=confidentiality,scope=asset-scope,order=2]{Confidentiality of information}
+  \asset(indirect)[id=reputation,scope=asset-scope,order=3]{Company reputation}
+
+  \corasscope[
+    name=asset-box,
+    scope=asset-scope,
+    kind=asset-scope,
+    party=company-a,
+    party corner=left
+  ]
+
+  \assigns{company-a -> availability}[asset value=critical]
+  \assigns{company-a -> confidentiality}[asset value=high]
+  \assigns{company-a -> reputation}
+  \assigns{company-b -> availability}[asset value=medium]
+  \harms{availability -> reputation}
+  \harms{confidentiality -> reputation}
+\end{corasassetdiagram}
+
+\end{document}

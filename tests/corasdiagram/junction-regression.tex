@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=10mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\section*{Junction Regression}
+
+\subsection*{1. Asset Diagram}
+\begin{center}
+\begin{corasassetdiagram}[x=.9cm,y=.9cm]
+  \stakeholder[id=asset-stakeholder]{Operations}
+  \junction[id=asset-junction]
+  \asset[id=asset-primary]{Core\\service}
+  \concern{asset-stakeholder -> asset-junction}
+  \concern{asset-junction -> asset-primary}
+  \relate{asset-primary -> asset-junction}
+\end{corasassetdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{2. Threat Diagram}
+\begin{center}
+\begin{corasthreatdiagram}[x=.9cm,y=.9cm]
+  \corasthreatdeliberate[name=threat-source,title={Attacker}]
+  \corasscenario[name=threat-scenario-a,order=1,title={Exploit\\channel A}]
+  \corasscenario[name=threat-scenario-b,order=2,title={Exploit\\channel B}]
+  \corasjunction[name=threat-junction]
+  \corasunwantedincident[name=threat-incident,title={Service\\degraded}]
+  \corasasset[name=threat-asset,title={Service}]
+  \corascauses[from=threat-source,to=threat-scenario-a]
+  \corascauses[from=threat-source,to=threat-scenario-b]
+  \corascauses[from=threat-scenario-a,to=threat-junction]
+  \corascauses[from=threat-scenario-b,to=threat-junction]
+  \corascauses[from=threat-junction,to=threat-incident]
+  \corasrelates[from=threat-incident,to=threat-asset]
+\end{corasthreatdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{3. Risk Diagram}
+\begin{center}
+\begin{corasriskdiagram}[x=.9cm,y=.9cm]
+  \threat(deliberate)[id=risk-source]{Attacker}
+  \risk[id=risk-node,level=medium]{Session\\failure}
+  \junction[id=risk-junction]
+  \asset[id=risk-asset]{Portal}
+  \cause{risk-source -> risk-node}
+  \impact{risk-node -> risk-junction}
+  \impact{risk-junction -> risk-asset}
+\end{corasriskdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{4. Detailed Risk Diagram}
+\begin{center}
+\begin{corasriskdiagram}[x=.9cm,y=.9cm]
+  \threat(nonhuman)[id=drisk-source]{System\\failure}
+  \scenario[id=drisk-scenario-a]{Signal loss}
+  \scenario[id=drisk-scenario-b]{Clock drift}
+  \junction[id=drisk-junction]
+  \incident[id=drisk-incident]{Position\\degraded}
+  \asset[id=drisk-asset]{GNSS}
+  \cause{drisk-source -> drisk-scenario-a}
+  \cause{drisk-source -> drisk-scenario-b}
+  \cause{drisk-scenario-a -> drisk-junction}
+  \cause{drisk-scenario-b -> drisk-junction}
+  \cause{drisk-junction -> drisk-incident}
+  \impact{drisk-incident -> drisk-asset}
+\end{corasriskdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{5. Treatment Diagram}
+\begin{center}
+\begin{corastreatmentdiagram}[x=.9cm,y=.9cm]
+  \threat(deliberate)[id=treat-source]{Attacker}
+  \scenario[id=treat-scenario]{Remote\\access}
+  \junction[id=treat-junction]
+  \risk[id=treat-risk,risk id=R2,level=medium]{Disclosure}
+  \asset[id=treat-asset]{Data}
+  \treatment[id=treat-action]{Patch\\service}
+  \cause{treat-source -> treat-scenario}
+  \cause{treat-scenario -> treat-junction}
+  \cause{treat-junction -> treat-risk}
+  \impact{treat-risk -> treat-asset}
+  \treat{treat-action -> treat-junction}
+\end{corastreatmentdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{6. Treatment Overview Diagram}
+\begin{center}
+\begin{corastreatmentoverviewdiagram}[x=.9cm,y=.9cm]
+  \corasrisk[name=overview-risk,title={Disclosure\\of data},level=unacceptable]
+  \corasasset[name=overview-asset,title={Data\\privacy}]
+  \corasjunction[name=overview-junction]
+  \corastreatment[name=overview-treatment-a,title={Limit\\access}]
+  \corastreatment[name=overview-treatment-b,title={Upgrade\\server}]
+  \corasrelates[from=overview-risk,to=overview-junction]
+  \corasrelates[from=overview-junction,to=overview-asset]
+  \corastreats[from=overview-treatment-a,to=overview-junction]
+  \corastreats[from=overview-treatment-b,to=overview-junction]
+  \corastreats[from=overview-junction,to=overview-risk]
+\end{corastreatmentoverviewdiagram}
+\end{center}
+
+\end{document}

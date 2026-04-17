@@ -5,34 +5,18 @@
 \usepackage[margin=18mm]{geometry}
 \usepackage{corasdiagram}
 \pagestyle{empty}
+\newcommand{\examplefragment}[1]{%
+  \IfFileExists{examples/fragments/#1}{%
+    \input{examples/fragments/#1}%
+  }{%
+    \input{fragments/#1}%
+  }%
+}
 
 \begin{document}
 
 \section*{High-Level Analysis Table}
 
-\begin{corashighlevelanalysistable}[
-  caption={Documenting the high-level analysis},
-  label={tab:high-level-analysis}
-]
-  \corashighlevelanalysisrow
-    {Hacker}
-    {Breaks into system and compromises integrity\\or confidentiality of databases}
-    {Use of web application and remote access;\\insufficient access control}
-
-  \corashighlevelanalysisrow
-    {Employee}
-    {Sloppiness compromises integrity\\or confidentiality of databases}
-    {Lack of competence;\\work processes not aligned with policy}
-
-  \corashighlevelanalysisrow
-    {System failure}
-    {Online store goes down because of failure of\\web application or loss of network connection}
-    {Immature technology;\\loss of network connection}
-
-  \corashighlevelanalysisrow
-    {Employee}
-    {Collection and processing of personal data\\diverge from data protection laws}
-    {Lack of competence on data protection laws;\\insufficient routines for processing personal data}
-\end{corashighlevelanalysistable}
+\examplefragment{corasdiagram-high-level-analysis-table-fragment.tex}
 
 \end{document}

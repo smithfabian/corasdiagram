@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasthreatdiagram}
+  \threat(nonhuman)[id=virus]{Computer virus}
+  \threatscenario[id=s1]{Infection}
+  \unwantedincident[id=i1]{Service outage}
+  \leadsto{s1 -> i1}[probability={0.2}]
+\end{corasthreatdiagram}
+
+\end{document}

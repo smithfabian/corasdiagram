@@ -1,0 +1,22 @@
+\begin{center}
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company,scope=asset-scope]{Company}
+  \asset(direct)[id=availability,scope=asset-scope]{Availability of server}
+  \asset(direct)[id=confidentiality,scope=asset-scope,order=2]{Confidentiality of information}
+  \asset(indirect)[id=reputation,scope=asset-scope,order=3]{Company's reputation}
+
+  \corasscope[
+    name=asset-box,
+    scope=asset-scope,
+    kind=asset-scope,
+    party=company,
+    party corner=left
+  ]
+
+  \assigns{company -> availability}[asset value=critical]
+  \assigns{company -> confidentiality}[asset value=critical]
+  \assigns{company -> reputation}
+  \harms{availability -> reputation}
+  \harms{confidentiality -> reputation}
+\end{corasassetdiagram}
+\end{center}

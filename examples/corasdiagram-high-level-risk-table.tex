@@ -1,0 +1,22 @@
+% Compile from the repository root:
+%   TEXINPUTS=tex/latex//: pdflatex examples/corasdiagram-high-level-risk-table.tex
+\documentclass[a4paper]{article}
+
+\usepackage[margin=18mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+\newcommand{\examplefragment}[1]{%
+  \IfFileExists{examples/fragments/#1}{%
+    \input{examples/fragments/#1}%
+  }{%
+    \input{fragments/#1}%
+  }%
+}
+
+\begin{document}
+
+\section*{High-Level Risk Table}
+
+\examplefragment{corasdiagram-high-level-risk-table-fragment.tex}
+
+\end{document}

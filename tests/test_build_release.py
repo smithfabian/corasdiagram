@@ -54,10 +54,15 @@ class BuildReleaseTests(unittest.TestCase):
         completed = mock.Mock()
         completed.stdout = "\n".join(
             [
+                "examples/corasdiagram-asset-diagram.tex",
                 "examples/corasdiagram-demo.tex",
                 "examples/corasdiagram-high-level-analysis-table.tex",
+                "examples/corasdiagram-high-level-risk-table.tex",
                 "examples/corasdiagram-minimal.tex",
-                "examples/corasdiagram-website-examples.tex",
+                "examples/corasdiagram-risk-diagram.tex",
+                "examples/corasdiagram-threat-diagram.tex",
+                "examples/corasdiagram-treatment-diagram.tex",
+                "examples/corasdiagram-treatment-overview-diagram.tex",
                 "examples/ignored.pdf",
             ]
         )
@@ -69,10 +74,15 @@ class BuildReleaseTests(unittest.TestCase):
         self.assertEqual(
             stems,
             [
+                "corasdiagram-asset-diagram",
                 "corasdiagram-demo",
                 "corasdiagram-high-level-analysis-table",
+                "corasdiagram-high-level-risk-table",
                 "corasdiagram-minimal",
-                "corasdiagram-website-examples",
+                "corasdiagram-risk-diagram",
+                "corasdiagram-threat-diagram",
+                "corasdiagram-treatment-diagram",
+                "corasdiagram-treatment-overview-diagram",
             ],
         )
 
@@ -126,8 +136,12 @@ class BuildReleaseTests(unittest.TestCase):
             source_dir = repo_root / "examples"
             dest_dir = Path(temp_dir) / "bundle"
             source_dir.mkdir()
+            (source_dir / "fragments").mkdir()
             (source_dir / "example.tex").write_text("% example", encoding="utf-8")
             (source_dir / "example.pdf").write_bytes(b"%PDF-1.4\n")
+            (source_dir / "fragments" / "fragment.tex").write_text(
+                "% fragment", encoding="utf-8"
+            )
             (source_dir / "stray.pdf").write_bytes(b"%PDF-1.4\n")
 
             self.build_release.copy_example_artifacts(
@@ -136,6 +150,7 @@ class BuildReleaseTests(unittest.TestCase):
 
             self.assertTrue((dest_dir / "example.tex").exists())
             self.assertTrue((dest_dir / "example.pdf").exists())
+            self.assertTrue((dest_dir / "fragments" / "fragment.tex").exists())
             self.assertFalse((dest_dir / "stray.pdf").exists())
 
     def test_copy_example_artifacts_accepts_root_level_pdf_outputs(self) -> None:

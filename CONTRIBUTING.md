@@ -28,8 +28,8 @@ Workflow boundaries:
 - `CI` validates pull requests and pushes to `main`/`master`.
 - `Pages` deploys the static documentation site from `main`.
 - `Release` runs only for pushed tags matching `v*`.
-- The first CTAN submission is expected to be done manually. Later CTAN updates
-  can run through the tagged release workflow.
+- The package is now live on [CTAN](https://ctan.org/pkg/corasdiagram), so
+  later tagged releases can continue through the gated release workflow.
 
 ## Canonical Sources and Generated Files
 
@@ -74,6 +74,7 @@ Local development expects:
 - `lualatex`
 - `latexmk`
 - `pdftoppm` for rasterized screenshot generation
+- `mkdocs-material` for the published documentation site
 - `cairosvg` only when rebuilding generated icon PDFs from the source SVG files
 - `actionlint` when editing GitHub Actions workflows
 
@@ -87,16 +88,19 @@ Build the minimal example:
 TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
 ```
 
-Build the full demo:
+Build the tracked examples:
 
 ```bash
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
+(cd examples && TEXINPUTS=../tex/latex//: \
+  for tex in *.tex; do
+    latexmk -pdf -interaction=nonstopmode -halt-on-error "$tex"
+  done)
 ```
 
 Build the manual:
 
 ```bash
-(cd docs && TEXINPUTS=../tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
+(cd manual && TEXINPUTS=../tex/latex//: latexmk -pdf -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
 ```
 
 Build with LuaLaTeX:
@@ -107,6 +111,12 @@ TEXINPUTS=tex/latex//: TEXMFVAR=/tmp/corasdiagram-texmf TEXMFCACHE=/tmp/corasdia
 ```
 
 ### Run semantic and visual regressions
+
+Run the semantic release gate:
+
+```bash
+python3 tools/check_release_gate.py
+```
 
 Run the semantic failure fixtures:
 
@@ -159,20 +169,21 @@ Build the manual and the canonical example PDFs before assembling the release
 bundle:
 
 ```bash
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-minimal.tex
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-demo.tex
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-high-level-analysis-table.tex
-TEXINPUTS=tex/latex//: pdflatex -interaction=nonstopmode -halt-on-error examples/corasdiagram-website-examples.tex
+(cd examples && TEXINPUTS=../tex/latex//: \
+  for tex in *.tex; do
+    latexmk -pdf -interaction=nonstopmode -halt-on-error "$tex"
+  done)
+(cd manual && TEXINPUTS=../tex/latex//: latexmk -pdf -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
 ```
 
 Then build the CTAN release bundle:
 
 ```bash
-python3 tools/build_release.py --doc-pdf docs/corasdiagram-doc.pdf
+python3 tools/build_release.py --doc-pdf manual/corasdiagram-doc.pdf
 ```
 
-Optionally validate the rebuilt archive against the CTAN API before uploading
-it manually:
+Optionally validate the rebuilt archive against the CTAN API before approving
+or manually uploading it:
 
 ```bash
 python3 tools/upload_ctan.py \
@@ -186,12 +197,8 @@ python3 tools/upload_ctan.py \
 Generate the static documentation site after compiling the examples and manual:
 
 ```bash
-python3 tools/build_site.py \
-  --docs-pdf docs/corasdiagram-doc.pdf \
-  --demo-pdf examples/corasdiagram-demo.pdf \
-  --minimal-pdf examples/corasdiagram-minimal.pdf \
-  --website-examples-pdf examples/corasdiagram-website-examples.pdf \
-  --analysis-table-pdf examples/corasdiagram-high-level-analysis-table.pdf
+python3 tools/stage_mkdocs_assets.py --doc-pdf manual/corasdiagram-doc.pdf
+mkdocs build
 ```
 
 If you edit workflow files, lint them:
@@ -205,10 +212,12 @@ actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflow
 ### Public API or notation change
 
 - update the package source, examples, and the manual together
+- update [`docs/semantic-api-migration.md`](docs/semantic-api-migration.md)
+  when the migration story or compatibility boundary changed
 - update [`README.md`](README.md) if the user-facing setup, supported API, or
   workflow summary changed
 - update [`CHANGELOG.md`](CHANGELOG.md) for public-facing behavior changes
-- run the relevant TeX builds plus semantic and visual checks
+- run `python3 tools/check_release_gate.py`
 - add or update negative semantic fixtures if the change affects validation
 
 ### Visual or layout change
@@ -228,9 +237,10 @@ actionlint .github/workflows/ci.yml .github/workflows/pages.yml .github/workflow
 ### Docs-only change
 
 - update the relevant repo docs and/or the package manual
-- build the manual if `docs/corasdiagram-doc.tex` changed
+- build the manual if `manual/corasdiagram-doc.tex` changed
+- build the MkDocs site if public docs under `docs/` changed
 - keep repo-facing contributor/runbook material in `README.md` and
-  `CONTRIBUTING.md`, not in the package manual
+  `CONTRIBUTING.md`, not in the package manual or the public docs site
 
 ### Release or version change
 
@@ -269,6 +279,7 @@ Release behavior:
   `CTAN_UPLOADER_EMAIL`
 - the `ctan-release` environment requires review by `smithfabian`, so the CTAN
   upload job cannot read those values or continue without approval
+- the package is now published at [ctan.org/pkg/corasdiagram](https://ctan.org/pkg/corasdiagram)
 - [`ctan/metadata.json`](ctan/metadata.json) keeps the committed CTAN package
   metadata, including the selected topics (`diagram`, `pgf-tikz`) and the
   announcement URL used for manual/reference purposes

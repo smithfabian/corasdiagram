@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage[margin=16mm]{geometry}
+\usepackage{corasdiagram}
+
+\begin{document}
+
+\begin{corasassetdiagram}[x=.95cm,y=.95cm,asset columns=3]
+  \party[id=company,scope=asset-scope]{Company}
+  \asset[id=availability,scope=asset-scope]{Availability of server}
+  \indirectasset[id=reputation,scope=asset-scope,order=2]{Company reputation}
+  \corasscope[name=asset-box,scope=asset-scope,kind=asset-scope,party=company,party corner=left]
+  \concern{company -> availability}[asset value=critical]
+  \concern{company -> reputation}
+  \relate{availability -> reputation}
+\end{corasassetdiagram}
+
+\newpage
+
+\begin{corasthreatdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \threat(deliberate)[id=h1]{Hacker}
+  \scenario[id=s1,likelihood=Possible,likelihood basis={1,2:1y}]{Remote access}
+  \incident[id=i1,risk id=R1]{Disclosure of data}
+  \asset[id=privacy]{Data privacy}
+  \cause{h1 -> s1}
+  \cause{s1 -> i1}[conditional likelihood={0.5}]
+  \impact{i1 -> privacy}[consequence={high}]
+\end{corasthreatdiagram}
+
+\newpage
+
+\begin{corastreatmentoverviewdiagram}[x=.95cm,y=.95cm,min edge gap=10mm]
+  \risk[id=r1,risk-id=R2,risk level=unacceptable]{Service outage}
+  \risk[id=r2,riskid=R3,risk level=acceptable]{Session hijack}
+  \asset[id=privacy]{Data privacy}
+  \treatment[id=t1]{Install monitoring software}
+  \treat{t1 -> r1}[treatment category={Reduce consequence}]
+  \relate{r2 -> privacy}
+\end{corastreatmentoverviewdiagram}
+
+\end{document}

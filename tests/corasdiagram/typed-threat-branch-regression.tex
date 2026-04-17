@@ -1,0 +1,108 @@
+\documentclass[a4paper,landscape]{article}
+\usepackage[margin=10mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\section*{Typed Threat Branch Regression}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.78cm,y=.78cm,min edge gap=8mm]
+  \lane{1}{
+    \threat(deliberate)[id=threat-delib-hacker-malware]{Hacker}
+    \vulnerability[id=vuln-unpatched-system]{Unpatched\\system}
+    \vulnerability[id=vuln-poor-security-design]{Poor security\\design}
+    \scenario[id=scenario-unauthorized-access]{Unauthorised\\access to the\\system}
+    \vulnerability[id=vuln-easy-admin-permission]{Easy way to get\\admin permission}
+    \vulnerability[id=vuln-sensor-integrity-not-checked]{Not checking the integrity\\of sensor data}
+    \scenario[id=scenario-malware-in-ecdis]{Malware in ECDIS\\system}
+    \scenario[id=scenario-sensor-data-manipulation]{Sensor data\\manipulation}
+    \incident[id=ui-ecdis-unavailable]{ECDIS system\\not available}
+  }
+
+  \lane{2}{
+    \threat(nonhuman)[id=threat-nonhuman-hardware]{Non Human Threat}
+    \vulnerability[id=vuln-substandard-materials]{Substandard materials used\\to produce hardware}
+    \scenario[id=scenario-hardware-error]{Hardware error}
+    \incident[id=ui-ecdis-degraded]{ECDIS system\\degraded}
+  }
+
+  \lane{3}{
+    \threat(accidental)[id=threat-accidental-crew-member]{Crew member}
+    \vulnerability[id=vuln-overworked-or-untrained-staff]{Overworked staff/staff that\\lacks knowledge}
+    \scenario[id=scenario-human-error]{Human error}
+    \incident[id=ui-ecdis-false-data]{ECDIS system\\displaying false data}
+  }
+
+  \asset[id=asset-ecdis-integrity-and-availability,right of=ui-ecdis-degraded]{ECDIS integrity\\and availability}
+
+  \cause{threat-delib-hacker-malware -> scenario-unauthorized-access}[via={vuln-unpatched-system,vuln-poor-security-design}]
+  \cause{scenario-unauthorized-access -> scenario-malware-in-ecdis}[via={vuln-easy-admin-permission}]
+  \cause{scenario-unauthorized-access -> scenario-sensor-data-manipulation}[via={vuln-sensor-integrity-not-checked}]
+  \cause{threat-nonhuman-hardware -> scenario-hardware-error}[via={vuln-substandard-materials}]
+  \cause{threat-accidental-crew-member -> scenario-human-error}[via={vuln-overworked-or-untrained-staff}]
+
+  \cause{{scenario-malware-in-ecdis,scenario-sensor-data-manipulation,scenario-hardware-error} -> ui-ecdis-unavailable}
+  \cause{{scenario-malware-in-ecdis,scenario-sensor-data-manipulation,scenario-hardware-error,scenario-human-error} -> ui-ecdis-degraded}
+  \cause{{scenario-sensor-data-manipulation,scenario-hardware-error,scenario-human-error} -> ui-ecdis-false-data}
+
+  \impact{ui-ecdis-unavailable -> asset-ecdis-integrity-and-availability}
+  \impact{ui-ecdis-degraded -> asset-ecdis-integrity-and-availability}
+  \impact{ui-ecdis-false-data -> asset-ecdis-integrity-and-availability}
+\end{corasthreatdiagram}
+\end{center}
+
+\newpage
+\section*{Typed Threat Unlaned Centering Regression}
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.78cm,y=.78cm,min edge gap=8mm]
+  \threat(deliberate)[id=unlaned-hacker]{Hacker}
+  \scenario[id=unlaned-malware]{Malware in\\ECDIS}
+  \incident[id=unlaned-outage]{ECDIS\\outage}
+
+  \threat(nonhuman)[id=unlaned-nonhuman]{Non Human\\Threat}
+  \scenario[id=unlaned-failure]{Hardware\\failure}
+  \incident[id=unlaned-degraded]{ECDIS\\degraded}
+
+  \asset[id=unlaned-asset-a]{Navigation\\safety}
+  \asset[id=unlaned-asset-b]{Operational\\continuity}
+
+  \cause{unlaned-hacker -> unlaned-malware}[via={{Weak access control}}]
+  \cause{unlaned-nonhuman -> unlaned-failure}[via={{Single point of failure}}]
+  \cause{unlaned-malware -> unlaned-outage}
+  \cause{unlaned-failure -> unlaned-degraded}
+  \impact{unlaned-outage -> unlaned-asset-a}
+  \impact{unlaned-degraded -> unlaned-asset-b}
+\end{corasthreatdiagram}
+\end{center}
+
+\bigskip
+
+\begin{center}
+\begin{corasthreatdiagram}[x=.78cm,y=.78cm,min edge gap=8mm]
+  \lane{1}{
+    \threat(deliberate)[id=lane-hacker]{Hacker}
+    \scenario[id=lane-malware]{Malware\\installed}
+  }
+
+  \threat(nonhuman)[id=floating-nonhuman]{System\\failure}
+  \scenario[id=floating-outage]{Service\\outage}
+
+  \incident[id=shared-impact-a]{ECDIS\\degraded}
+  \incident[id=shared-impact-b]{ECDIS\\unavailable}
+  \asset[id=shared-asset-a]{ECDIS\\availability}
+  \asset[id=shared-asset-b]{Operational\\continuity}
+
+  \cause{lane-hacker -> lane-malware}[via={{Unpatched system}}]
+  \cause{floating-nonhuman -> floating-outage}[via={{No redundancy}}]
+  \cause{lane-malware -> shared-impact-a}
+  \cause{floating-outage -> shared-impact-a}
+  \cause{lane-malware -> shared-impact-b}
+  \cause{floating-outage -> shared-impact-b}
+  \impact{shared-impact-a -> shared-asset-a}
+  \impact{shared-impact-b -> shared-asset-b}
+\end{corasthreatdiagram}
+\end{center}
+
+\end{document}

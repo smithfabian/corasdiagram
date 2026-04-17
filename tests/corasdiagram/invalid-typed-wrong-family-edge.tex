@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+\begin{corasassetdiagram}
+  \asset[id=asset]{Core asset}
+  \indirectasset[id=indirect]{Reputation}
+  \cause{asset -> indirect}
+\end{corasassetdiagram}
+\end{document}

@@ -1,0 +1,111 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=18mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+
+\begin{document}
+
+\section*{Detailed Risk Diagram Regression Fixture}
+
+\subsection*{1. Detailed Risk Chain}
+\begin{center}
+\begin{corasriskdiagram}[x=.82cm,y=.82cm]
+  \corasthreatnonhuman[
+    name=system-failure,
+    order=1,
+    title={System\\failure}
+  ]
+  \corasvulnerability[
+    name=immature-tech,
+    order=1,
+    title={Immature\\technology}
+  ]
+  \corasscenario[
+    name=web-down,
+    order=1,
+    title={Web application\\goes down},
+    likelihood={rare}
+  ]
+  \corasvulnerability[
+    name=unstable-network,
+    order=2,
+    title={Unstable network\\connection}
+  ]
+  \corasscenario[
+    name=network-loss,
+    order=2,
+    title={Loss of network\\connection},
+    likelihood={unlikely}
+  ]
+  \corasunwantedincident[
+    name=store-down,
+    order=1,
+    title={Online store down due\\to system failure},
+    likelihood={rare}
+  ]
+  \corasasset[
+    name=online-store,
+    order=1,
+    title={Online\\store}
+  ]
+
+  \corascauses[from=system-failure,to=immature-tech]
+  \corascauses[from=immature-tech,to=web-down]
+  \corascauses[from=system-failure,to=unstable-network]
+  \corascauses[from=unstable-network,to=network-loss]
+  \corascauses[from=web-down,to=store-down,probability={0.9}]
+  \corascauses[from=network-loss,to=store-down,probability={0.2}]
+  \corasrelates[from=store-down,to=online-store,consequence={major}]
+\end{corasriskdiagram}
+\end{center}
+
+\clearpage
+
+\subsection*{2. Mixed Explicit Risk Node}
+\begin{center}
+\begin{corasriskdiagram}[x=.82cm,y=.82cm]
+  \corasthreatdeliberate[
+    name=attacker,
+    order=1,
+    title={Attacker}
+  ]
+  \corasvulnerability[
+    name=weak-auth,
+    order=1,
+    title={Weak\\authentication}
+  ]
+  \corasscenario[
+    name=session-abuse,
+    order=1,
+    title={Privileged session\\abuse},
+    likelihood={possible}
+  ]
+  \corasunwantedincident[
+    name=data-exposure,
+    order=1,
+    title={Sensitive data\\exposed},
+    likelihood={rare}
+  ]
+  \corasasset[
+    name=customer-trust,
+    order=1,
+    title={Customer\\trust}
+  ]
+  \corasrisk[
+    name=summary-risk,
+    at={(6.0,5.7)},
+    title={Summary risk},
+    meta={portfolio view},
+    level=high
+  ]
+
+  \corascauses[from=attacker,to=weak-auth]
+  \corascauses[from=weak-auth,to=session-abuse]
+  \corascauses[from=session-abuse,to=data-exposure,probability={0.6}]
+  \corasrelates[from=data-exposure,to=customer-trust,consequence={high}]
+  \corasrelates[from=summary-risk,to=customer-trust,pos=.65]
+\end{corasriskdiagram}
+\end{center}
+
+\end{document}

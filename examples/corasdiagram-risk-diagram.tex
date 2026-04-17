@@ -1,0 +1,19 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=18mm]{geometry}
+\usepackage{corasdiagram}
+\pagestyle{empty}
+\newcommand{\examplefragment}[1]{%
+  \IfFileExists{examples/fragments/#1}{%
+    \input{examples/fragments/#1}%
+  }{%
+    \input{fragments/#1}%
+  }%
+}
+
+\begin{document}
+
+\section*{Risk Diagram}
+
+\examplefragment{corasdiagram-risk-diagram-fragment.tex}
+
+\end{document}
