@@ -50,4 +50,4 @@ Supported engines:
 \end{document}
 ```
 
-See the full compileable example sources in [examples/](examples/) and the complete family coverage in the [docs site](https://smithfabian.github.io/corasdiagram/complete-examples/).
+See the full compilable example sources in [examples/](examples/) and the complete family coverage in the [docs site](https://smithfabian.github.io/corasdiagram/complete-examples/).

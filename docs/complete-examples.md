@@ -1,6 +1,6 @@
 # Complete Examples
 
-The site publishes the canonical compileable example source and PDF for every diagram and table family.
+The site publishes the canonical compilable example source and PDF for every diagram and table family.
 
 ## Canonical family examples
 

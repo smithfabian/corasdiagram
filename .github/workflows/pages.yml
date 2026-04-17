@@ -14,6 +14,9 @@ permissions:
   id-token: write
   pages: write
 
+env:
+  MKDOCS_MATERIAL_VERSION: '9.7.6'
+
 jobs:
   build-site:
     name: Build documentation site
@@ -37,15 +40,22 @@ jobs:
             texlive-latex-recommended \
             texlive-pictures
           python3 -m pip install --upgrade pip
-          python3 -m pip install mkdocs-material
+          python3 -m pip install "mkdocs-material==${MKDOCS_MATERIAL_VERSION}"
 
       - name: Build docs and examples
         run: |
-          (cd examples && TEXINPUTS=../tex/latex//: \
+          (
+            cd examples
+            export TEXINPUTS=../tex/latex//:
             for tex in *.tex; do
               latexmk -pdf -interaction=nonstopmode -halt-on-error "$tex"
-            done)
-          (cd manual && TEXINPUTS=../tex/latex//: latexmk -pdf -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex)
+            done
+          )
+          (
+            cd manual
+            export TEXINPUTS=../tex/latex//:
+            latexmk -pdf -interaction=nonstopmode -halt-on-error corasdiagram-doc.tex
+          )
 
       - name: Build Pages site
         run: |
@@ -53,7 +63,7 @@ jobs:
           mkdocs build
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: site
 

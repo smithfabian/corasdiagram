@@ -8,9 +8,9 @@ Use this mode when the document should attach treatment scenarios directly to ri
 
 ```latex
 \begin{corastreatmentdiagram}[mode=overview]
-  \risk[id=r1,risk ref=R1,risk level=high]{Credential theft}
+  \risk[id=r1,risk ref=R1,risk level=unacceptable]{Credential theft}
   \treatmentscenario[id=t1]{Hardware keys}
-  \treats{t1 -> r1}[treatment category=reduce-likelihood]
+  \treats{t1 -> r1}[treatment category={Reduce likelihood}]
 \end{corastreatmentdiagram}
 ```
 

@@ -14,7 +14,7 @@ The preferred public API mirrors the formal English-prose semantics of the CORAS
 - [Semantic-First DSL](semantic-first-dsl/asset-diagrams.md): family-by-family canonical syntax.
 - [Complete Examples](complete-examples.md): download the full example sources and PDFs for every diagram and table family.
 - [Migration Guide](semantic-api-migration.md): move from the retained compatibility aliases to the canonical surface.
-- [Manual PDF](manual-pdf.md): printable reference manual with full compileable examples.
+- [Manual PDF](manual-pdf.md): printable reference manual with full compilable examples.
 
 ## Diagram and table families
 

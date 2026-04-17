@@ -45,21 +45,35 @@ def example_stems(repo_root: Path) -> list[str]:
     return sorted(stems)
 
 
+def allowed_output_root(repo_root: Path) -> Path:
+    return (repo_root / "docs" / "assets" / "generated").resolve()
+
+
+def validate_output_dir(repo_root: Path, output_dir: Path) -> Path:
+    output_root = output_dir.expanduser().resolve()
+    generated_root = allowed_output_root(repo_root)
+
+    if output_root == output_root.parent:
+        raise RuntimeError(f"Refusing to stage into filesystem root: {output_root}")
+    if output_root != generated_root and generated_root not in output_root.parents:
+        raise RuntimeError(
+            "Output dir must be the generated-docs tree or one of its descendants: "
+            f"{generated_root}"
+        )
+    return output_root
+
+
 def resolve_example_pdf(repo_root: Path, stem: str) -> Path:
-    candidates = (
-        repo_root / "examples" / f"{stem}.pdf",
-        repo_root / f"{stem}.pdf",
+    candidate = repo_root / "examples" / f"{stem}.pdf"
+    if candidate.is_file():
+        return candidate
+    raise RuntimeError(
+        f"Missing compiled example PDF for {stem} at {candidate}."
     )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    raise RuntimeError(f"Missing compiled example PDF for {stem}.")
 
 
-def main() -> int:
-    args = parse_args()
-    repo_root = Path(__file__).resolve().parents[1]
-    output_root = args.output_dir.expanduser().resolve()
+def stage_assets(repo_root: Path, doc_pdf: Path, output_dir: Path) -> Path:
+    output_root = validate_output_dir(repo_root, output_dir)
     manual_dir = output_root / "manual"
     examples_dir = output_root / "examples"
 
@@ -68,7 +82,7 @@ def main() -> int:
     manual_dir.mkdir(parents=True, exist_ok=True)
     examples_dir.mkdir(parents=True, exist_ok=True)
 
-    doc_pdf = args.doc_pdf.expanduser().resolve()
+    doc_pdf = doc_pdf.expanduser().resolve()
     if not doc_pdf.is_file():
         raise RuntimeError(f"Manual PDF not found: {doc_pdf}")
     shutil.copy2(doc_pdf, manual_dir / "corasdiagram-doc.pdf")
@@ -79,6 +93,13 @@ def main() -> int:
         shutil.copy2(tex_path, examples_dir / tex_path.name)
         shutil.copy2(pdf_path, examples_dir / pdf_path.name)
 
+    return output_root
+
+
+def main() -> int:
+    args = parse_args()
+    repo_root = Path(__file__).resolve().parents[1]
+    output_root = stage_assets(repo_root, args.doc_pdf, args.output_dir)
     print(f"staged MkDocs assets in {output_root}")
     return 0
 

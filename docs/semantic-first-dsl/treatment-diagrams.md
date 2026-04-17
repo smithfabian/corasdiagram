@@ -19,7 +19,7 @@ Canonical commands:
 \begin{corastreatmentdiagram}
   \vulnerability[id=old_av]{Virus protection not up to date}
   \treatmentscenario[id=update]{Implement new routines for updating virus protection}
-  \treats{update -> old_av}[treatment category=reduce-likelihood]
+  \treats{update -> old_av}[treatment category={Reduce likelihood}]
 \end{corastreatmentdiagram}
 ```
 

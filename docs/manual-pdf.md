@@ -10,4 +10,4 @@ The manual contains:
 - canonical key reference
 - compatibility appendix
 - advanced structural appendix
-- complete compileable examples of every diagram and table family
+- complete compilable examples of every diagram and table family
