@@ -24,7 +24,7 @@ jobs:
       TEXINPUTS: 'tex/latex//:'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Verify tag matches VERSION
         run: python3 tools/check_release_tag.py --tag "${{ github.ref_name }}"
@@ -112,7 +112,7 @@ jobs:
       name: ctan-release
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download release artifact
         uses: actions/download-artifact@v8
